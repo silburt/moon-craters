@@ -1,3 +1,3 @@
-# Lunar craters counting project
-# CPS / CITA 
-# University of Toronto
+# Lunar craters counting using Convolutional Networks
+CPS / CITA 
+University of Toronto

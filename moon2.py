@@ -136,9 +136,6 @@ def read_and_normalize_test_data():
     test_data = test_data / 255    
     #train_target = np_utils.to_categorical(train_target, 8)
 
-    print('Train shape:', train_data.shape)
-    print(test_data.shape[0], 'train samples')
-    
     return test_data, test_target, test_id
 
 
@@ -183,13 +180,15 @@ def create_model_resnet():
 ################################################ Main Routine ############################################
 def run_cross_validation_create_models(nfolds=4):
     # input image dimensions
-    batch_size = 32 #16
+    batch_size = 64 #16
     nb_epoch = 1 #30
     random_state = 51
     args = get_args()
 
     models = [] 
     train_data, train_target, train_id = read_and_normalize_train_data()
+    test_data, test_target, test_id = read_and_normalize_test_data()
+    
 #    print train_target
 
     y_for_folds=train_target.copy()
@@ -246,35 +245,15 @@ def run_cross_validation_create_models(nfolds=4):
 
     score = sum_score/len(train_data)
     print("Total average loss score: ", score)
+    
+    for model in (models):
+        predictions_valid_test = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
+        score = mean_absolute_error(test_target, predictions_valid_test)    
+        print('Validation set Score log_loss: ', score)
 
     info_string = 'loss_' + str(score) + '_folds_' + str(nfolds) +'_ep_' + str(nb_epoch)
     return info_string, models
 ###################################################################################################
-
-def validation_set():
-    # input image dimensions
-    batch_size = 32
-    test_data, test_target, test_id = read_and_normalize_test_data()
-#    print train_target
-
-    y_for_folds=test_target.copy()
-#    train_target = np_utils.to_categorical(train_target)
-#    print train_target
-								
-    predictions_valid_test = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
-    score = mean_absolute_error(test_target, predictions_valid_test)
-    print('Validation set Score log_loss: ', score)
-    sum_score += score*len(test_index)
-
-				# Store valid predictions
-    for i in range(len(test_index)):
-        yfull_train[test_index[i]] = predictions_valid[i]
-
-    score = sum_score/len(test_data)
-    print("Validation set Total average loss score: ", score)
-
-    return 
-    
 
 if __name__ == '__main__':
     print('Keras version: {}'.format(keras_version))
@@ -283,4 +262,3 @@ if __name__ == '__main__':
 #    allFiles = glob.glob(path + "/*.csv")
 #    allFilesimg = glob.glob(path + "/*.png")
     info_string, models = run_cross_validation_create_models(num_folds)
-    print validation_set()

@@ -145,8 +145,6 @@ def y_trainn2(file_):
     target = []    
     file2_=file_[:24]
     file2_=str(file2_)+'.csv'
-    print file2_
-    print fileee
     df = pd.read_csv(file2_ , header=0) 
     target.append(len(df.index))
     return target

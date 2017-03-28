@@ -121,7 +121,7 @@ def read_and_normalize_train_data():
     return train_data, train_target, train_id
     
 def read_and_normalize_test_data():
-    test_data, test_target, test_id = load_train()
+    test_data, test_target, test_id = load_test()
 
     print('Convert to numpy...')
 

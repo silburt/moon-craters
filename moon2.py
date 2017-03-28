@@ -121,7 +121,7 @@ def read_and_normalize_train_data():
     return train_data, train_target, train_id
     
 def read_and_normalize_test_data():
-    test_data, test_target, test_id = load_train()
+    test_data, test_target, test_id = load_test()
 
     print('Convert to numpy...')
 
@@ -145,6 +145,8 @@ def y_trainn2(file_):
     target = []    
     file2_=file_[:24]
     file2_=str(file2_)+'.csv'
+    print file2_
+    print fileee
     df = pd.read_csv(file2_ , header=0) 
     target.append(len(df.index))
     return target

@@ -68,7 +68,7 @@ def read_and_normalize_data(path, img_width, img_height):
     print('%s shape:'%data_type, data.shape)
     return data, target, id
 
-def get_csv_len(file_):                        #previously y_trainn2
+def get_csv_len(file_):                        #returns # craters in each image (target)
     file2_ = file_.split('.png')[0] + '.csv'
     df = pd.read_csv(file2_ , header=0)
     return [len(df.index)]
@@ -165,13 +165,15 @@ if __name__ == '__main__':
     
     #args
     lr = 0.0001             #learning rate
-    bs = 64 #16             #batch size
-    epoch = 1 #30           #number of epochs to train the model
-    ncvf = 2                #number of cross-validation folds
+    bs = 64 #16             #batch size: smaller values = less memory, less accurate gradient estimate
+    epochs = 10 #30         #number of epochs. 1 epoch = forward/back pass thru all train data
+
+    #optional args (shouldn't change)
+    ncvf = 4                #number of cross-validation folds
     nc = 1                  #number of classes in final dense layer
     iw = 224                #image width
     ih = 224                #image height
     
     #run model
-    info_string, models = run_cross_validation_create_models(lr,bs,epoch,ncvf,nc,iw,ih)
+    info_string, models = run_cross_validation_create_models(lr,bs,epochs,ncvf,nc,iw,ih)
 

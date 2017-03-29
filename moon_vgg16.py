@@ -15,6 +15,8 @@ from keras.models import Sequential, Model
 from keras.layers.core import Dense, Dropout, Flatten
 from keras.layers import AveragePooling2D
 from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D
+from keras.models import load_model
+from keras.applications.resnet50 import ResNet50
 
 from keras.optimizers import SGD, Adam, RMSprop
 from keras.callbacks import EarlyStopping, ModelCheckpoint
@@ -68,7 +70,7 @@ def read_and_normalize_data(path, img_width, img_height):
     print('%s shape:'%data_type, data.shape)
     return data, target, id
 
-def get_csv_len(file_):                        #previously y_trainn2
+def get_csv_len(file_):                        #returns # craters in each image (target)
     file2_ = file_.split('.png')[0] + '.csv'
     df = pd.read_csv(file2_ , header=0)
     return [len(df.index)]
@@ -78,6 +80,7 @@ def get_csv_len(file_):                        #previously y_trainn2
 ########################################################################
 #Following https://github.com/fchollet/keras/blob/master/keras/applications/vgg16.py
 def vgg16(n_classes,im_width,im_height,learn_rate):
+    print('Making VGG16 model...')
     model = Sequential()
     n_filters = 32          #vgg16 uses 64
     n_blocks = 3            #vgg16 uses 5
@@ -105,6 +108,27 @@ def vgg16(n_classes,im_width,im_height,learn_rate):
     return model
 
 ##############
+#resnet model#
+########################################################################
+def create_model_resnet(learn_rate):
+    print('Loading ResNet50 Weights ...')
+    ResNet50_notop = ResNet50(include_top=False, weights='imagenet',
+                              input_tensor=None , input_shape=(224, 224,3)
+                              )
+    print('Adding Average Pooling Layer and Softmax Output Layer ...')
+    output = ResNet50_notop.get_layer(index = -1).output
+    output = Dropout(0.50)(output)
+
+    output = Flatten(name='flatten')(output)
+    output = Dense(1, activation='relu', name='predictions')(output)
+
+    ResNet50_model = Model(ResNet50_notop.input, output)
+    optimizer = SGD(lr = learn_rate, momentum = 0.9, decay = 0.0, nesterov = True)
+    ResNet50_model.compile(loss='mae', optimizer = optimizer, metrics = ['accuracy'])
+    return ResNet50_model
+###################################################################################################
+
+##############
 #Main Routine#
 ########################################################################
 def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n_classes=1,im_width=224,im_height=224):
@@ -122,7 +146,8 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n
     num_fold = 0
     sum_score = 0
     for train_index,test_index in kf:
-        model = vgg16(n_classes,im_width,im_height,learn_rate)
+        #model = vgg16(n_classes,im_width,im_height,learn_rate)
+        model = create_model_resnet(learn_rate)
         X_train = train_data[train_index]
         Y_train = train_target[train_index]
         X_valid = train_data[test_index]
@@ -165,13 +190,15 @@ if __name__ == '__main__':
     
     #args
     lr = 0.0001             #learning rate
-    bs = 64 #16             #batch size
-    epoch = 1 #30           #number of epochs to train the model
-    ncvf = 2                #number of cross-validation folds
+    bs = 64 #16             #batch size: smaller values = less memory, less accurate gradient estimate
+    epochs = 10 #30         #number of epochs. 1 epoch = forward/back pass thru all train data
+
+    #optional args (shouldn't change)
+    ncvf = 4                #number of cross-validation folds
     nc = 1                  #number of classes in final dense layer
     iw = 224                #image width
     ih = 224                #image height
     
     #run model
-    info_string, models = run_cross_validation_create_models(lr,bs,epoch,ncvf,nc,iw,ih)
+    info_string, models = run_cross_validation_create_models(lr,bs,epochs,ncvf,nc,iw,ih)
 

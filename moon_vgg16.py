@@ -1,3 +1,6 @@
+#This python script is adapted from moon2.py and uses the vgg16 convnet structure.
+#The number of blocks, and other aspects of the vgg16 model can be modified.
+
 import cv2
 import os
 import glob
@@ -32,13 +35,13 @@ def get_args():
     args = parser.parse_args()
     return args
 
-def get_im_cv2(path):
+def get_im_cv2(path, img_width, img_height):
     img = cv2.imread(path)
     #resized = cv2.resize(img, (32, 32))#, cv2.INTER_LINEAR)
     resized = cv2.resize(img, (img_width, img_height))#, cv2.INTER_LINEAR)
     return resized
 
-def load_data(path, data_type):
+def load_data(path, data_type, img_width, img_height):
     X = []
     X_id = []
     y = []
@@ -46,18 +49,18 @@ def load_data(path, data_type):
     print "number of %s files are: %d"%(data_type,len(files))
     for fl in files:
         flbase = os.path.basename(fl)
-        img = get_im_cv2(fl)
+        img = get_im_cv2(fl,img_width,img_height)
         X.append(img)
         X_id.append(fl)
         y.append(get_csv_len(fl))
     return  X, y, X_id
 
-def read_and_normalize_data(path):
+def read_and_normalize_data(path, img_width, img_height):
     if 'train' in path:
         data_type = 'train'
     elif 'test' in path:
         data_type = 'test'
-    data, target, id = load_data(path, data_type)
+    data, target, id = load_data(path, data_type, img_width, img_height)
     data = np.array(data, dtype=np.uint8)      #convert to numpy
     target = np.array(target, dtype=np.uint8)
     data = data.astype('float32')              #convert to float
@@ -104,16 +107,13 @@ def vgg16(n_classes,im_width,im_height,learn_rate):
 ##############
 #Main Routine#
 ########################################################################
-def run_cross_validation_create_models(learn_rate,nfolds=4,n_classes=1,im_width=224,im_height=224):
-    # input image dimensions
-    batch_size = 64 #16
-    nb_epoch = 1 #30
+def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n_classes=1,im_width=224,im_height=224):
     random_state = 51
     args = get_args()
 
     train_path, test_path = 'training_set/', 'test_set/'
-    train_data, train_target, train_id = read_and_normalize_data(train_path)
-    test_data, test_target, test_id = read_and_normalize_data(test_path)
+    train_data, train_target, train_id = read_and_normalize_data(train_path, im_width, im_height)
+    test_data, test_target, test_id = read_and_normalize_data(test_path, im_width, im_height)
 
     y_for_folds=train_target.copy()
     yfull_train = dict()
@@ -164,12 +164,14 @@ if __name__ == '__main__':
     print('Keras version: {}'.format(keras_version))
     
     #args
-    learning_rate = 0.0001  #learning rate
-    num_folds = 2           #number of cross-validation folds
-    n_classes = 1           #number of classes in final dense layer
-    img_width = 224         #image width
-    img_height = 224        #image height
+    lr = 0.0001             #learning rate
+    bs = 64 #16             #batch size
+    epoch = 1 #30           #number of epochs to train the model
+    ncvf = 2                #number of cross-validation folds
+    nc = 1                  #number of classes in final dense layer
+    iw = 224                #image width
+    ih = 224                #image height
     
     #run model
-    info_string, models = run_cross_validation_create_models(learning_rate,num_folds,n_classes,img_width,img_height)
+    info_string, models = run_cross_validation_create_models(lr,bs,epoch,ncvf,nc,iw,ih)
 

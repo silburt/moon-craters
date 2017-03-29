@@ -107,8 +107,10 @@ def vgg16(n_classes,im_width,im_height,learn_rate):
     model.compile(loss='mae', optimizer=optimizer, metrics=['accuracy'])
     return model
 
-################################################# Convnet Model  #############################################
-def create_model_resnet(learning_rate):
+##############
+#resnet model#
+########################################################################
+def create_model_resnet(learn_rate):
     print('Loading ResNet50 Weights ...')
     ResNet50_notop = ResNet50(include_top=False, weights='imagenet',
                               input_tensor=None , input_shape=(224, 224,3)
@@ -121,7 +123,7 @@ def create_model_resnet(learning_rate):
     output = Dense(1, activation='relu', name='predictions')(output)
 
     ResNet50_model = Model(ResNet50_notop.input, output)
-    optimizer = SGD(lr = learning_rate, momentum = 0.9, decay = 0.0, nesterov = True)
+    optimizer = SGD(lr = learn_rate, momentum = 0.9, decay = 0.0, nesterov = True)
     ResNet50_model.compile(loss='mae', optimizer = optimizer, metrics = ['accuracy'])
     return ResNet50_model
 ###################################################################################################

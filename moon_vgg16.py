@@ -87,16 +87,16 @@ def vgg16(n_classes,im_width,im_height,learn_rate):
     n_dense = 512           #vgg16 uses 4096
 
     #first block
-    model.add(Conv2D(n_filters, (3, 3), activation='relu', padding='same', input_shape=(im_width,im_height,3)))
-    model.add(Conv2D(n_filters, (3, 3), activation='relu', padding='same'))
-    model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+    model.add(Conv2D(n_filters, kernel_size=(3, 3), activation='relu', padding='same', input_shape=(im_width,im_height,3)))
+    model.add(Conv2D(n_filters, kernel_size=(3, 3), activation='relu', padding='same'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
     #subsequent blocks
     for i in np.arange(1,n_blocks):
         n_filters_ = np.min((n_filters*2**i, 512))          #maximum of 512 filters in vgg16
-        model.add(Conv2D(n_filters_, (3, 3), activation='relu', padding='same'))
-        model.add(Conv2D(n_filters_, (3, 3), activation='relu', padding='same'))
-        model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+        model.add(Conv2D(n_filters_, kernel_size=(3, 3), activation='relu', padding='same'))
+        model.add(Conv2D(n_filters_, kernel_size=(3, 3), activation='relu', padding='same'))
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
     model.add(Flatten())
     model.add(Dense(n_dense, activation='relu'))
@@ -126,12 +126,11 @@ def create_model_resnet(learn_rate):
     optimizer = SGD(lr = learn_rate, momentum = 0.9, decay = 0.0, nesterov = True)
     ResNet50_model.compile(loss='mae', optimizer = optimizer, metrics = ['accuracy'])
     return ResNet50_model
-###################################################################################################
 
 ##############
 #Main Routine#
 ########################################################################
-def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n_classes=1,im_width=224,im_height=224):
+def run_cross_validation_create_models(learn_rate,batch_size,epochs,nfolds=4,n_classes=1,im_width=224,im_height=224):
     random_state = 51
     args = get_args()
 
@@ -146,8 +145,8 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n
     num_fold = 0
     sum_score = 0
     for train_index,test_index in kf:
-        #model = vgg16(n_classes,im_width,im_height,learn_rate)
-        model = create_model_resnet(learn_rate)
+        model = vgg16(n_classes,im_width,im_height,learn_rate)
+        #model = create_model_resnet(learn_rate)
         X_train = train_data[train_index]
         Y_train = train_target[train_index]
         X_valid = train_data[test_index]
@@ -159,7 +158,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n
         print('Split train: ', len(X_train), len(Y_train))
         print('Split valid: ', len(X_valid), len(Y_valid))
         callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=0)]
-        model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
+        model.fit(X_train, Y_train, batch_size=batch_size, epochs=epochs,
                   shuffle=True, verbose=1, validation_data=(X_valid, Y_valid),
                   callbacks=callbacks)
         predictions_valid = model.predict(X_valid.astype('float32'), batch_size=batch_size, verbose=2)
@@ -190,8 +189,8 @@ if __name__ == '__main__':
     
     #args
     lr = 0.0001             #learning rate
-    bs = 64 #16             #batch size: smaller values = less memory, less accurate gradient estimate
-    epochs = 10 #30         #number of epochs. 1 epoch = forward/back pass thru all train data
+    bs = 16 #16             #batch size: smaller values = less memory, less accurate gradient estimate
+    epochs = 1 #30         #number of epochs. 1 epoch = forward/back pass thru all train data
 
     #optional args (shouldn't change)
     ncvf = 4                #number of cross-validation folds

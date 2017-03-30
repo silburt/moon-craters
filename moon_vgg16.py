@@ -87,7 +87,9 @@ def vgg16(n_classes,im_width,im_height,learn_rate):
     n_dense = 512           #vgg16 uses 4096
 
     #first block
-    model.add(Conv2D(n_filters, kernel_size=(3, 3), activation='relu', padding='same', input_shape=(im_width,im_height,3)))
+    #model.add(Conv2D(n_filters, kernel_size=(3, 3), activation='relu', padding='same', input_shape=(im_width,im_height,3)))
+    model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', input_shape=(im_width,im_height,3)))
+    print 'success!'
     model.add(Conv2D(n_filters, kernel_size=(3, 3), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 

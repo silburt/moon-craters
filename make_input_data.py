@@ -9,7 +9,7 @@ The LRO image is a "simple cylindrical" projection, which is synonymous with Equ
 
 import sys
 if sys.version_info[0] < 3:
-    raise Exception("Must be using Python 3")
+    from __future__ import absolute_import, division, print_function
 
 import numpy as np
 import pandas as pd

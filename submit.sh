@@ -1,3 +1,5 @@
+How to run on scinet:
+
 ssh malidib@login.scinet.utoronto.ca
 ssh p8t03
 cd /scratch/k/kristen/malidib/moon
@@ -12,4 +14,8 @@ CUDA_VISIBLE_DEVICES=1 python moon1.py --run_fold 2 > outputfold2.txt &
 CUDA_VISIBLE_DEVICES=2 python moon1.py --run_fold 3 > outputfold3.txt &
 CUDA_VISIBLE_DEVICES=3 python moon1.py --run_fold 4 > outputfold4.txt &
 
+How to run on your computer:
 
+create a conda env with the following:
+Keras 1.2.2
+Tensorflow 0.10

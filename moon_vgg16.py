@@ -75,8 +75,8 @@ def get_csv_len(file_):                        #returns # craters in each image 
     df = pd.read_csv(file2_ , header=0)
     return [len(df.index)]
 
-#############
-#vgg16 model#
+#########################
+#vgg16 model (keras 2.0)#
 ########################################################################
 #Following https://github.com/fchollet/keras/blob/master/keras/applications/vgg16.py 
 def vgg16(n_classes,im_width,im_height,learn_rate):

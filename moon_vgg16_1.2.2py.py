@@ -77,7 +77,7 @@ def get_csv_len(file_):                        #returns # craters in each image 
     return [len(df.index)]
 
 #########################
-#vgg16 model (keras 2.0)#
+#vgg16 model (keras 1.2.2)#
 ########################################################################
 #Following https://github.com/fchollet/keras/blob/master/keras/applications/vgg16.py 
 def vgg16(n_classes,im_width,im_height,learn_rate):
@@ -106,6 +106,7 @@ def vgg16(n_classes,im_width,im_height,learn_rate):
 
     optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
     model.compile(loss='mae', optimizer=optimizer, metrics=['accuracy'])
+    print model.summary()
     return model
 
 ##############
@@ -198,10 +199,7 @@ if __name__ == '__main__':
     nc = 1                  #number of classes in final dense layer
     iw = 224                #image width
     ih = 224                #image height
-    
-    model = vgg16(nc,iw,ih,lr)
-    print model.summary()
 
     #run model
-    #info_string, models = run_cross_validation_create_models(lr,bs,epochs,ncvf,nc,iw,ih)
+    info_string, models = run_cross_validation_create_models(lr,bs,epochs,ncvf,nc,iw,ih)
 

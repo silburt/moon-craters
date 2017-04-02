@@ -146,6 +146,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,epochs,nfolds=4,n_c
     # kf = StratifiedKFold(y_for_folds, n_folds=nfolds, shuffle=True, random_state=random_state)
     num_fold = 0
     sum_score = 0
+    models = []
     for train_index,test_index in kf:
         model = vgg16(n_classes,im_width,im_height,learn_rate)
         #model = create_model_resnet(learn_rate)

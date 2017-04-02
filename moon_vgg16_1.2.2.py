@@ -132,7 +132,7 @@ def create_model_resnet(learn_rate):
 ##############
 #Main Routine#
 ########################################################################
-def run_cross_validation_create_models(learn_rate,batch_size,epochs,nfolds=4,n_classes=1,im_width=224,im_height=224):
+def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n_classes=1,im_width=224,im_height=224):
     random_state = 51
     args = get_args()
 
@@ -161,7 +161,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,epochs,nfolds=4,n_c
         print('Split train: ', len(X_train), len(Y_train))
         print('Split valid: ', len(X_valid), len(Y_valid))
         callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=0)]
-        model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=epochs,
+        model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
                   shuffle=True, verbose=1, validation_data=(X_valid, Y_valid),
                   callbacks=callbacks)
         predictions_valid = model.predict(X_valid.astype('float32'), batch_size=batch_size, verbose=2)

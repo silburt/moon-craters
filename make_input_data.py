@@ -6,7 +6,6 @@ Functions for combining LRO LOLA Elevation Model heightmap (https://astrogeology
 
 The LRO image is a "simple cylindrical" projection, which is synonymous with Equidistant Cylindrical or Plate Carree (http://desktop.arcgis.com/en/arcmap/10.3/guide-books/map-projections/equidistant-cylindrical.htm).
 """
-
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
@@ -21,6 +20,7 @@ import glob
 import collections
 import pickle
 import re
+
 
 ########## Read Cratering CSVs ###########################
 
@@ -969,4 +969,25 @@ def GenDataset(img, craters, outhead, ilen_range=np.array([300., 4000.]),
 
     pdict = dict( zip(outpnames, outpvals) )
     pickle.dump( pdict, open(outhead + outp, 'wb') )
+    
+if __name__ == '__main__':
+    from mpi4py import MPI
+    import make_input_data as mkin
+    from PIL import Image
+    import numpy as np
+
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    size = comm.Get_size()
+
+    print("rank {0} of {1}".format(rank, size))
+
+    img = Image.open("./LOLA_Global_20k.png").convert("L")
+    craters = mkin.ReadCombinedCraterCSV(dropfeatures=True)
+
+    mkin.GenDataset(img, craters, "out/lola", ilen_range=np.array([600., 3000.]),
+                    olen=300, amt=7500, zeropad=5, slivercut=0.6, outp="_p{0}.p".format(rank),
+                    istart = rank*7500)
+
+
 

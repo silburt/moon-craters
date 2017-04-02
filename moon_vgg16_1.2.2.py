@@ -160,7 +160,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,epochs,nfolds=4,n_c
         print('Split train: ', len(X_train), len(Y_train))
         print('Split valid: ', len(X_valid), len(Y_valid))
         callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=0)]
-        model.fit(X_train, Y_train, batch_size=batch_size, nb_epochs=epochs,
+        model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=epochs,
                   shuffle=True, verbose=1, validation_data=(X_valid, Y_valid),
                   callbacks=callbacks)
         predictions_valid = model.predict(X_valid.astype('float32'), batch_size=batch_size, verbose=2)

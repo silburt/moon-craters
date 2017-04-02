@@ -199,6 +199,9 @@ if __name__ == '__main__':
     iw = 224                #image width
     ih = 224                #image height
     
+    model = vgg16(nc,iw,ih,lr)
+    print model.summary
+
     #run model
-    info_string, models = run_cross_validation_create_models(lr,bs,epochs,ncvf,nc,iw,ih)
+    #info_string, models = run_cross_validation_create_models(lr,bs,epochs,ncvf,nc,iw,ih)
 

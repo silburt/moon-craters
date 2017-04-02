@@ -7,9 +7,7 @@ Functions for combining LRO LOLA Elevation Model heightmap (https://astrogeology
 The LRO image is a "simple cylindrical" projection, which is synonymous with Equidistant Cylindrical or Plate Carree (http://desktop.arcgis.com/en/arcmap/10.3/guide-books/map-projections/equidistant-cylindrical.htm).
 """
 
-import sys
-if sys.version_info[0] < 3:
-    from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import, division, print_function
 
 import numpy as np
 import pandas as pd

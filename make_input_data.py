@@ -1027,13 +1027,13 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Input data creation script.')
     parser.add_argument('--image_path', metavar='imgpath', type=str, required=False,
-                        help='Path to the source image.'default="./LOLA_Global_20k.png")
+                        help='Path to the source image.', default="./LOLA_Global_20k.png")
     parser.add_argument('--lu_csv_path', metavar='lupath', type=str, required=False,
-                        help='Path to LU78287 crater csv.'default="./LU78287GT.csv")
+                        help='Path to LU78287 crater csv.', default="./LU78287GT.csv")
     parser.add_argument('--alan_csv_path', metavar='lupath', type=str, required=False,
-                        help='Path to LROC crater csv.'default="./alanalldata.csv")
+                        help='Path to LROC crater csv.', default="./alanalldata.csv")
     parser.add_argument('--outhead', metavar='outhead', type=str, required=False,
-                        help='Filepath and filename prefix of outputs.'default="out/lola")
+                        help='Filepath and filename prefix of outputs.', default="out/lola")
     parser.add_argument('--amt', type=int, default=7500, required=False,
                         help='Number of images each thread will make (multiply by number of \
                         threads for total number of images produced).')

@@ -4,6 +4,7 @@ ssh malidib@login.scinet.utoronto.ca
 ssh p8t03
 cd /scratch/k/kristen/malidib/moon
 
+The data should be in training_set and test_set at the same level as moon2.py .
 
 module load gcc/6.2.1 
 module load cuda/8.0 

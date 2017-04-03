@@ -1043,7 +1043,7 @@ if __name__ == '__main__':
     print("rank {0} of {1}".format(rank, size))
 
     img = Image.open(args.image_path).convert("L")
-    craters = mkin.ReadCombinedCraterCSV(filealan=args.alan_csv_path, filelu=lu_csv_path,
+    craters = mkin.ReadCombinedCraterCSV(filealan=args.alan_csv_path, filelu=args.lu_csv_path,
                                             dropfeatures=True)
 
     mkin.GenDataset(img, craters, args.outhead, ilen_range=np.array([600., 3000.]),

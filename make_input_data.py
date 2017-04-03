@@ -804,8 +804,7 @@ def RandRot(img, craters, expand=False, origin="upper"):
     return [img, craters]
 
 
-def ResampleCraters(craters, llbd, imgheight, Cdownsamp,
-                    arad=1737.4, minpix=0):
+def ResampleCraters(craters, llbd, imgheight, arad=1737.4, minpix=0):
     """Crops crater file, and removes craters smaller than 
     some user defined minimum value.
 
@@ -818,9 +817,6 @@ def ResampleCraters(craters, llbd, imgheight, Cdownsamp,
         lat_min, lat_max) of image
     imgheight : int
         Pixel height of image
-    Cdownsamp : float from 0 to 1
-        Amount by which image was downsampled
-        from original crop
     arad : float
         Radius of Moon
     minpix : int
@@ -846,7 +842,7 @@ def ResampleCraters(craters, llbd, imgheight, Cdownsamp,
         # latitude because Plate carree doesn't distort
         # along this axis
         pxperkm = km2pix(imgheight, llbd[3] - llbd[2], \
-                            dc=1., a=arad) * Cdownsamp
+                            dc=1., a=arad)
         minkm = minpix / pxperkm
         
         # Remove craters smaller than pixel limit
@@ -883,6 +879,53 @@ def GenDataset(img, craters, outhead, ilen_range=np.array([300., 4000.]),
 
     Parameters
     ----------
+    img : PIL.Image.Image
+        Source image
+    craters : pandas.DataFrame
+        Crater list csv
+    outhead : str
+        Filepath and file prefix to save output
+        images under.
+    ilen_range : list-like
+        Lower and upper bounds of image width, in pixels,
+        to crop from source.  To always crop the same sized
+        image, set lower bound to same value as upper.
+    olen : int
+        Output image width, in pixels.  Cropped images will be
+        downsampled to this size.
+    minpix : int
+        Minimum crater diameter in pixels to be included in
+        crater list.  By default, not useful, since
+        our source image is ~100-200 m/px, we downsample by
+        at most a factor of 10 and our crater dataset starts at
+        d = 5000 m.  However, if you use a different image, or
+        setting max(ilen_range) > 10000 px, might be necessary
+        to remove craters that are less than ~3 pixels across.
+    randrot : bool - UNTESTED!
+        If True, randomly rotates and flips image (and corresponding
+        craters).  Might as well do it in Keras instead, though.
+    amt : int
+        Number of images to produce.
+    zeropad : int
+        Number of zeros to pad output file numbering.
+    slivercut : float from 0 to 1
+        Occasionally the code samples a small region near the pole,
+        in which case the transformation from Plate Carree to
+        Orthographic leads to tiny slivers of the Moon surrounded
+        by padding.  These images are useless, so the code trashes
+        any images whose non-padding region has an width/height ratio
+        less than slivercut.  Discarded images are not counted
+        as part of amt.  Setting slivercut to 0 disables the cut.
+        Setting it too close to 1 will lead to an infinite loop!
+    outp : str or None
+        If a string, will dump the long/lat boundary and crop
+        bounds of all images to a pickle file.  File's name is
+        obtained from outhead + outp.
+    istart : int
+        Output file starting number.  Useful for preventing overwriting
+        of files when batch serializing the code (see __main__ script)
+    seed : int or None
+        np.random.seed input (for testing purposes).    
     """
 
     # If seed == None, uses an OS-dependent built-in
@@ -933,8 +976,7 @@ def GenDataset(img, craters, outhead, ilen_range=np.array([300., 4000.]),
         im = im.resize([olen, olen])
 
         # Remove all craters that are too small to be seen in image
-        ctr_sub = ResampleCraters(craters, llbd, img.size[1], 
-                    olen/ilen, minpix=minpix)
+        ctr_sub = ResampleCraters(craters, llbd, im.size[1], minpix=minpix)
 
         # Convert Plate Carree to Orthographic
         [imgo, ctr_xy] = PlateCarree_to_Orthographic(im, None, llbd, ctr_sub, 
@@ -970,24 +1012,43 @@ def GenDataset(img, craters, outhead, ilen_range=np.array([300., 4000.]),
     pdict = dict( zip(outpnames, outpvals) )
     pickle.dump( pdict, open(outhead + outp, 'wb') )
     
+
 if __name__ == '__main__':
+
     from mpi4py import MPI
     import make_input_data as mkin
     from PIL import Image
     import numpy as np
+    import argparse
 
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
 
+    parser = argparse.ArgumentParser(description='Input data creation script.')
+    parser.add_argument('--image_path', metavar='imgpath', type=str, required=False,
+                        help='Path to the source image.'default="./LOLA_Global_20k.png")
+    parser.add_argument('--lu_csv_path', metavar='lupath', type=str, required=False,
+                        help='Path to LU78287 crater csv.'default="./LU78287GT.csv")
+    parser.add_argument('--alan_csv_path', metavar='lupath', type=str, required=False,
+                        help='Path to LROC crater csv.'default="./alanalldata.csv")
+    parser.add_argument('--outhead', metavar='outhead', type=str, required=False,
+                        help='Filepath and filename prefix of outputs.'default="out/lola")
+    parser.add_argument('--amt', type=int, default=7500, required=False,
+                        help='Number of images each thread will make (multiply by number of \
+                        threads for total number of images produced).')
+
+    args = parser.parse_args()
+
     print("rank {0} of {1}".format(rank, size))
 
-    img = Image.open("./LOLA_Global_20k.png").convert("L")
-    craters = mkin.ReadCombinedCraterCSV(dropfeatures=True)
+    img = Image.open(args.image_path).convert("L")
+    craters = mkin.ReadCombinedCraterCSV(filealan=args.alan_csv_path, filelu=lu_csv_path,
+                                            dropfeatures=True)
 
-    mkin.GenDataset(img, craters, "out/lola", ilen_range=np.array([600., 3000.]),
-                    olen=300, amt=7500, zeropad=5, slivercut=0.6, outp="_p{0}.p".format(rank),
-                    istart = rank*7500)
+    mkin.GenDataset(img, craters, args.outhead, ilen_range=np.array([600., 3000.]),
+                    olen=300, amt=args.amt, zeropad=5, slivercut=0.6, outp="_p{0}.p".format(rank),
+                    istart = rank*args.amt)
 
 
 

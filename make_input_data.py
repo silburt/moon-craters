@@ -448,10 +448,10 @@ def WarpCraterLoc(craters, geoproj, oproj,
     if llbd is None:
         ctr_wrp = craters
     else:
-        ctr_xlim = (craters["Long"] > llbd[0]) & \
-                    (craters["Long"] < llbd[1])
-        ctr_ylim = (craters["Lat"] > llbd[2]) & \
-                    (craters["Lat"] < llbd[3])
+        ctr_xlim = (craters["Long"] >= llbd[0]) & \
+                    (craters["Long"] <= llbd[1])
+        ctr_ylim = (craters["Lat"] >= llbd[2]) & \
+                    (craters["Lat"] <= llbd[3])
         ctr_wrp = craters.loc[ctr_xlim & \
                                 ctr_ylim, :].copy()
 
@@ -830,10 +830,10 @@ def ResampleCraters(craters, llbd, imgheight, arad=1737.4, minpix=0):
     """
 
     # Get subset of craters within llbd limits
-    ctr_xlim = (craters["Long"] > llbd[0]) & \
-                (craters["Long"] < llbd[1])
-    ctr_ylim = (craters["Lat"] > llbd[2]) & \
-                (craters["Lat"] < llbd[3])
+    ctr_xlim = (craters["Long"] >= llbd[0]) & \
+                (craters["Long"] <= llbd[1])
+    ctr_ylim = (craters["Lat"] >= llbd[2]) & \
+                (craters["Lat"] <= llbd[3])
     ctr_sub = craters.loc[ctr_xlim & \
                             ctr_ylim, :].copy()
 
@@ -871,9 +871,9 @@ def ResampleCraters(craters, llbd, imgheight, arad=1737.4, minpix=0):
 #        yield im.copy()
 
 
-
 def GenDataset(img, craters, outhead, ilen_range=np.array([300., 4000.]), 
-                olen=300, minpix=0, randrot=False, amt=100, zeropad=4,
+                olen=300, cdim=[-180, 180, -90, 90],
+                minpix=0, randrot=False, amt=100, zeropad=4,
                 slivercut=0.1, outp=False, istart = 0, seed=None):
     """Generates random dataset from plate image.
 
@@ -893,6 +893,8 @@ def GenDataset(img, craters, outhead, ilen_range=np.array([300., 4000.]),
     olen : int
         Output image width, in pixels.  Cropped images will be
         downsampled to this size.
+    cdim : list-like
+        Coordinate limits (x_min, x_max, y_min, y_max) of image
     minpix : int
         Minimum crater diameter in pixels to be included in
         crater list.  By default, not useful, since
@@ -928,14 +930,16 @@ def GenDataset(img, craters, outhead, ilen_range=np.array([300., 4000.]),
         np.random.seed input (for testing purposes).    
     """
 
+    # just in case we make this user-selectable later...
+    origin = "upper"
+
     # If seed == None, uses an OS-dependent built-in
     # randomizer
     np.random.seed(seed)
 
     # Get craters
-    cdim = [-180, 180, -90, 90]
     AddPlateCarree_XY(craters, list(img.size), cdim=cdim, 
-                            origin="upper")
+                            origin=origin)
 
     iglobe = ccrs.Globe(semimajor_axis=1737400, 
                     semiminor_axis=1737400,
@@ -969,7 +973,7 @@ def GenDataset(img, craters, outhead, ilen_range=np.array([300., 4000.]),
         # Obtain long/lat bounds for coordinate transform
         ix = np.array([box[0], box[2]])
         iy = np.array([box[1], box[3]])
-        llong, llat = pix2coord(ix, iy, cdim, list(img.size), origin="upper")
+        llong, llat = pix2coord(ix, iy, cdim, list(img.size), origin=origin)
         llbd = np.r_[llong, llat[::-1]]
 
         # Downsample image
@@ -981,7 +985,7 @@ def GenDataset(img, craters, outhead, ilen_range=np.array([300., 4000.]),
         # Convert Plate Carree to Orthographic
         [imgo, ctr_xy] = PlateCarree_to_Orthographic(im, None, llbd, ctr_sub, 
                                     iglobe=iglobe, ctr_sub=True, 
-                                    origin="upper", rgcoeff=1.2, dontsave=True,
+                                    origin=origin, rgcoeff=1.2, dontsave=True,
                                     slivercut=slivercut)
 
         # If PlateCarree_to_Orthogonal returns NoneType, skip saving,
@@ -992,7 +996,7 @@ def GenDataset(img, craters, outhead, ilen_range=np.array([300., 4000.]),
 
         # Randomly rotate and/or flip, if user so desires
         if randrot:
-            [imgo, ctr_xy] = RandRot(imgo, ctr_xy, origin="upper")
+            [imgo, ctr_xy] = RandRot(imgo, ctr_xy, origin=origin)
 
         # Output everything
         oname = outhead + "_{i:0{zp}d}".format(i=i, zp=zeropad)
@@ -1011,14 +1015,45 @@ def GenDataset(img, craters, outhead, ilen_range=np.array([300., 4000.]),
 
     pdict = dict( zip(outpnames, outpvals) )
     pickle.dump( pdict, open(outhead + outp, 'wb') )
+
+
+def InitialImageCut(img, cdim, newcdim):
+    """Crops image, so that the crop output
+    can be used in GenDataset.
+
+    Parameters
+    ----------
+    img : PIL.Image.Image
+        Image
+    cdim : list-like
+        Coordinate limits (x_min, x_max, y_min, y_max) of image
+    newcdim : list-like
+        Crop boundaries (x_min, x_max, y_min, y_max).  There is
+        currently NO CHECK that newcdim is within cdim!
+
+    Returns
+    -------
+    img : PIL.Image.Image
+        Cropped image
+    """
+
+    origin = "upper"
+
+    x, y = coord2pix(np.array(newcdim[:2]), 
+                    np.array(newcdim[2:]), cdim, img.size, 
+                    origin=origin)
+
+    # y is backward since origin is upper!
+    box = [x[0], y[1], x[1], y[0]]
+    img = img.crop(box)
+    img.load()
     
+    return img
+
 
 if __name__ == '__main__':
 
     from mpi4py import MPI
-    import make_input_data as mkin
-    from PIL import Image
-    import numpy as np
     import argparse
 
     comm = MPI.COMM_WORLD
@@ -1037,18 +1072,27 @@ if __name__ == '__main__':
     parser.add_argument('--amt', type=int, default=7500, required=False,
                         help='Number of images each thread will make (multiply by number of \
                         threads for total number of images produced).')
-
+    parser.add_argument('--cdim', nargs=4, type=int, required=False,
+                        help='[Min longitude, max, min latitude, max] of source image crop. \
+                        Crop creates global bounds for image set.')
     args = parser.parse_args()
 
     print("rank {0} of {1}".format(rank, size))
 
     img = Image.open(args.image_path).convert("L")
-    craters = mkin.ReadCombinedCraterCSV(filealan=args.alan_csv_path, filelu=args.lu_csv_path,
-                                            dropfeatures=True)
+    cdim = [-180, 180, -90, 90]
+    if args.cdim:
+        img = InitialImageCut(img, cdim, args.cdim)
+        cdim = args.cdim
 
-    mkin.GenDataset(img, craters, args.outhead, ilen_range=np.array([600., 3000.]),
-                    olen=300, amt=args.amt, zeropad=5, slivercut=0.6, outp="_p{0}.p".format(rank),
-                    istart = rank*args.amt)
+    craters = ReadCombinedCraterCSV(filealan=args.alan_csv_path, filelu=args.lu_csv_path,
+                                            dropfeatures=True)
+    # Co-opt ResampleCraters to remove all craters beyond subset cdim
+    craters = ResampleCraters(craters, cdim, None, minpix=0)
+
+    GenDataset(img, craters, args.outhead, ilen_range=np.array([600., 3000.]),
+                    olen=300, cdim=cdim, amt=args.amt, zeropad=5, slivercut=0.6, 
+                    outp="_p{0}.p".format(rank), istart = rank*args.amt)
 
 
 

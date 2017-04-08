@@ -19,6 +19,7 @@ from keras.layers import AveragePooling2D
 from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
 from keras.models import load_model
 from keras.applications.resnet50 import ResNet50
+from keras.applications.inception_v3 import InceptionV3
 
 from keras.preprocessing.image import ImageDataGenerator
 
@@ -141,7 +142,7 @@ def read_and_normalize_test_data():
 
 def y_testt2(file_):
     target = []    
-    file2_=file_[:20]
+    file2_=file_[:21]
     file2_=str(file2_)+'.csv'
     df = pd.read_csv(file2_ , header=0) 
     target.append(len(df.index))
@@ -149,7 +150,7 @@ def y_testt2(file_):
 
 def y_trainn2(file_):
     target = []    
-    file2_=file_[:24]
+    file2_=file_[:25]
     file2_=str(file2_)+'.csv'
     df = pd.read_csv(file2_ , header=0) 
     target.append(len(df.index))
@@ -162,6 +163,9 @@ def create_model_resnet():
     ResNet50_notop = ResNet50(include_top=False, weights='imagenet',
                     input_tensor=None , input_shape=(224, 224,3)
                                     )
+#    ResNet50_notop = InceptionV3(include_top=False, weights='imagenet',
+#                    input_tensor=None , input_shape=(299, 299,3)
+#                                    )
     print('Adding Average Pooling Layer and Softmax Output Layer ...')
     output = ResNet50_notop.get_layer(index = -1).output 
     output = Dropout(0.50)(output)
@@ -186,8 +190,8 @@ def create_model_resnet():
 ################################################ Main Routine ############################################
 def run_cross_validation_create_models(nfolds=4):
     # input image dimensions
-    batch_size = 64 #16
-    nb_epoch = 1 #30
+    batch_size = 128 #16
+    nb_epoch =30 #30
     random_state = 51
     args = get_args()
 
@@ -263,7 +267,7 @@ def run_cross_validation_create_models(nfolds=4):
 
 if __name__ == '__main__':
     print('Keras version: {}'.format(keras_version))
-    num_folds = 2
+    num_folds = 4
 #    path =r'./training_set' 
 #    allFiles = glob.glob(path + "/*.csv")
 #    allFilesimg = glob.glob(path + "/*.png")

@@ -1080,6 +1080,8 @@ if __name__ == '__main__':
     print("rank {0} of {1}".format(rank, size))
 
     img = Image.open(args.image_path).convert("L")
+    
+    
     cdim = [-180, 180, -90, 90]
     if args.cdim:
         img = InitialImageCut(img, cdim, args.cdim)
@@ -1090,7 +1092,7 @@ if __name__ == '__main__':
     # Co-opt ResampleCraters to remove all craters beyond subset cdim
     craters = ResampleCraters(craters, cdim, None, minpix=0)
 
-    GenDataset(img, craters, args.outhead, ilen_range=np.array([600., 3000.]),
+    GenDataset(img, craters, args.outhead, ilen_range=np.array([600., 10300.]),
                     olen=300, cdim=cdim, amt=args.amt, zeropad=5, slivercut=0.6, 
                     outp="_p{0}.p".format(rank), istart = rank*args.amt)
 

@@ -190,7 +190,7 @@ def create_model_resnet():
 ################################################ Main Routine ############################################
 def run_cross_validation_create_models(nfolds=4):
     # input image dimensions
-    batch_size = 128 #16
+    batch_size = 64 #16
     nb_epoch =30 #30
     random_state = 51
     args = get_args()

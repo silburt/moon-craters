@@ -158,7 +158,7 @@ def y_trainn2(file_):
 ###################################################################################################
 
 ################################################# Convnet Model  #############################################
-def create_model():
+def create_model_resnet():
     model = Sequential()
     model.add(ZeroPadding2D((1, 1), input_shape=(224, 224, 3), dim_ordering='tf'))
     model.add(Convolution2D(3, 3, 8, activation='relu', dim_ordering='tf', init='he_uniform'))
@@ -177,7 +177,7 @@ def create_model():
     model.add(Dense(1, activation='relu'))
 
     sgd = SGD(lr=5e-5, decay=1e-4, momentum=0.89, nesterov=False)
-    model.compile(optimizer=sgd, loss='categorical_crossentropy')
+    model.compile(optimizer=sgd, loss='mae')
 
     return model
 ###################################################################################################
@@ -188,7 +188,7 @@ def create_model():
 ################################################ Main Routine ############################################
 def run_cross_validation_create_models(nfolds=4):
     # input image dimensions
-    batch_size = 128 #16
+    batch_size = 64 #16
     nb_epoch =30 #30
     random_state = 51
     args = get_args()

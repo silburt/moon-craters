@@ -158,30 +158,28 @@ def y_trainn2(file_):
 ###################################################################################################
 
 ################################################# Convnet Model  #############################################
-def create_model_resnet():
-    print('Loading ResNet50 Weights ...')
-    ResNet50_notop = ResNet50(include_top=False, weights='imagenet',
-                    input_tensor=None , input_shape=(224, 224,3)
-                                    )
-#    ResNet50_notop = InceptionV3(include_top=False, weights='imagenet',
-#                    input_tensor=None , input_shape=(299, 299,3)
-#                                    )
-    print('Adding Average Pooling Layer and Softmax Output Layer ...')
-    output = ResNet50_notop.get_layer(index = -1).output 
+def create_model():
+    model = Sequential()
+    model.add(ZeroPadding2D((1, 1), input_shape=(224, 224, 3), dim_ordering='tf'))
+    model.add(Convolution2D(3, 3, 8, activation='relu', dim_ordering='tf', init='he_uniform'))
+    model.add(Dropout(0.2))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), dim_ordering='tf'))
+    model.add(ZeroPadding2D((1, 1), dim_ordering='tf'))
+    model.add(Convolution2D(3, 3, 16, activation='relu', dim_ordering='tf', init='he_uniform'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), dim_ordering='tf'))
+    model.add(Dropout(0.2))
     
-     # Shape: (8, 8, 2048)    
-#    output = AveragePooling2D((8, 8), strides=(8, 8), name='avg_pool')(output)
+    model.add(Flatten())
+    model.add(Dense(96, activation='relu',init='he_uniform'))
+    model.add(Dropout(0.4))
+    model.add(Dense(24, activation='relu',init='he_uniform'))
+    model.add(Dropout(0.2))
+    model.add(Dense(1, activation='relu'))
 
-    output = Flatten(name='flatten')(output)
-    
-    output = Dense(1, activation='relu', name='predictions')(output)
+    sgd = SGD(lr=5e-5, decay=1e-4, momentum=0.89, nesterov=False)
+    model.compile(optimizer=sgd, loss='categorical_crossentropy')
 
-    ResNet50_model = Model(ResNet50_notop.input, output)
-#    ResNet50_model.summary()
- #   exit(0)
-    optimizer = SGD(lr = learning_rate, momentum = 0.9, decay = 0.0, nesterov = True)
-    ResNet50_model.compile(loss='mae', optimizer = optimizer, metrics = ['mae'])
-    return ResNet50_model
+    return model
 ###################################################################################################
 
 

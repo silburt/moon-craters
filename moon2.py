@@ -96,7 +96,7 @@ def load_test():
             X_test_id.append(fl)
             y_test.append(y_testt2(fl))
 
-
+   
 #    print('Read train data time: {} seconds'.format(round(time.time() - start_time, 2)))
     return X_test, y_test, X_test_id
     
@@ -244,7 +244,7 @@ def run_cross_validation_create_models(nfolds=4):
         
         predictions_valid = model.predict(X_valid.astype('float32'), batch_size=batch_size, verbose=2)
         score = mean_absolute_error(Y_valid, predictions_valid)
-        print('fold example Score is: ', score)
+        print('CV fold Score is: ', score)
 #        sum_score += score*len(test_index)
 
         # Store valid predictions
@@ -268,11 +268,17 @@ def run_cross_validation_process_test(info_string, model):
 
 	test_data,test_target, test_id = read_and_normalize_test_data()
 	test_prediction = model.predict(test_data, batch_size=batch_size, verbose=2)
-	#        yfull_test.append(test_prediction)
-	score = mean_absolute_error(test_target, test_prediction)
-	print('Holdout set score is: ', score)
 
-    
+	result1 = pd.DataFrame(test_prediction, columns=['prediction'])
+	result1['img']=test_id
+	now = datetime.datetime.now()
+	sub_file = 'submission_' + info_string + '_' + str(now.strftime("%Y-%m-%d-%H-%M")) + '.csv'
+	result1.to_csv(sub_file, index=False)	
+
+	#	score = mean_absolute_error(test_target, test_prediction)
+	#	print('Holdout set score is: ', score)
+
+      
 if __name__ == '__main__':
     print('Keras version: {}'.format(keras_version))
     num_folds = 4

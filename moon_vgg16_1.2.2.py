@@ -76,16 +76,16 @@ def get_csv_len(file_):                        #returns # craters in each image 
     df = pd.read_csv(file2_ , header=0)
     return [len(df.index)]
 
-#########################
+###########################
 #vgg16 model (keras 1.2.2)#
 ########################################################################
 #Following https://github.com/fchollet/keras/blob/master/keras/applications/vgg16.py 
 def vgg16(n_classes,im_width,im_height,learn_rate):
     print('Making VGG16 model...')
     model = Sequential()
-    n_filters = 32          #vgg16 uses 64
-    n_blocks = 3            #vgg16 uses 5
-    n_dense = 512           #vgg16 uses 4096
+    n_filters = 64          #vgg16 uses 64
+    n_blocks = 4            #vgg16 uses 5
+    n_dense = 2048          #vgg16 uses 4096
 
     #first block
     model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', input_shape=(im_width,im_height,3)))
@@ -106,7 +106,7 @@ def vgg16(n_classes,im_width,im_height,learn_rate):
 
     optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
     model.compile(loss='mae', optimizer=optimizer, metrics=['accuracy'])
-    print model.summary()
+    #print model.summary()
     return model
 
 ##############
@@ -136,7 +136,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n
     random_state = 51
     args = get_args()
 
-    train_path, test_path = 'training_set/', 'test_set/'
+    train_path, test_path = '/scratch/k/kristen/malidib/moon/training_set/', '/scratch/k/kristen/malidib/moon/test_set/'
     train_data, train_target, train_id = read_and_normalize_data(train_path, im_width, im_height)
     test_data, test_target, test_id = read_and_normalize_data(test_path, im_width, im_height)
 
@@ -203,4 +203,5 @@ if __name__ == '__main__':
 
     #run model
     info_string, models = run_cross_validation_create_models(lr,bs,epochs,ncvf,nc,iw,ih)
+    print info_string
 

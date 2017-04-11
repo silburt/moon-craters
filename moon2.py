@@ -93,7 +93,7 @@ def load_test():
             img = get_im_cv2(fl)
             X_test.append(img)
             X_test_id.append(fl)
-            y_test.append(y_trainn2(fl))
+            y_test.append(y_testt2(fl))
 
 
 #    print('Read train data time: {} seconds'.format(round(time.time() - start_time, 2)))
@@ -139,7 +139,13 @@ def read_and_normalize_test_data():
     return test_data, test_target, test_id
 
 
-
+def y_testt2(file_):
+    target = []    
+    file2_=file_[:20]
+    file2_=str(file2_)+'.csv'
+    df = pd.read_csv(file2_ , header=0) 
+    target.append(len(df.index))
+    return target
 
 def y_trainn2(file_):
     target = []    

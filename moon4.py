@@ -160,7 +160,7 @@ def y_trainn2(file_):
 ################################################# Convnet Model  #############################################
 def create_model_resnet():
     print('Loading ResNet50 Weights ...')
-    ResNet50_notop = ResNet50(include_top=False, weights='imagenet',
+    ResNet50_notop = ResNet50(include_top=False, weights=None,
                     input_tensor=None , input_shape=(224, 224,3)
                                     )
 #    ResNet50_notop = InceptionV3(include_top=False, weights='imagenet',
@@ -173,7 +173,10 @@ def create_model_resnet():
 #    output = AveragePooling2D((8, 8), strides=(8, 8), name='avg_pool')(output)
 
     output = Flatten(name='flatten')(output)
-    
+    output =(Dense(96, activation='relu',init='he_uniform'))(output)
+    output =(Dropout(0.4))(output)
+    output =(Dense(24, activation='relu',init='he_uniform'))(output)
+    output =(Dropout(0.2))(output)
     output = Dense(1, activation='relu', name='predictions')(output)
 
     ResNet50_model = Model(ResNet50_notop.input, output)
@@ -269,10 +272,9 @@ def run_cross_validation_process_test(info_string, model):
 	test_data,test_target, test_id = read_and_normalize_test_data()
 	test_prediction = model.predict(test_data, batch_size=batch_size, verbose=2)
 
-	result1 = pd.DataFrame(test_prediction, columns=['prediction'])
-	result1['img']=test_id
+	result1 = pd.Series(test_id, test_prediction)
 	now = datetime.datetime.now()
-	sub_file = 'submission_' + info_string + '_' + str(now.strftime("%Y-%m-%d-%H-%M")) + '.csv'
+	sub_file = 'submission_' + info + '_' + str(now.strftime("%Y-%m-%d-%H-%M")) + '.csv'
 	result1.to_csv(sub_file, index=False)	
 
 	#	score = mean_absolute_error(test_target, test_prediction)

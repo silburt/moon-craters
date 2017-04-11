@@ -58,10 +58,10 @@ def load_data(path, data_type, img_width, img_height):
         y.append(get_csv_len(fl))
     return  X, y, X_id
 
-def read_and_normalize_data(path, img_width, img_height):
-    if 'train' in path:
+def read_and_normalize_data(path, img_width, img_height, data_flag):
+    if data_flag == 0:
         data_type = 'train'
-    elif 'test' in path:
+    elif data_flag == 1:
         data_type = 'test'
     data, target, id = load_data(path, data_type, img_width, img_height)
     data = np.array(data, dtype=np.uint8)      #convert to numpy
@@ -102,11 +102,11 @@ def vgg16(n_classes,im_width,im_height,learn_rate):
     model.add(Flatten())
     model.add(Dense(n_dense, activation='relu'))
     model.add(Dense(n_dense, activation='relu'))
-    model.add(Dense(n_classes, activation='relu'))          #if counting craters, want a relu/regression output
+    model.add(Dense(n_classes, activation='relu',name='predictions'))          #if counting craters, want a relu/regression output
 
     optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
     model.compile(loss='mae', optimizer=optimizer, metrics=['accuracy'])
-    #print model.summary()
+    print model.summary()
     return model
 
 ##############
@@ -134,11 +134,11 @@ def create_model_resnet(learn_rate):
 ########################################################################
 def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n_classes=1,im_width=224,im_height=224):
     random_state = 51
-    args = get_args()
+    #args = get_args()
 
     train_path, test_path = '/scratch/k/kristen/malidib/moon/training_set/', '/scratch/k/kristen/malidib/moon/test_set/'
-    train_data, train_target, train_id = read_and_normalize_data(train_path, im_width, im_height)
-    test_data, test_target, test_id = read_and_normalize_data(test_path, im_width, im_height)
+    train_data, train_target, train_id = read_and_normalize_data(train_path, im_width, im_height, 0)
+    test_data, test_target, test_id = read_and_normalize_data(test_path, im_width, im_height, 1)
 
     y_for_folds=train_target.copy()
     yfull_train = dict()
@@ -146,18 +146,17 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n
     # kf = StratifiedKFold(y_for_folds, n_folds=nfolds, shuffle=True, random_state=random_state)
     num_fold = 0
     sum_score = 0
-    models = []
     for train_index,test_index in kf:
+        num_fold += 1
         model = vgg16(n_classes,im_width,im_height,learn_rate)
         #model = create_model_resnet(learn_rate)
         X_train = train_data[train_index]
         Y_train = train_target[train_index]
         X_valid = train_data[test_index]
         Y_valid = train_target[test_index]
-        num_fold += 1
-        if args.run_fold != num_fold:
-            continue
-        print('Start KFold number {} from {}'.format(num_fold, nfolds))
+        #if args.run_fold != num_fold:
+        #    continue
+        print('Start KFold number %d of %d'%(num_fold, nfolds))
         print('Split train: ', len(X_train), len(Y_train))
         print('Split valid: ', len(X_valid), len(Y_valid))
         callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=0)]
@@ -166,23 +165,11 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n
                   callbacks=callbacks)
         predictions_valid = model.predict(X_valid.astype('float32'), batch_size=batch_size, verbose=2)
         score = mean_absolute_error(Y_valid, predictions_valid)
-        print('Score log_loss: ', score)
-        sum_score += score*len(test_index)
-        
-        # Store valid predictions
-        for i in range(len(test_index)):
-            yfull_train[test_index[i]] = predictions_valid[i]
-        models.append(model)
+        print('\nCV for fold %d Score is %f.\n'%(num_fold, score))
+        sum_score += score
 
-    score = sum_score/len(train_data)
-    print("Total average loss score: ", score)
-    for model in (models):
-        predictions_valid_test = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
-        score = mean_absolute_error(test_target, predictions_valid_test)
-        print('Validation set Score log_loss: ', score)
-    
-    info_string = 'loss_' + str(score) + '_folds_' + str(nfolds) +'_ep_' + str(nb_epoch)
-    return info_string, models
+    info_string = 'avgloss_' + str(sum_score/nfolds) + '_folds_' + str(nfolds) +'_ep_' + str(nb_epoch)
+    return info_string
 
 ################
 #Arguments, Run#
@@ -192,8 +179,8 @@ if __name__ == '__main__':
     
     #args
     lr = 0.0001             #learning rate
-    bs = 16 #16             #batch size: smaller values = less memory, less accurate gradient estimate
-    epochs = 1 #30         #number of epochs. 1 epoch = forward/back pass thru all train data
+    bs = 64                 #batch size: smaller values = less memory, less accurate gradient estimate
+    epochs = 30             #number of epochs. 1 epoch = forward/back pass thru all train data
 
     #optional args (shouldn't change)
     ncvf = 4                #number of cross-validation folds
@@ -202,6 +189,6 @@ if __name__ == '__main__':
     ih = 224                #image height
 
     #run model
-    info_string, models = run_cross_validation_create_models(lr,bs,epochs,ncvf,nc,iw,ih)
+    info_string = run_cross_validation_create_models(lr,bs,epochs,ncvf,nc,iw,ih)
     print info_string
 

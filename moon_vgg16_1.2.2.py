@@ -104,7 +104,8 @@ def vgg16(n_classes,im_width,im_height,learn_rate):
     model.add(Dense(n_dense, activation='relu'))
     model.add(Dense(n_classes, activation='relu',name='predictions'))          #if counting craters, want a relu/regression output
 
-    optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
+    #optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
+    optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
     model.compile(loss='mae', optimizer=optimizer, metrics=['accuracy'])
     print model.summary()
     return model
@@ -163,8 +164,10 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n
         model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
                   shuffle=True, verbose=1, validation_data=(X_valid, Y_valid),
                   callbacks=callbacks)
-        predictions_valid = model.predict(X_valid.astype('float32'), batch_size=batch_size, verbose=2)
-        score = mean_absolute_error(Y_valid, predictions_valid)
+        #predictions_valid = model.predict(X_valid.astype('float32'), batch_size=batch_size, verbose=2)
+        #score = mean_absolute_error(Y_valid, predictions_valid)
+        predictions_valid = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
+        score = mean_absolute_error(test_target, predictions_valid)
         print('\nCV for fold %d Score is %f.\n'%(num_fold, score))
         sum_score += score
 
@@ -179,7 +182,7 @@ if __name__ == '__main__':
     
     #args
     lr = 0.0001             #learning rate
-    bs = 64                 #batch size: smaller values = less memory, less accurate gradient estimate
+    bs = 32                 #batch size: smaller values = less memory, less accurate gradient estimate (64 maxes out memory on p8t03)
     epochs = 30             #number of epochs. 1 epoch = forward/back pass thru all train data
 
     #optional args (shouldn't change)

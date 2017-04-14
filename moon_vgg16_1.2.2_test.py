@@ -112,8 +112,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n
     n_train_samples = 6400  #needs to be a multiple of batch_size
 
     #load data
-    #kristen_dir = '/scratch/k/kristen/malidib/moon/'
-    kristen_dir = ''
+    kristen_dir = '/scratch/k/kristen/malidib/moon/'
     try:
         train_data=np.load('training_set/train_data.npy')[:n_train_samples]
         train_target=np.load('training_set/train_target.npy')[:n_train_samples]
@@ -151,8 +150,9 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n
         print('Split train: ', len(X_train), len(Y_train))
         print('Split valid: ', len(X_valid), len(Y_valid))
         callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=0)]
+        
         model.fit_generator(gen.flow(X_train,Y_train,batch_size=batch_size,shuffle=1),
-                            samples_per_epoch=n_train_samples, nb_epoch=nb_epoch,verbose=1,
+                            samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
                             validation_data=(X_valid, Y_valid), #try a generator for this too
                             callbacks=callbacks)
         #model_name = ''

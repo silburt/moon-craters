@@ -8,7 +8,7 @@ datagen = ImageDataGenerator(
                              rotation_range=180,
 #                             horizontal_flip=True,
 #                             vertical_flip=True,
-                             fill_mode='wrap'    #"constant", "nearest", "reflect" or "wrap"
+                             fill_mode='wrap'    #constant/nearest/reflect/wrap, for rotations
 )
 
 #arguments

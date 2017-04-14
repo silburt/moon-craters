@@ -137,7 +137,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n
     gen = ImageDataGenerator(horizontal_flip=True,vertical_flip=True)
 
     #main routine
-    kf = KFold(len(train_id), n_folds=nfolds, shuffle=True, random_state=random_state)
+    kf = KFold(len(train_target), n_folds=nfolds, shuffle=True, random_state=random_state)
     sum_score, num_fold = 0, 0
     for train_index,test_index in kf:
         num_fold += 1
@@ -152,7 +152,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n
         callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=0)]
         
         model.fit_generator(gen.flow(X_train,Y_train,batch_size=batch_size,shuffle=1),
-                            samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
+                            samples_per_epoch=n_train_samples-1,nb_epoch=nb_epoch,verbose=1,
                             validation_data=(X_valid, Y_valid), #try a generator for this too
                             callbacks=callbacks)
         #model_name = ''

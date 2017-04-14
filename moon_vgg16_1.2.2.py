@@ -29,15 +29,6 @@ K.set_image_dim_ordering('tf')
 #####################
 #load/read functions#
 ########################################################################
-def get_args():
-    parser = argparse.ArgumentParser()
-    #parser.add_argument("--mode", type=str)
-    parser.add_argument("--run_fold", type=int, default=1)
-    #parser.add_argument("--nice", dest="nice", action="store_true")
-    #parser.set_defaults(nice=False)
-    args = parser.parse_args()
-    return args
-
 def get_im_cv2(path, img_width, img_height):
     img = cv2.imread(path)
     #resized = cv2.resize(img, (32, 32))#, cv2.INTER_LINEAR)
@@ -135,18 +126,23 @@ def create_model_resnet(learn_rate):
 ########################################################################
 def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n_classes=1,im_width=224,im_height=224):
     random_state = 51
-    #args = get_args()
+    load_npy_data = 1
 
-    train_path, test_path = '/scratch/k/kristen/malidib/moon/training_set/', '/scratch/k/kristen/malidib/moon/test_set/'
-    train_data, train_target, train_id = read_and_normalize_data(train_path, im_width, im_height, 0)
-    test_data, test_target, test_id = read_and_normalize_data(test_path, im_width, im_height, 1)
+    #load data
+    kristen_dir = '/scratch/k/kristen/malidib/moon/'
+    if load_npy_data == 1:
+        train_data=np.load('%straining_set/train_data.npy'%kristen_dir)[:6000]
+        train_target=np.load('%straining_set/train_target.npy'%kristen_dir)[:6000]
+        test_data=np.load('%stest_set/train_data.npy'%kristen_dir)
+        test_target=np.load('%stest_set/train_target.npy'%kristen_dir)
+    else:
+        train_path, test_path = '%straining_set/'%kristen_dir, '%stest_set/'%kristen_dir
+        train_data, train_target, train_id = read_and_normalize_data(train_path, im_width, im_height, 0)
+        test_data, test_target, test_id = read_and_normalize_data(test_path, im_width, im_height, 1)
 
-    y_for_folds=train_target.copy()
-    yfull_train = dict()
+    #main routine
     kf = KFold(len(train_id), n_folds=nfolds, shuffle=True, random_state=random_state)
-    # kf = StratifiedKFold(y_for_folds, n_folds=nfolds, shuffle=True, random_state=random_state)
-    num_fold = 0
-    sum_score = 0
+    sum_score, num_fold = 0, 0
     for train_index,test_index in kf:
         num_fold += 1
         model = vgg16(n_classes,im_width,im_height,learn_rate)
@@ -155,8 +151,6 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n
         Y_train = train_target[train_index]
         X_valid = train_data[test_index]
         Y_valid = train_target[test_index]
-        #if args.run_fold != num_fold:
-        #    continue
         print('Start KFold number %d of %d'%(num_fold, nfolds))
         print('Split train: ', len(X_train), len(Y_train))
         print('Split valid: ', len(X_valid), len(Y_valid))

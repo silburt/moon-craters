@@ -34,7 +34,6 @@ K.set_image_dim_ordering('tf')
 ########################################################################
 def get_im_cv2(path, img_width, img_height):
     img = cv2.imread(path)
-    #resized = cv2.resize(img, (32, 32))#, cv2.INTER_LINEAR)
     resized = cv2.resize(img, (img_width, img_height))#, cv2.INTER_LINEAR)
     return resized
 
@@ -88,7 +87,7 @@ def vgg16(n_classes,im_width,im_height,learn_rate):
 
     #subsequent blocks
     for i in np.arange(1,n_blocks):
-        n_filters_ = np.min((n_filters*2**i, 512))          #maximum of 512 filters in vgg16
+        n_filters_ = np.min((n_filters*2**i, 512))                      #maximum of 512 filters in vgg16
         model.add(Conv2D(n_filters_, nb_row=3, nb_col=3, activation='relu', border_mode='same'))
         model.add(Conv2D(n_filters_, nb_row=3, nb_col=3, activation='relu', border_mode='same'))
         model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
@@ -96,7 +95,7 @@ def vgg16(n_classes,im_width,im_height,learn_rate):
     model.add(Flatten())
     model.add(Dense(n_dense, activation='relu'))
     model.add(Dense(n_dense, activation='relu'))
-    model.add(Dense(n_classes, activation='relu',name='predictions'))          #if counting craters, want a relu/regression output
+    model.add(Dense(n_classes, activation='relu',name='predictions'))   #if counting craters, want a relu/regression output
 
     #optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
@@ -107,9 +106,13 @@ def vgg16(n_classes,im_width,im_height,learn_rate):
 ##############
 #Main Routine#
 ########################################################################
-def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n_classes=1,im_width=224,im_height=224):
+def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,n_train_samples):
+    #static arguments
+    nfolds = 4                  #number of cross-validation folds
+    n_classes = 1               #number of classes in final dense layer
+    im_width = 224              #image width
+    im_height = 224             #image height
     random_state = 51
-    n_train_samples = 32000  #needs to be a multiple of batch_size
 
     #load data
     kristen_dir = '/scratch/k/kristen/malidib/moon/'
@@ -118,8 +121,9 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n
         train_target=np.load('training_set/train_target.npy')[:n_train_samples]
         test_data=np.load('test_set/train_data.npy')
         test_target=np.load('test_set/train_target.npy')
+        print "Successfully loaded files locally."
     except:
-        print "couldnt find local saved .npy files, load from %s"%kristen_dir
+        print "Couldnt find locally saved .npy files, loading from %s."%kristen_dir
         train_path, test_path = '%straining_set/'%kristen_dir, '%stest_set/'%kristen_dir
         train_data, train_target, train_id = read_and_normalize_data(train_path, im_width, im_height, 0)
         test_data, test_target, test_id = read_and_normalize_data(test_path, im_width, im_height, 1)
@@ -130,8 +134,8 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n
         train_data = train_data[:n_train_samples]
         train_target = train_target[:n_train_samples]
 
-    #squash train_target (i.e. from 0-10 -> 0-1 counts)
-    train_target = np.log10(1+train_target)
+    #squash train_target (e.g. from 0-10 -> 0-1 crater counts)
+    #train_target = np.log10(1+train_target)
 
     #keras ImageDataGenerator
     gen = ImageDataGenerator(horizontal_flip=True,vertical_flip=True)
@@ -151,16 +155,17 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n
         print('Split valid: ', len(X_valid), len(Y_valid))
         callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=0)]
         
-        model.fit_generator(gen.flow(X_train,Y_train,batch_size=batch_size,shuffle=1),
+        model.fit_generator(gen.flow(X_train,Y_train,batch_size=batch_size,shuffle=True),
                             samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
-                            validation_data=(X_valid, Y_valid), #try a generator for this too
+                            #validation_data=(X_valid, Y_valid), #no generator for validation data
+                            validation_data=gen.flow(X_valid,Y_valid,batch_size=batch_size),nb_val_samples=len(X_valid),
                             callbacks=callbacks)
         #model_name = ''
         #model.save_weights(model_name)     #save weights of the model
 
         #make target predictions and unsquash
         predictions_valid = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
-        predictions_valid = 10**(predictions_valid) - 1
+        #predictions_valid = 10**(predictions_valid) - 1
         
         #calculate test score
         score = mean_absolute_error(test_target, predictions_valid)
@@ -177,17 +182,12 @@ if __name__ == '__main__':
     print('Keras version: {}'.format(keras_version))
     
     #args
-    lr = 0.0001             #learning rate
-    bs = 32                 #batch size:smaller values = less memory = less accurate gradient estimate
-    epochs = 40             #number of epochs. 1 epoch = forward/back pass thru all train data
-
-    #optional args (shouldn't change)
-    ncvf = 4                #number of cross-validation folds
-    nc = 1                  #number of classes in final dense layer
-    iw = 224                #image width
-    ih = 224                #image height
+    lr = 0.0001         #learning rate
+    bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
+    epochs = 40         #number of epochs. 1 epoch = forward/back pass thru all train data
+    n_train = 32000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
 
     #run model
-    info_string = run_cross_validation_create_models(lr,bs,epochs,ncvf,nc,iw,ih)
+    info_string = run_cross_validation_create_models(lr,bs,epochs,n_train)
     print info_string
 

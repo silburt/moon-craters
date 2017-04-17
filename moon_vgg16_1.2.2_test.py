@@ -109,7 +109,7 @@ def vgg16(n_classes,im_width,im_height,learn_rate):
 ########################################################################
 def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,nfolds=4,n_classes=1,im_width=224,im_height=224):
     random_state = 51
-    n_train_samples = 6400  #needs to be a multiple of batch_size
+    n_train_samples = 32000  #needs to be a multiple of batch_size
 
     #load data
     kristen_dir = '/scratch/k/kristen/malidib/moon/'

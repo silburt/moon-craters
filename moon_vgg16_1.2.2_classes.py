@@ -63,10 +63,10 @@ def read_and_normalize_data(path, n_classes, img_width, img_height, data_flag):
     elif data_flag == 1:
         data_type = 'test'
     data, target, id = load_data(path, data_type, img_width, img_height)
-    data = np.array(data, dtype=np.uint8)                   #convert to numpy
-    y = np_utils.to_categorical(y, nb_classes=n_classes)    #convert crater counts to individual classes
-    data = data.astype('float32')                           #convert to float
-    data = data / 255                                       #normalize
+    data = np.array(data, dtype=np.uint8)                               #convert to numpy
+    target = np_utils.to_categorical(target, nb_classes=n_classes)      #convert crater counts to individual classes
+    data = data.astype('float32')                                       #convert to float
+    data = data / 255                                                   #normalize
     print('%s shape:'%data_type, data.shape)
     return data, target, id
 

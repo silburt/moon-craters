@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import argparse
 
-from sklearn.cross_validation import StratifiedKFold, KFold
+from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error
 
 from keras.models import Sequential, Model
@@ -57,10 +57,10 @@ def read_and_normalize_data(path, img_width, img_height, data_flag):
     elif data_flag == 1:
         data_type = 'test'
     data, target, id = load_data(path, data_type, img_width, img_height)
-    data = np.array(data, dtype=np.uint8)      #convert to numpy
+    data = np.array(data, dtype=np.uint8)       #convert to numpy
     target = np.array(target, dtype=np.uint8)
-    data = data.astype('float32')              #convert to float
-    data = data / 255
+    data = data.astype('float32')               #convert to float
+    data = data / 255                           #normalize
     print('%s shape:'%data_type, data.shape)
     return data, target, id
 
@@ -73,7 +73,7 @@ def get_csv_len(file_):                        #returns # craters in each image 
 #vgg16 model (keras 1.2.2)#
 ########################################################################
 #Following https://github.com/fchollet/keras/blob/master/keras/applications/vgg16.py 
-def vgg16(n_classes,im_width,im_height,learn_rate):
+def vgg16(n_classes,im_width,im_height,learn_rate,lambda_):
     print('Making VGG16 model...')
     model = Sequential()
     n_filters = 64          #vgg16 uses 64
@@ -81,21 +81,21 @@ def vgg16(n_classes,im_width,im_height,learn_rate):
     n_dense = 2048          #vgg16 uses 4096
 
     #first block
-    model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', input_shape=(im_width,im_height,3)))
-    model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same'))
+    model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lambda_), input_shape=(im_width,im_height,3)))
+    model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lambda_)))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
     #subsequent blocks
     for i in np.arange(1,n_blocks):
         n_filters_ = np.min((n_filters*2**i, 512))                      #maximum of 512 filters in vgg16
-        model.add(Conv2D(n_filters_, nb_row=3, nb_col=3, activation='relu', border_mode='same'))
-        model.add(Conv2D(n_filters_, nb_row=3, nb_col=3, activation='relu', border_mode='same'))
+        model.add(Conv2D(n_filters_, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lambda_)))
+        model.add(Conv2D(n_filters_, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lambda_)))
         model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
     model.add(Flatten())
     model.add(Dense(n_dense, activation='relu'))
     model.add(Dense(n_dense, activation='relu'))
-    model.add(Dense(n_classes, activation='relu',name='predictions'))   #if counting craters, want a relu/regression output
+    model.add(Dense(n_classes, activation='relu',name='predictions'))   #relu/regression output
 
     #optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
@@ -106,13 +106,13 @@ def vgg16(n_classes,im_width,im_height,learn_rate):
 ##############
 #Main Routine#
 ########################################################################
-def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,n_train_samples):
+def run_cross_validation_create_models(learn_rate,batch_size,lmda,nb_epoch,n_train_samples):
     #static arguments
     nfolds = 4                  #number of cross-validation folds
     n_classes = 1               #number of classes in final dense layer
     im_width = 224              #image width
     im_height = 224             #image height
-    random_state = 51
+    rs = 42                     #random_state
 
     #load data
     kristen_dir = '/scratch/k/kristen/malidib/moon/'
@@ -137,42 +137,34 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,n_train_sa
     #squash train_target (e.g. from 0-10 -> 0-1 crater counts)
     #train_target = np.log10(1+train_target)
 
-    #keras ImageDataGenerator
-    gen = ImageDataGenerator(horizontal_flip=True,vertical_flip=True)
+    #Keras_ImageDataGenerator for manipulating images to prevent overfitting
+    gen = ImageDataGenerator(channel_shift_range=30,                    #R,G,B shifts
+                             #rotation_range=180,                        #rotations
+                             #fill_mode='wrap',
+                             horizontal_flip=True,vertical_flip=True    #flips
+                             )
 
-    #main routine
-    kf = KFold(len(train_target), n_folds=nfolds, shuffle=True, random_state=random_state)
-    sum_score, num_fold = 0, 0
-    for train_index,test_index in kf:
-        num_fold += 1
-        model = vgg16(n_classes,im_width,im_height,learn_rate)
-        X_train = train_data[train_index]
-        Y_train = train_target[train_index]
-        X_valid = train_data[test_index]
-        Y_valid = train_target[test_index]
-        print('Start KFold number %d of %d'%(num_fold, nfolds))
-        print('Split train: ', len(X_train), len(Y_train))
-        print('Split valid: ', len(X_valid), len(Y_valid))
-        callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=0)]
-        
-        model.fit_generator(gen.flow(X_train,Y_train,batch_size=batch_size,shuffle=True),
-                            samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
-                            #validation_data=(X_valid, Y_valid), #no generator for validation data
-                            validation_data=gen.flow(X_valid,Y_valid,batch_size=batch_size),nb_val_samples=len(X_valid),
-                            callbacks=callbacks)
-        #model_name = ''
-        #model.save_weights(model_name)     #save weights of the model
+    #Main Routine - Build/Train/Test model
+    model = vgg16(n_classes,im_width,im_height,learn_rate,lmda)
+    X_train, X_valid, Y_train, Y_valid = train_test_split(train_data, train_target, test_size=0.25, random_state=rs)
+    print('Split train: ', len(X_train), len(Y_train))
+    print('Split valid: ', len(X_valid), len(Y_valid))
+    model.fit_generator(gen.flow(X_train,Y_train,batch_size=batch_size,shuffle=True),
+                        samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
+                        #validation_data=(X_valid, Y_valid), #no generator for validation data
+                        validation_data=gen.flow(X_valid,Y_valid,batch_size=batch_size),nb_val_samples=len(X_valid),
+                        callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
+    #model_name = ''
+    #model.save_weights(model_name)     #save weights of the model
 
-        #make target predictions and unsquash
-        predictions_valid = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
-        #predictions_valid = 10**(predictions_valid) - 1
-        
-        #calculate test score
-        score = mean_absolute_error(test_target, predictions_valid)
-        print('\nCV for fold %d Score is %f.\n'%(num_fold, score))
-        sum_score += score
-
-    info_string = 'avgloss_' + str(sum_score/nfolds) + '_folds_' + str(nfolds) +'_ep_' + str(nb_epoch)
+    #make target predictions and unsquash
+    predictions_valid = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
+    #predictions_valid = 10**(predictions_valid) - 1
+    
+    #calculate test score
+    score = mean_absolute_error(test_target, predictions_valid)
+    print('\nTest Score for fold %d Score is %f.\n'%(num_fold, score))
+    info_string = 'test_error_' + str(score) + '_ep_' + str(nb_epoch)
     return info_string
 
 ################
@@ -184,10 +176,11 @@ if __name__ == '__main__':
     #args
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
-    epochs = 40         #number of epochs. 1 epoch = forward/back pass thru all train data
-    n_train = 32000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    lmda = 0.01         #L2 regularization strength (lambda)
+    epochs = 30         #number of epochs. 1 epoch = forward/back pass thru all train data
+    n_train = 16000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
 
     #run model
-    info_string = run_cross_validation_create_models(lr,bs,epochs,n_train)
+    info_string = run_cross_validation_create_models(lr,bs,lmda,epochs,n_train)
     print info_string
 

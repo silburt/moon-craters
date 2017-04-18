@@ -21,6 +21,7 @@ from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D
 from keras.models import load_model
 from keras.applications.resnet50 import ResNet50
 from keras.preprocessing.image import ImageDataGenerator
+from keras import regularizers
 
 from keras.optimizers import SGD, Adam, RMSprop
 from keras.callbacks import EarlyStopping, ModelCheckpoint

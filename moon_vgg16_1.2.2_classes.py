@@ -41,7 +41,7 @@ def get_im_cv2(path, img_width, img_height):
 def get_csv_len(file_):                        #returns # craters in each image (target)
     file2_ = file_.split('.png')[0] + '.csv'
     df = pd.read_csv(file2_ , header=0)
-    return [len(df.index)]
+    return len(df.index)
 
 def load_data(path, data_type, img_width, img_height):
     X = []
@@ -57,16 +57,16 @@ def load_data(path, data_type, img_width, img_height):
         y.append(get_csv_len(fl))
     return  X, y, X_id
 
-def read_and_normalize_data(path, img_width, img_height, data_flag):
+def read_and_normalize_data(path, n_classes, img_width, img_height, data_flag):
     if data_flag == 0:
         data_type = 'train'
     elif data_flag == 1:
         data_type = 'test'
     data, target, id = load_data(path, data_type, img_width, img_height)
-    data = np.array(data, dtype=np.uint8)       #convert to numpy
-    target = np.array(target, dtype=np.uint8)
-    data = data.astype('float32')               #convert to float
-    data = data / 255                           #normalize
+    data = np.array(data, dtype=np.uint8)                   #convert to numpy
+    y = np_utils.to_categorical(y, nb_classes=n_classes)    #convert crater counts to individual classes
+    data = data.astype('float32')                           #convert to float
+    data = data / 255                                       #normalize
     print('%s shape:'%data_type, data.shape)
     return data, target, id
 
@@ -79,7 +79,7 @@ def vgg16(n_classes,im_width,im_height,learn_rate,lambda_):
     model = Sequential()
     n_filters = 64          #vgg16 uses 64
     n_blocks = 4            #vgg16 uses 5
-    n_dense = 2048          #vgg16 uses 4096
+    n_dense = n_classes*2   #vgg16 uses 4096
 
     #first block
     model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lambda_), input_shape=(im_width,im_height,3)))
@@ -96,7 +96,7 @@ def vgg16(n_classes,im_width,im_height,learn_rate,lambda_):
     model.add(Flatten())
     model.add(Dense(n_dense, activation='relu'))
     model.add(Dense(n_dense, activation='relu'))
-    model.add(Dense(n_classes, activation='relu',name='predictions'))   #relu/regression output
+    model.add(Dense(n_classes, activation='softmax',name='predictions'))   #try classes
 
     #optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
@@ -110,36 +110,21 @@ def vgg16(n_classes,im_width,im_height,learn_rate,lambda_):
 def run_cross_validation_create_models(learn_rate,batch_size,lmda,nb_epoch,n_train_samples):
     #static arguments
     nfolds = 4                  #number of cross-validation folds
-    n_classes = 1               #number of classes in final dense layer
+    n_classes = 4401            #number of classes in final dense layer
     im_width = 224              #image width
     im_height = 224             #image height
     rs = 42                     #random_state
 
     #load data
     kristen_dir = '/scratch/k/kristen/malidib/moon/'
-    try:
-        train_data=np.load('training_set/train_data.npy')[:n_train_samples]
-        train_target=np.load('training_set/train_target.npy')[:n_train_samples]
-        test_data=np.load('test_set/train_data.npy')
-        test_target=np.load('test_set/train_target.npy')
-        print "Successfully loaded files locally."
-    except:
-        print "Couldnt find locally saved .npy files, loading from %s."%kristen_dir
-        train_path, test_path = '%straining_set/'%kristen_dir, '%stest_set/'%kristen_dir
-        train_data, train_target, train_id = read_and_normalize_data(train_path, im_width, im_height, 0)
-        test_data, test_target, test_id = read_and_normalize_data(test_path, im_width, im_height, 1)
-        np.save('training_set/train_data.npy',train_data)
-        np.save('training_set/train_target.npy',train_target)
-        np.save('test_set/test_data.npy',test_data)
-        np.save('test_set/test_target.npy',test_target)
-        train_data = train_data[:n_train_samples]
-        train_target = train_target[:n_train_samples]
-
-    #squash train_target (e.g. from 0-10 -> 0-1 crater counts)
-    #train_target = np.log10(1+train_target)
+    train_path, test_path = '%straining_set/'%kristen_dir, '%stest_set/'%kristen_dir
+    train_data, train_target, train_id = read_and_normalize_data(train_path, n_classes, im_width, im_height, 0)
+    test_data, test_target, test_id = read_and_normalize_data(test_path, n_classes, im_width, im_height, 1)
+    train_data = train_data[:n_train_samples]
+    train_target = train_target[:n_train_samples]
 
     #Keras_ImageDataGenerator for manipulating images to prevent overfitting
-    gen = ImageDataGenerator(channel_shift_range=30,                    #R,G,B shifts
+    gen = ImageDataGenerator(#channel_shift_range=30,                    #R,G,B shifts
                              #rotation_range=180,                        #rotations
                              #fill_mode='wrap',
                              horizontal_flip=True,vertical_flip=True    #flips
@@ -160,7 +145,6 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmda,nb_epoch,n_tra
 
     #make target predictions and unsquash
     predictions_valid = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
-    #predictions_valid = 10**(predictions_valid) - 1
     
     #calculate test score
     score = mean_absolute_error(test_target, predictions_valid)

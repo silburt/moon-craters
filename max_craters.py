@@ -52,7 +52,7 @@ def load_data(path, data_type, img_width, img_height):
         X_id.append(fl)
         N_craters = get_csv_len(fl)
         y.append(N_craters)
-        max_N_craters = np.max((max_N_craters, N_craters))
+        max_N_craters = np.max((max_N_craters, N_craters[0]))
     return  X, y, X_id, max_N_craters
 
 def get_csv_len(file_):                        #returns # craters in each image (target)

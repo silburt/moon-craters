@@ -60,8 +60,8 @@ def get_csv_len(file_):                        #returns # craters in each image 
     df = pd.read_csv(file2_ , header=0)
     return [len(df.index)]
 
-im_width = 224              #image width
-im_height = 224             #image height
+img_width = 224              #image width
+img_height = 224             #image height
 kristen_dir = '/scratch/k/kristen/malidib/moon/'
 train_path, test_path = '%straining_set/'%kristen_dir, '%stest_set/'%kristen_dir
 train_data, train_target, id, max_train_craters = load_data(train_path, 'train', img_width, img_height)

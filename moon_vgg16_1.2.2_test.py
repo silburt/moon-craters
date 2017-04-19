@@ -33,6 +33,11 @@ K.set_image_dim_ordering('tf')
 #####################
 #load/read functions#
 ########################################################################
+def header(learn_rate,batch_size,lmda,nb_epoch,n_train_samples,n_classes,im_width,im_height):
+    print '##########INFO##########'
+    print 'learning_rate=%e, batch_size=%e, lambda=%e, n_epoch=%d, n_train_samples=%d, n_classes=%d, im_width=%d, im_height=%d'%(learn_rate,batch_size,lmda,nb_epoch,n_train_samples,n_classes,im_width,im_height)
+    print '##########INFO##########'
+
 def get_im_cv2(path, img_width, img_height):
     img = cv2.imread(path)
     resized = cv2.resize(img, (img_width, img_height))#, cv2.INTER_LINEAR)
@@ -109,11 +114,13 @@ def vgg16(n_classes,im_width,im_height,learn_rate,lambda_):
 ########################################################################
 def run_cross_validation_create_models(learn_rate,batch_size,lmda,nb_epoch,n_train_samples):
     #static arguments
-    nfolds = 4                  #number of cross-validation folds
     n_classes = 1               #number of classes in final dense layer
     im_width = 224              #image width
     im_height = 224             #image height
     rs = 42                     #random_state
+
+    #info header
+    header(learn_rate,batch_size,lmda,nb_epoch,n_train_samples,n_classes,im_width,im_height)
 
     #load data
     kristen_dir = '/scratch/k/kristen/malidib/moon/'
@@ -139,7 +146,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmda,nb_epoch,n_tra
     #train_target = np.log10(1+train_target)
 
     #Keras_ImageDataGenerator for manipulating images to prevent overfitting
-    gen = ImageDataGenerator(channel_shift_range=30,                    #R,G,B shifts
+    gen = ImageDataGenerator(#channel_shift_range=30,                    #R,G,B shifts
                              #rotation_range=180,                        #rotations
                              #fill_mode='wrap',
                              horizontal_flip=True,vertical_flip=True    #flips
@@ -165,8 +172,6 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmda,nb_epoch,n_tra
     #calculate test score
     score = mean_absolute_error(test_target, predictions_valid)
     print('\nTest Score is %f.\n'%score)
-    info_string = 'test_error_' + str(score) + '_ep_' + str(nb_epoch)
-    return info_string
 
 ################
 #Arguments, Run#
@@ -182,6 +187,6 @@ if __name__ == '__main__':
     n_train = 16000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
 
     #run model
-    info_string = run_cross_validation_create_models(lr,bs,lmda,epochs,n_train)
-    print info_string
+    run_cross_validation_create_models(lr,bs,lmda,epochs,n_train)
+
 

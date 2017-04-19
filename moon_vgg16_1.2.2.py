@@ -119,8 +119,8 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,n_train_sa
     try:
         train_data=np.load('training_set/train_data.npy')[:n_train_samples]
         train_target=np.load('training_set/train_target.npy')[:n_train_samples]
-        test_data=np.load('test_set/train_data.npy')
-        test_target=np.load('test_set/train_target.npy')
+        test_data=np.load('test_set/test_data.npy')
+        test_target=np.load('test_set/test_target.npy')
         print "Successfully loaded files locally."
     except:
         print "Couldnt find locally saved .npy files, loading from %s."%kristen_dir

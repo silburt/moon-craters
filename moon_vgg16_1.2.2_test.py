@@ -113,22 +113,19 @@ def vgg16(n_classes,im_width,im_height,learn_rate,lambda_):
 #Main Routine#
 ########################################################################
 def run_cross_validation_create_models(learn_rate,batch_size,lmda,nb_epoch,n_train_samples):
-    #static arguments
+    #Static arguments
     n_classes = 1               #number of classes in final dense layer
     im_width = 224              #image width
     im_height = 224             #image height
     rs = 42                     #random_state
 
-    #info header
-    header(learn_rate,batch_size,lmda,nb_epoch,n_train_samples,n_classes,rs,im_width,im_height)
-
-    #load data
+    #Load data
     kristen_dir = '/scratch/k/kristen/malidib/moon/'
     try:
         train_data=np.load('training_set/train_data.npy')[:n_train_samples]
         train_target=np.load('training_set/train_target.npy')[:n_train_samples]
-        test_data=np.load('test_set/train_data.npy')
-        test_target=np.load('test_set/train_target.npy')
+        test_data=np.load('test_set/test_data.npy')
+        test_target=np.load('test_set/test_target.npy')
         print "Successfully loaded files locally."
     except:
         print "Couldnt find locally saved .npy files, loading from %s."%kristen_dir
@@ -142,10 +139,10 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmda,nb_epoch,n_tra
         train_data = train_data[:n_train_samples]
         train_target = train_target[:n_train_samples]
 
-    #squash train_target (e.g. from 0-10 -> 0-1 crater counts)
+    #Squash train_target (e.g. from 0-10 -> 0-1 crater counts)
     #train_target = np.log10(1+train_target)
 
-    #Keras_ImageDataGenerator for manipulating images to prevent overfitting
+    #ImageDataGenerator - for manipulating images to prevent overfitting
     gen = ImageDataGenerator(#channel_shift_range=30,                    #R,G,B shifts
                              #rotation_range=180,                        #rotations
                              #fill_mode='wrap',
@@ -153,25 +150,34 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmda,nb_epoch,n_tra
                              )
 
     #Main Routine - Build/Train/Test model
-    model = vgg16(n_classes,im_width,im_height,learn_rate,lmda)
-    X_train, X_valid, Y_train, Y_valid = train_test_split(train_data, train_target, test_size=0.25, random_state=rs)
+    X_train, X_valid, Y_train, Y_valid = train_test_split(train_data, train_target, test_size=0.20, random_state=rs)
     print('Split train: ', len(X_train), len(Y_train))
     print('Split valid: ', len(X_valid), len(Y_valid))
-    model.fit_generator(gen.flow(X_train,Y_train,batch_size=batch_size,shuffle=True),
-                        samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
-                        #validation_data=(X_valid, Y_valid), #no generator for validation data
-                        validation_data=gen.flow(X_valid,Y_valid,batch_size=batch_size),nb_val_samples=len(X_valid),
-                        callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
-    #model_name = ''
-    #model.save_weights(model_name)     #save weights of the model
 
-    #make target predictions and unsquash
-    predictions_valid = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
-    #predictions_valid = 10**(predictions_valid) - 1
-    
-    #calculate test score
-    score = mean_absolute_error(test_target, predictions_valid)
-    print('\nTest Score is %f.\n'%score)
+    #Iterate over lamda
+    for lmda in [0,1e-3,1e-2,1e-1,1]:
+        header(learn_rate,batch_size,lmda,nb_epoch,n_train_samples,n_classes,rs,im_width,im_height)    #info header
+        model = vgg16(n_classes,im_width,im_height,learn_rate,lmda)
+        model.fit_generator(gen.flow(X_train,Y_train,batch_size=batch_size,shuffle=True),
+                            samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
+                            #validation_data=(X_valid, Y_valid), #no generator for validation data
+                            validation_data=gen.flow(X_valid,Y_valid,batch_size=batch_size),nb_val_samples=len(X_valid),
+                            callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
+        #model_name = ''
+        #model.save_weights(model_name)     #save weights of the model
+
+        #make target predictions and unsquash
+        predictions_valid = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
+        #predictions_valid = 10**(predictions_valid) - 1
+        
+        #calculate test score
+        score = mean_absolute_error(test_target, predictions_valid)
+        print('\nTest Score is %f.\n'%score)
+        print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
+        print "$$$$$$$$$$$$$$$$$$$$END_OF_RUN$$$$$$$$$$$$$$$$$$$$$"
+        print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
+        print ""
+
 
 ################
 #Arguments, Run#
@@ -187,10 +193,6 @@ if __name__ == '__main__':
     n_train = 16000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
 
     #run models
-    for lmbda in [0,1e-3,1e-2,1e-1,1]:
-        run_cross_validation_create_models(lr,bs,lmbda,epochs,n_train)
-        print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
-        print "$$$$$$$$$$$$$$$$$$$$END_OF_RUN$$$$$$$$$$$$$$$$$$$$$"
-        print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
-        print ""
+    run_cross_validation_create_models(lr,bs,lmbda,epochs,n_train)
+
 

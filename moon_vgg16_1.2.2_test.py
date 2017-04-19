@@ -33,10 +33,10 @@ K.set_image_dim_ordering('tf')
 #####################
 #load/read functions#
 ########################################################################
-def header(learn_rate,batch_size,lmda,nb_epoch,n_train_samples,n_classes,im_width,im_height):
-    print '##########INFO##########'
-    print 'learning_rate=%e, batch_size=%e, lambda=%e, n_epoch=%d, n_train_samples=%d, n_classes=%d, im_width=%d, im_height=%d'%(learn_rate,batch_size,lmda,nb_epoch,n_train_samples,n_classes,im_width,im_height)
-    print '##########INFO##########'
+def header(learn_rate,batch_size,lmda,nb_epoch,n_train_samples,n_classes,rs,im_width,im_height):
+    print '##########INFO_HEADER##########'
+    print 'learning_rate=%e, batch_size=%e, lambda=%e, n_epoch=%d, n_train_samples=%d, n_classes=%d, random_state=%d, im_width=%d, im_height=%d'%(learn_rate,batch_size,lmda,nb_epoch,n_train_samples,n_classes,rs,im_width,im_height)
+    print '###############################'
 
 def get_im_cv2(path, img_width, img_height):
     img = cv2.imread(path)
@@ -120,7 +120,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmda,nb_epoch,n_tra
     rs = 42                     #random_state
 
     #info header
-    header(learn_rate,batch_size,lmda,nb_epoch,n_train_samples,n_classes,im_width,im_height)
+    header(learn_rate,batch_size,lmda,nb_epoch,n_train_samples,n_classes,rs,im_width,im_height)
 
     #load data
     kristen_dir = '/scratch/k/kristen/malidib/moon/'
@@ -182,11 +182,15 @@ if __name__ == '__main__':
     #args
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
-    lmda = 0            #L2 regularization strength (lambda)
-    epochs = 40         #number of epochs. 1 epoch = forward/back pass thru all train data
+    lmbda = 0           #L2 regularization strength (lambda)
+    epochs = 30         #number of epochs. 1 epoch = forward/back pass thru all train data
     n_train = 16000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
 
-    #run model
-    run_cross_validation_create_models(lr,bs,lmda,epochs,n_train)
-
+    #run models
+    for lmbda in [0,1e-3,1e-2,1e-1,1]:
+        run_cross_validation_create_models(lr,bs,lmbda,epochs,n_train)
+        print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
+        print "$$$$$$$$$$$$$$$$$$$$END_OF_RUN$$$$$$$$$$$$$$$$$$$$$"
+        print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
+        print ""
 

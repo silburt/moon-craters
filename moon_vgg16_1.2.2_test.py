@@ -70,11 +70,6 @@ def read_and_normalize_data(path, img_width, img_height, data_flag):
     print('%s shape:'%data_type, data.shape)
     return data, target, id
 
-def header(learn_rate,batch_size,lmbda,drop,nb_epoch,n_train_samples,im_width,im_height,n_classes,rs):
-    print '##########INFO_HEADER##########'
-    print 'learning_rate=%e, batch_size=%d, dropout=%f, lambda=%e, n_epoch=%d, n_train_samples=%d, n_classes=%d, random_state=%d, im_width=%d, im_height=%d'%(learn_rate,batch_size,drop,lmbda,nb_epoch,n_train_samples,n_classes,rs,im_width,im_height)
-    print '###############################'
-
 ###########################
 #vgg16 model (keras 1.2.2)#
 ########################################################################
@@ -116,7 +111,12 @@ def vgg16(n_classes,im_width,im_height,learn_rate,lmbda,dropout):
 ########################################################################
 #Need to create this function so that memory is released every iteration (when function exits).
 #Otherwise the memory used accumulates and eventually the program crashes.
-def train_test_model(X_train,Y_train,X_valid,Y_valid,learn_rate,batch_size,lmbda,drop,nb_epoch,n_train_samples,im_width,im_height,n_classes):
+def train_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,lmbda,drop,nb_epoch,n_train_samples,im_width,im_height,n_classes,rs):
+    
+    #Main Routine - Build/Train/Test model
+    X_train, X_valid, Y_train, Y_valid = train_test_split(train_data, train_target, test_size=0.20, random_state=rs)
+    print('Split train: ', len(X_train), len(Y_train))
+    print('Split valid: ', len(X_valid), len(Y_valid))
     
     #ImageDataGenerator - for manipulating images to prevent overfitting
     gen = ImageDataGenerator(#channel_shift_range=30,                    #R,G,B shifts
@@ -171,11 +171,6 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,dropout,nb_ep
     #Squash train_target (e.g. from 0-10 -> 0-1 crater counts)
     #train_target = np.log10(1+train_target)
 
-    #Main Routine - Build/Train/Test model
-    X_train, X_valid, Y_train, Y_valid = train_test_split(train_data, train_target, test_size=0.20, random_state=rs)
-    print('Split train: ', len(X_train), len(Y_train))
-    print('Split valid: ', len(X_valid), len(Y_valid))
-
     #Iterate
     N_runs = 6
     lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1)
@@ -183,14 +178,13 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,dropout,nb_ep
     lmbda.append(0), dropout.append(0)  #ensure we have a baseline comparison
     for i in range(N_runs):
         l,d = lmbda[i], dropout[i]
-        header(learn_rate,batch_size,l,d,nb_epoch,n_train_samples,im_width,im_height,n_classes,rs)    #info header
-        score = train_test_model(X_train,Y_train,X_valid,Y_valid,learn_rate,batch_size,l,d,nb_epoch,n_train_samples,im_width,im_height,n_classes)
+        score = train_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,l,d,nb_epoch,n_train_samples,im_width,im_height,n_classes,rs)
+        print '###################################'
+        print '##########END_OF_RUN_INFO##########
         print('\nTest Score is %f.\n'%score)
-        print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
-        print "$$$$$$$$$$$$$$$$$$$$END_OF_RUN$$$$$$$$$$$$$$$$$$$$$"
-        print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
-        print ""
-
+        print 'learning_rate=%e, batch_size=%d, lambda=%e, dropout=%f, n_epoch=%d, n_train_samples=%d, n_classes=%d, random_state=%d, im_width=%d, im_height=%d'%(learn_rate,batch_size,l,d,nb_epoch,n_train_samples,n_classes,rs,im_width,im_height)
+        print '###################################'
+        print '###################################'
 
 ################
 #Arguments, Run#

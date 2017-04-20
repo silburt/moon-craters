@@ -4,14 +4,15 @@ from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_a
 import numpy as np
 import os
 
+width = 224
 datagen = ImageDataGenerator(
-                             rotation_range=180,
-                             #horizontal_flip=True,
-                             #vertical_flip=True,
+                             #rotation_range=180,
+                             horizontal_flip=True,
+                             vertical_flip=True,
                              #channel_shift_range = 30,
-                             #width_shift_range = 10,
-                             #height_shift_range = 10,
-                             fill_mode='wrap'    #constant/nearest/reflect/wrap, for rotations
+                             width_shift_range = 1./width,
+                             height_shift_range = 1./width,
+                             fill_mode='constant'    #constant/nearest/reflect/wrap, for rotations
                              
 
 )
@@ -19,7 +20,7 @@ datagen = ImageDataGenerator(
 #arguments
 dir = 'old/preview/'            #directory of image
 img = 'out_11_28_ORIGINAL.png'  #original image
-num_images = 5                  #number of images to generate
+num_images = 10                  #number of images to generate
 save_prefix = 'shift'           #prefix of newly generated images
 
 #load image

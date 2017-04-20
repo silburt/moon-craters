@@ -180,7 +180,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,dropout,nb_ep
         l,d = lmbda[i], dropout[i]
         score = train_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,l,d,nb_epoch,n_train_samples,im_width,im_height,n_classes,rs)
         print '###################################'
-        print '##########END_OF_RUN_INFO##########
+        print '##########END_OF_RUN_INFO##########'
         print('\nTest Score is %f.\n'%score)
         print 'learning_rate=%e, batch_size=%d, lambda=%e, dropout=%f, n_epoch=%d, n_train_samples=%d, n_classes=%d, random_state=%d, im_width=%d, im_height=%d'%(learn_rate,batch_size,l,d,nb_epoch,n_train_samples,n_classes,rs,im_width,im_height)
         print '###################################'

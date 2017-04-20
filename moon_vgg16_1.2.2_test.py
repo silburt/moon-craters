@@ -124,20 +124,19 @@ def train_test_model(X_train,Y_train,X_valid,Y_valid,learn_rate,batch_size,lmbda
                              width_shift_range=1./im_width,
                              height_shift_range=1./im_height,
                              fill_mode='constant',
-                             horizontal_flip=True,vertical_flip=True    #flips
-                             )
-        
-     model = vgg16(n_classes,im_width,im_height,learn_rate,lmbda,drop)
-     model.fit_generator(gen.flow(X_train,Y_train,batch_size=batch_size,shuffle=True),
+                             horizontal_flip=True,vertical_flip=True)    #flips
+
+    model = vgg16(n_classes,im_width,im_height,learn_rate,lmbda,drop)
+    model.fit_generator(gen.flow(X_train,Y_train,batch_size=batch_size,shuffle=True),
                          samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
                          #validation_data=(X_valid, Y_valid), #no generator for validation data
                          validation_data=gen.flow(X_valid,Y_valid,batch_size=batch_size),nb_val_samples=len(X_valid),
                          callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
-     #model_name = ''
-     #model.save_weights(model_name)     #save weights of the model
+    #model_name = ''
+    #model.save_weights(model_name)     #save weights of the model
      
-     test_predictions = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
-     return mean_absolute_error(test_target, test_predictions)  #calculate test score
+    test_predictions = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
+    return mean_absolute_error(test_target, test_predictions)  #calculate test score
 
 ##############
 #Main Routine#

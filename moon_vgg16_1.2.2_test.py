@@ -100,9 +100,9 @@ def vgg16(n_classes,im_width,im_height,learn_rate,lmbda,dropout):
 
     model.add(Flatten())
     model.add(Dropout(dropout))
-    model.add(Dense(n_dense, activation='relu', kernel_regularizer=l2(lmbda)))
+    model.add(Dense(n_dense, activation='relu', W_regularizer=l2(lmbda)))
     model.add(Dropout(dropout))
-    model.add(Dense(n_dense, activation='relu', kernel_regularizer=l2(lmbda)))
+    model.add(Dense(n_dense, activation='relu', W_regularizer=l2(lmbda)))
     model.add(Dense(n_classes, activation='relu', name='predictions'))   #relu/regression output
 
     #optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)

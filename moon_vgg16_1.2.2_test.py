@@ -75,7 +75,7 @@ def read_and_normalize_data(path, img_width, img_height, data_flag):
 ########################################################################
 #Following https://github.com/fchollet/keras/blob/master/keras/applications/vgg16.py 
 def vgg16(n_classes,im_width,im_height,learn_rate,lmbda,dropout):
-    n_filters = 64          #vgg16 uses 64
+    n_filters = 32          #vgg16 uses 64
     n_blocks = 3            #vgg16 uses 5
     n_dense = 512           #vgg16 uses 4096
 

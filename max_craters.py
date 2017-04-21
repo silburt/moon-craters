@@ -1,15 +1,11 @@
-#This tries out different modules to see if they add any benefit.
-
-#This python script is adapted from moon2.py and uses the vgg16 convnet structure.
-#The number of blocks, and other aspects of the vgg16 model can be modified.
-#This has the keras 1.2.2. architechture
+#This looks through all the data and finds the number of craters in each image, as well as the max craters in a given image.
+#When running this, probably a good idea to port (>) to a txt file, as it prints once per file.
 
 import cv2
 import os
 import glob
 import numpy as np
 import pandas as pd
-import argparse
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error
@@ -51,6 +47,7 @@ def load_data(path, data_type, img_width, img_height):
         X.append(img)
         X_id.append(fl)
         N_craters = get_csv_len(fl)
+        print "%d craters in file %s"%(N_craters[0],fl)
         y.append(N_craters)
         max_N_craters = np.max((max_N_craters, N_craters[0]))
     return  X, y, X_id, max_N_craters

@@ -75,13 +75,13 @@ def read_and_normalize_data(path, img_width, img_height, data_flag):
 ########################################################################
 #Following https://github.com/fchollet/keras/blob/master/keras/applications/vgg16.py 
 def vgg16(n_classes,im_width,im_height,learn_rate,lmbda,dropout):
-    print('Making VGG16 model...')
-    model = Sequential()
-    n_filters = 64          #vgg16 uses 64
-    n_blocks = 4            #vgg16 uses 5
-    n_dense = 2048          #vgg16 uses 4096
+    n_filters = 32          #vgg16 uses 64
+    n_blocks = 3            #vgg16 uses 5
+    n_dense = 1024          #vgg16 uses 4096
 
     #first block
+    print('Making VGG model...')
+    model = Sequential()
     model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), input_shape=(im_width,im_height,3)))
     model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))

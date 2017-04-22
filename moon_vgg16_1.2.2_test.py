@@ -129,7 +129,7 @@ def train_test_model(train_data,train_target,test_data,test_target,learn_rate,ba
     model = vgg16(n_classes,im_width,im_height,learn_rate,lmbda,drop)
     model.fit_generator(gen.flow(X_train,Y_train,batch_size=batch_size,shuffle=True),
                          samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
-                         #validation_data=(X_valid, Y_valid), #no generator for validation data
+                        #validation_data=(X_valid, Y_valid), #no generator for validation data
                          validation_data=gen.flow(X_valid,Y_valid,batch_size=batch_size),nb_val_samples=len(X_valid),
                          callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
     #model_name = ''
@@ -146,7 +146,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,dropout,nb_ep
     n_classes = 1               #number of classes in final dense layer
     im_width = 224              #image width
     im_height = 224             #image height
-    rs = 42                     #random_state for train/test split
+    rs = 43                     #random_state for train/test split
 
     #Load data
     kristen_dir = '/scratch/k/kristen/malidib/moon/'
@@ -172,7 +172,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,dropout,nb_ep
     #train_target = np.log10(1+train_target)
 
     #Iterate
-    N_runs = 6
+    N_runs = 10
     lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1)
     dropout = random.sample(np.linspace(0,0.8,5*N_runs), N_runs-1)
     lmbda.append(0), dropout.append(0)  #ensure we have a baseline comparison

@@ -110,7 +110,6 @@ class CoordTest(unittest.TestCase):
                         rtol=1e-7, atol=1e-10) )
 
 
-
 class WarpTest(unittest.TestCase):
 
     def setUp(self):
@@ -252,7 +251,6 @@ class WarpTest(unittest.TestCase):
         self.assertTrue( ctr_xy.equals(ctr_xy2) )
 
 
-
 def run_inputtest():
     suite = unittest.TestLoader().loadTestsFromTestCase(InputTest)
     unittest.TextTestRunner(verbosity=2).run(suite)
@@ -273,6 +271,7 @@ def run_everything():
     suite.addTest(unittest.makeSuite(InputTest))
     suite.addTest(unittest.makeSuite(CoordTest))
     suite.addTest(unittest.makeSuite(WarpTest))
+    suite.addTest(unittest.makeSuite(DensityMapTest))
     unittest.TextTestRunner(verbosity=2).run(suite)
 
 

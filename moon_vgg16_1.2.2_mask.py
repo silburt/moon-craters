@@ -9,7 +9,7 @@ import os
 import glob
 import numpy as np
 import pandas as pd
-import argparse
+import make_density_map as mdm
 
 from sklearn.cross_validation import StratifiedKFold, KFold
 from sklearn.metrics import mean_absolute_error
@@ -38,9 +38,8 @@ def get_im_cv2(path, img_width, img_height):
     return resized
 
 def load_data(path, data_type, img_width, img_height):
-    X = []
-    X_id = []
-    y = []
+    X, X_id, y = [], [], []
+    minpix = 2                                  #minimum number of pixels for crater to count
     files = glob.glob('%s*.png'%path)
     print "number of %s files are: %d"%(data_type,len(files))
     for fl in files:
@@ -48,7 +47,11 @@ def load_data(path, data_type, img_width, img_height):
         img = get_im_cv2(fl,img_width,img_height)
         X.append(img)
         X_id.append(fl)
-        y.append(get_csv_len(fl))
+        
+        #make mask as target
+        csv = pd.read_csv('%s.csv'%fl.split('.png')[0])
+        csv.drop(np.where(csv['Diameter (pix)'] < minpix)[0], inplace=True)
+        y.append(mdm.make_mask(csv, (img_width,img_height), binary=True))
     return  X, y, X_id
 
 def read_and_normalize_data(path, img_width, img_height, data_flag):
@@ -64,12 +67,20 @@ def read_and_normalize_data(path, img_width, img_height, data_flag):
     print('%s shape:'%data_type, data.shape)
     return data, target, id
 
-def get_csv_len(file_):                        #returns # craters in each image (target)
-    file2_ = file_.split('.png')[0] + '.csv'
-    df = pd.read_csv(file2_ , header=0)
-    minpix = 2.
-    df.drop( np.where(df["Diameter (pix)"] < minpix)[0], inplace=True ) #remove craters below minpix pixel size
-    return [len(df.index)]
+########################
+#custom image generator#
+########################################################################
+#Following https://github.com/fchollet/keras/issues/2708
+def custom_image_generator(data, target, batch_size=32):
+    while True:
+        for i in range(0, len(data), batch_size):
+            d, t = data[i:i+batch_size].copy(), target[i:i+batch_size].copy() #is this the most memory efficient way?
+            lr, ud = np.where(np.random.randint(0,2,batch_size)==1)[0], np.where(np.random.randint(0,2,batch_size)==1)[0]
+            for j in lr:
+                d[j], t[j] = np.fliplr(d[j]), np.fliplr(t[j])   #left/right flips
+            for j in ud:
+                d[j], t[j] = np.flipud(d[j]), np.flipud(t[j])   #up/down flips
+            yield (d, t)
 
 ###########################
 #vgg16 model (keras 1.2.2)#
@@ -136,12 +147,6 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,n_train_sa
         train_data = train_data[:n_train_samples]
         train_target = train_target[:n_train_samples]
 
-    #squash train_target (e.g. from 0-10 -> 0-1 crater counts)
-    #train_target = np.log10(1+train_target)
-    
-    #Keras_ImageDataGenerator for manipulating images to prevent overfitting
-    gen = ImageDataGenerator(horizontal_flip=True,vertical_flip=True)
-
     #main routine
     kf = KFold(len(train_target), n_folds=nfolds, shuffle=True, random_state=random_state)
     sum_score, num_fold = 0, 0
@@ -157,22 +162,23 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,n_train_sa
         print('Split valid: ', len(X_valid), len(Y_valid))
         callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=0)]
         
-        model.fit_generator(gen.flow(X_train,Y_train,batch_size=batch_size,shuffle=True),
+        model.fit_generator(custom_image_generator(X_train,Y_train,batch_size=batch_size),
                             samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
-                            #validation_data=(X_valid, Y_valid), #no generator for validation data
-                            validation_data=gen.flow(X_valid,Y_valid,batch_size=batch_size),nb_val_samples=len(X_valid),
+                            validation_data=(X_valid, Y_valid), #no generator for validation data
+                            #validation_data=custom_image_generator(X_valid,Y_valid,batch_size=batch_size),
+                            nb_val_samples=len(X_valid),
                             callbacks=callbacks)
-                            #model_name = ''
-                            #model.save_weights(model_name)     #save weights of the model
-                            
-                            #make target predictions and unsquash
-                            predictions_valid = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
-                            #predictions_valid = 10**(predictions_valid) - 1
-                            
-                            #calculate test score
-                            score = mean_absolute_error(test_target, predictions_valid)
-                            print('\nTest Score for fold %d Score is %f.\n'%(num_fold, score))
-                            sum_score += score
+            
+        #model_name = ''
+        #model.save_weights(model_name)     #save weights of the model
+        
+        #make target predictions and unsquash
+        predictions_valid = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
+        
+        #calculate test score
+        score = mean_absolute_error(test_target, predictions_valid)
+        print('\nTest Score for fold %d Score is %f.\n'%(num_fold, score))
+        sum_score += score
 
     info_string = 'avgloss_' + str(sum_score/nfolds) + '_folds_' + str(nfolds) +'_ep_' + str(nb_epoch)
     return info_string

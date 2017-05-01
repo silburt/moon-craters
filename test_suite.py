@@ -6,6 +6,9 @@ import numpy as np
 import cartopy.crs as ccrs
 import cartopy.img_transform as cimg
 from PIL import Image, ImageOps
+from scipy.integrate import simps
+from scipy import signal
+import make_density_map as mdm
 
 
 class InputTest(unittest.TestCase):
@@ -108,7 +111,6 @@ class CoordTest(unittest.TestCase):
 
         self.assertTrue( np.isclose(mykmppix, kmppix, 
                         rtol=1e-7, atol=1e-10) )
-
 
 
 class WarpTest(unittest.TestCase):
@@ -252,6 +254,73 @@ class WarpTest(unittest.TestCase):
         self.assertTrue( ctr_xy.equals(ctr_xy2) )
 
 
+class DensMapTest(unittest.TestCase):
+
+    def setUp(self):
+
+        self.img =  np.asanyarray(Image.open("moonmap_tiny.png").convert("L"))
+        self.craters = mkin.ReadCombinedCraterCSV(dropfeatures=True)
+        cx, cy = mkin.coord2pix(self.craters["Long"].as_matrix(), 
+                    self.craters["Lat"].as_matrix(), 
+                    [-180, 180, -90, 90],
+                    [self.img.shape[1], self.img.shape[0]])
+        self.craters["x"] = cx
+        self.craters["y"] = cy
+        self.craters["Diameter (pix)"] = \
+            self.craters["Diameter (km)"]*mkin.km2pix(self.img.shape[0], 180)
+        self.craters.drop( np.where(self.craters["Diameter (pix)"] < 15.)[0], inplace=True )
+        self.craters.reset_index(inplace=True)
+
+        self.img2 = np.zeros([200,200])
+        crat_x_list = np.array([100, 50, 2, 4, 167, 72, 198, 1])
+        crat_y_list = np.array([100, 50, 1, 191, 3, 199, 198, 199])
+        self.craters2 = pd.DataFrame([crat_x_list, crat_y_list]).T.rename(columns={0 : "x", 1 : "y"})
+
+        for i in range(len(crat_x_list)):
+            self.img2[crat_y_list[i],crat_x_list[i]] +=1 # add one at crater location
+
+
+    @staticmethod
+    def gkern(l=5, sig=1.):
+        """
+        Creates Gaussian kernel with side length l and a sigma of sig
+        """
+        ax = np.arange(-l // 2 + 1., l // 2 + 1.)
+        xx, yy = np.meshgrid(ax, ax)
+        kernel = np.exp(-(xx**2 + yy**2) / (2. * sig**2))
+        return kernel / np.sum(kernel)
+
+    def test_make_dens_map(self):
+
+        # Tiny Moon image
+        kernel_sig = 4
+        kernel_extent = 8
+
+        dmap_delta = np.zeros(self.img.shape)
+
+        for i in range(self.craters.shape[0]):
+            dmap_delta[int(self.craters.loc[i,"y"]), int(self.craters.loc[i,"x"])] +=1 # add one at crater location
+
+        # keep kernel support odd number (for comparison with my function)
+        kernel_support = int(kernel_extent*kernel_sig/2)*2 + 1
+        kernel = self.gkern(kernel_support, kernel_sig)
+
+        img_dm_c2 = signal.convolve2d(dmap_delta, kernel, boundary='fill', mode='same')
+        img_dm = mdm.make_density_map(self.craters, self.img.shape, k_sig=kernel_sig, k_support=kernel_extent)
+
+        self.assertTrue( np.isclose(img_dm_c2, img_dm, rtol=1e-05, atol=1e-08).sum() / img_dm.size )
+
+        # Edge cases image
+        kernel_sig = 12
+        kernel_extent = 5
+        kernel_support = int(kernel_extent * kernel_sig/2)*2 + 1
+        kernel = self.gkern(kernel_support, kernel_sig)
+
+        img2_dm_c2 = signal.convolve2d(self.img2, kernel, boundary='fill', mode='same')
+        img2_dm = mdm.make_density_map(self.craters2, self.img2.shape, k_sig=kernel_sig, k_support=kernel_extent)
+
+        self.assertTrue( np.isclose(img2_dm_c2, img2_dm, rtol=1e-05, atol=1e-06).sum()/ img2_dm.size )
+
 
 def run_inputtest():
     suite = unittest.TestLoader().loadTestsFromTestCase(InputTest)
@@ -268,11 +337,17 @@ def run_warptest():
     unittest.TextTestRunner(verbosity=2).run(suite)
 
 
+def run_dmtest():
+    suite = unittest.TestLoader().loadTestsFromTestCase(DensMapTest)
+    unittest.TextTestRunner(verbosity=2).run(suite)
+
+
 def run_everything():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(InputTest))
     suite.addTest(unittest.makeSuite(CoordTest))
     suite.addTest(unittest.makeSuite(WarpTest))
+    suite.addTest(unittest.makeSuite(DensMapTest))
     unittest.TextTestRunner(verbosity=2).run(suite)
 
 

@@ -143,8 +143,8 @@ def make_mask(craters, img, binary=True, truncate=True):
     ----------
     craters : pandas.DataFrame
         craters dataframe that includes pixel x and y columns
-    imgshape : listlike
-        Image dimensions [y, x], i.e. output of img.shape
+    img : 3D numpy array
+        original image. 
     binary : bool
         If True, returns a binary image of crater masks
     truncate : bool
@@ -152,7 +152,7 @@ def make_mask(craters, img, binary=True, truncate=True):
     """
 
     # Load blank density map
-    imgshape = (img.shape[0], img.shape[1])
+    imgshape = (img.shape[0], img.shape[1])     #Image dimensions [y, x], i.e. output of img.shape
     dmap = np.zeros(imgshape)
     cx, cy = craters["x"].values.astype('int'), craters["y"].values.astype('int')
     radius = craters["Diameter (pix)"].values / 2.

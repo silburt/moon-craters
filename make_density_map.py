@@ -136,7 +136,7 @@ def make_density_map(craters, imgshape, kernel=None, k_support = 8, k_sig=4., kn
     return dmap
 
 
-def make_mask(craters, imgshape, binary=True):
+def make_mask(craters, img, binary=True, truncate=True):
     """Makes crater mask binary image (does not yet consider crater overlap).
 
     Parameters
@@ -146,10 +146,13 @@ def make_mask(craters, imgshape, binary=True):
     imgshape : listlike
         Image dimensions [y, x], i.e. output of img.shape
     binary : bool
-        If True, returns a binary image of crater masks; 
+        If True, returns a binary image of crater masks
+    truncate : bool
+        If True, truncate mask where image truncates
     """
 
     # Load blank density map
+    imgshape = (img.shape[0], img.shape[1])
     dmap = np.zeros(imgshape)
     cx, cy = craters["x"].values.astype('int'), craters["y"].values.astype('int')
     radius = craters["Diameter (pix)"].values / 2.
@@ -171,8 +174,11 @@ def make_mask(craters, imgshape, binary=True):
     
     if binary:
         dmap = (dmap > 0).astype(float)
-        
-        #add centroids to image
-        #dmap[cy,cx] = 2
+    
+    if truncate:
+        dmap[img[:,:,0] == 0] = 0
+    
+    #add centroids to image
+    #dmap[cy,cx] = 2
 
     return dmap

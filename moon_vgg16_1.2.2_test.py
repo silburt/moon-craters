@@ -35,7 +35,7 @@ K.set_image_dim_ordering('tf')
 ########################################################################
 def get_im_cv2(path, img_width, img_height):
     img = cv2.imread(path)
-    resized = cv2.resize(img, (img_width, img_height))#, cv2.INTER_LINEAR)
+    resized = cv2.resize(img, (img_width, img_height))#, cv2.INTER_LINEAR) #downsampler.
     return resized
 
 def get_csv_len(file_):                        #returns # craters in each image (target)
@@ -144,8 +144,8 @@ def train_test_model(train_data,train_target,test_data,test_target,learn_rate,ba
 def run_cross_validation_create_models(learn_rate,batch_size,lmbda,dropout,nb_epoch,n_train_samples):
     #Static arguments
     n_classes = 1               #number of classes in final dense layer
-    im_width = 224              #image width
-    im_height = 224             #image height
+    im_width = 224              #image width - 300?
+    im_height = 224             #image height - 300?
     rs = 43                     #random_state for train/test split
 
     #Load data

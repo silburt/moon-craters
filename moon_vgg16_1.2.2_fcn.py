@@ -1,7 +1,5 @@
-#This tries out different modules to see if they add any benefit.
-
-#This python script is adapted from moon2.py and uses the vgg16 convnet structure.
-#The number of blocks, and other aspects of the vgg16 model can be modified.
+#This script constructs a fully connected network (FCN) following the same procedures as the paper "Fully Convolutional Networks for Semantic Segmentation" - https://people.eecs.berkeley.edu/~jonlong/long_shelhamer_fcn.pdf
+#The goal is for the FCN to output crater masks with the same dimensions as the input images, where 1=crater, 0=no crater.
 #This has the keras 1.2.2. architechture
 
 import cv2
@@ -9,18 +7,15 @@ import os
 import glob
 import numpy as np
 import pandas as pd
-import random
+import make_density_map as mdm
 
-from sklearn.model_selection import train_test_split
+from sklearn.cross_validation import StratifiedKFold, KFold
 from sklearn.metrics import mean_absolute_error
 
 from keras.models import Sequential, Model
-from keras.layers.core import Dense, Dropout, Flatten
+from keras.layers.core import Dense, Dropout, Flatten, Reshape
 from keras.layers import AveragePooling2D
-from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D
-from keras.models import load_model
-from keras.applications.resnet50 import ResNet50
-from keras.preprocessing.image import ImageDataGenerator
+from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D, UpSampling2D, Deconvolution2D, AtrousConvolution2D
 from keras.regularizers import l2
 
 from keras.optimizers import SGD, Adam, RMSprop
@@ -35,18 +30,12 @@ K.set_image_dim_ordering('tf')
 ########################################################################
 def get_im_cv2(path, img_width, img_height):
     img = cv2.imread(path)
-    resized = cv2.resize(img, (img_width, img_height))#, cv2.INTER_LINEAR) #downsampler.
+    resized = cv2.resize(img, (img_width, img_height))#, cv2.INTER_LINEAR)
     return resized
 
-def get_csv_len(file_):                        #returns # craters in each image (target)
-    file2_ = file_.split('.png')[0] + '.csv'
-    df = pd.read_csv(file2_ , header=0)
-    return [len(df.index)]
-
 def load_data(path, data_type, img_width, img_height):
-    X = []
-    X_id = []
-    y = []
+    X, X_id, y = [], [], []
+    minpix = 2                                  #minimum number of pixels for crater to count
     files = glob.glob('%s*.png'%path)
     print "number of %s files are: %d"%(data_type,len(files))
     for fl in files:
@@ -54,7 +43,11 @@ def load_data(path, data_type, img_width, img_height):
         img = get_im_cv2(fl,img_width,img_height)
         X.append(img)
         X_id.append(fl)
-        y.append(get_csv_len(fl))
+        
+        #make mask as target
+        csv = pd.read_csv('%s.csv'%fl.split('.png')[0])
+        csv.drop(np.where(csv['Diameter (pix)'] < minpix)[0], inplace=True)
+        y.append(mdm.make_mask(csv, (img_width,img_height), binary=True))
     return  X, y, X_id
 
 def read_and_normalize_data(path, img_width, img_height, data_flag):
@@ -66,39 +59,65 @@ def read_and_normalize_data(path, img_width, img_height, data_flag):
     data = np.array(data, dtype=np.uint8)       #convert to numpy
     target = np.array(target, dtype=np.uint8)
     data = data.astype('float32')               #convert to float
-    data = data / 255                           #normalize color
+    data = data / 255                           #normalize
     print('%s shape:'%data_type, data.shape)
     return data, target, id
 
-###########################
-#vgg16 model (keras 1.2.2)#
+########################
+#custom image generator#
 ########################################################################
-#Following https://github.com/fchollet/keras/blob/master/keras/applications/vgg16.py 
-def vgg16(n_classes,im_width,im_height,learn_rate,lmbda,dropout):
-    n_filters = 32          #vgg16 uses 64
-    n_blocks = 3            #vgg16 uses 5
-    n_dense = 512           #vgg16 uses 4096
+#Following https://github.com/fchollet/keras/issues/2708
+def custom_image_generator(data, target, batch_size=32):
+    while True:
+        for i in range(0, len(data), batch_size):
+            d, t = data[i:i+batch_size].copy(), target[i:i+batch_size].copy() #is this the most memory efficient way?
+            
+            #horizontal/vertical flips
+            for j in np.where(np.random.randint(0,2,batch_size)==1)[0]:
+                d[j], t[j] = np.fliplr(d[j]), np.fliplr(t[j])   #left/right flips
+            for j in np.where(np.random.randint(0,2,batch_size)==1)[0]:
+                d[j], t[j] = np.flipud(d[j]), np.flipud(t[j])   #up/down flips
+            
+            #random up/down and left/right pixel shifts
+            npix = 1
+            h = np.random.randint(-npix,npix+1,batch_size)      #horizontal shift
+            v = np.random.randint(-npix,npix+1,batch_size)      #vertical shift
+            for j in range(batch_size):
+                d[j] = np.pad(d[j], ((npix,npix),(npix,npix),(0,0)), mode='constant')[npix+h[j]:L+h[j]+npix,npix+v[j]:W+v[j]+npix,:]
+                t[j] = np.pad(t[j], (npix,), mode='constant')[npix+h[j]:L+h[j]+npix,npix+v[j]:W+v[j]+npix]
+            yield (d, t)
+
+#############################
+#FCC vgg model (keras 1.2.2)#
+########################################################################
+#Following https://github.com/aurora95/Keras-FCN/blob/master/models.py
+def FCN(n_classes,im_width,im_height,learn_rate,lmbda):
+    print('Making VGG16 autoencoder model...')
+    model = Sequential()
+    n_filters = 64          #vgg16 uses 64
+    n_blocks = 4            #vgg16 uses 5
+    n_dense = 2048          #vgg16 uses 4096
 
     #first block
-    print('Making VGG model...')
-    model = Sequential()
     model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), input_shape=(im_width,im_height,3)))
     model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
     #subsequent blocks
     for i in np.arange(1,n_blocks):
-        n_filters_ = np.min((n_filters*2**i, 512))                          #maximum of 512 filters in vgg16
+        n_filters_ = np.min((n_filters*2**i, 500))
         model.add(Conv2D(n_filters_, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
         model.add(Conv2D(n_filters_, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
         model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
-    model.add(Flatten())
-    model.add(Dropout(dropout))
-    model.add(Dense(n_dense, activation='relu', W_regularizer=l2(lmbda)))   #biggest memory sink
-    model.add(Dropout(dropout))
-    model.add(Dense(n_dense, activation='relu', W_regularizer=l2(lmbda)))
-    model.add(Dense(n_classes, activation='relu', name='predictions'))      #relu/regression output
+    #reinterpreted FC layers
+    model.add(AtrousConvolution2D(n_dense, nb_row=7, nb_col=7, activation='relu', border_mode='same', atrous_rate=(2, 2), W_regularizer=l2(lmbda), name='fc1'))
+    #model.add(Dropout(0.5))
+    model.add(Conv2D(n_dense, nb_row=1, nb_col=1, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc2'))
+    #model.add(Dropout(0.5))
+
+    #need final upsample/deconv layer - Bilinear upsampling is implemented via convolution, therefore the weights
+
 
     #optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
@@ -111,43 +130,36 @@ def vgg16(n_classes,im_width,im_height,learn_rate,lmbda,dropout):
 ########################################################################
 #Need to create this function so that memory is released every iteration (when function exits).
 #Otherwise the memory used accumulates and eventually the program crashes.
-def train_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,lmbda,drop,nb_epoch,n_train_samples,im_width,im_height,n_classes,rs):
+def train_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,lmbda,nb_epoch,n_train_samples,im_width,im_height,n_classes,rs):
     
     #Main Routine - Build/Train/Test model
     X_train, X_valid, Y_train, Y_valid = train_test_split(train_data, train_target, test_size=0.20, random_state=rs)
     print('Split train: ', len(X_train), len(Y_train))
     print('Split valid: ', len(X_valid), len(Y_valid))
-    
-    #ImageDataGenerator - for manipulating images to prevent overfitting
-    gen = ImageDataGenerator(#channel_shift_range=30,                    #R,G,B shifts
-                             #rotation_range=180,                        #rotations
-                             width_shift_range=1./im_width,
-                             height_shift_range=1./im_height,
-                             fill_mode='constant',
-                             horizontal_flip=True,vertical_flip=True)    #flips
 
-    model = vgg16(n_classes,im_width,im_height,learn_rate,lmbda,drop)
-    model.fit_generator(gen.flow(X_train,Y_train,batch_size=batch_size,shuffle=True),
-                         samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
-                        #validation_data=(X_valid, Y_valid), #no generator for validation data
-                         validation_data=gen.flow(X_valid,Y_valid,batch_size=batch_size),nb_val_samples=len(X_valid),
-                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
+    model = FCN(n_classes,im_width,im_height,learn_rate,lmbda)
+    model.fit_generator(custom_image_generator(X_train,Y_train,batch_size=batch_size),
+                        samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
+                        validation_data=(X_valid, Y_valid), #no generator for validation data
+                        #validation_data=custom_image_generator(X_valid,Y_valid,batch_size=batch_size),
+                        nb_val_samples=len(X_valid),
+                        callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
     #model_name = ''
     #model.save_weights(model_name)     #save weights of the model
-     
+    
     test_predictions = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
     return mean_absolute_error(test_target, test_predictions)  #calculate test score
 
 ##############
 #Main Routine#
 ########################################################################
-def run_cross_validation_create_models(learn_rate,batch_size,lmbda,dropout,nb_epoch,n_train_samples):
+def run_models(learn_rate,batch_size,lmbda,nb_epoch,n_train_samples):
     #Static arguments
     n_classes = 1               #number of classes in final dense layer
     im_width = 224              #image width - 300?
     im_height = 224             #image height - 300?
     rs = 43                     #random_state for train/test split
-
+    
     #Load data
     kristen_dir = '/scratch/k/kristen/malidib/moon/'
     try:
@@ -168,21 +180,17 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,dropout,nb_ep
     train_data = train_data[:n_train_samples]
     train_target = train_target[:n_train_samples]
 
-    #Squash train_target (e.g. from 0-10 -> 0-1 crater counts)
-    #train_target = np.log10(1+train_target)
-
     #Iterate
     N_runs = 10
     lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1)
-    dropout = random.sample(np.linspace(0,0.8,5*N_runs), N_runs-1)
-    lmbda.append(0), dropout.append(0)  #ensure we have a baseline comparison
+    lmbda.append(0)
     for i in range(N_runs):
-        l,d = lmbda[i], dropout[i]
-        score = train_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,l,d,nb_epoch,n_train_samples,im_width,im_height,n_classes,rs)
+        l = lmbda[i]
+        score = train_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,l,nb_epoch,n_train_samples,im_width,im_height,n_classes,rs)
         print '###################################'
         print '##########END_OF_RUN_INFO##########'
         print('\nTest Score is %f.\n'%score)
-        print 'learning_rate=%e, batch_size=%d, lambda=%e, dropout=%f, n_epoch=%d, n_train_samples=%d, n_classes=%d, random_state=%d, im_width=%d, im_height=%d'%(learn_rate,batch_size,l,d,nb_epoch,n_train_samples,n_classes,rs,im_width,im_height)
+        print 'learning_rate=%e, batch_size=%d, lambda=%e, n_epoch=%d, n_train_samples=%d, n_classes=%d, random_state=%d, im_width=%d, im_height=%d'%(learn_rate,batch_size,l,nb_epoch,n_train_samples,n_classes,rs,im_width,im_height)
         print '###################################'
         print '###################################'
 
@@ -196,11 +204,8 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    dropout = 0         #percentage of neurons in the FC layers randomly set to 0.
     epochs = 30         #number of epochs. 1 epoch = forward/back pass thru all train data
     n_train = 16000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
-
+    
     #run models
-    run_cross_validation_create_models(lr,bs,lmbda,dropout,epochs,n_train)
-
-
+    run_models(lr,bs,lmbda,epochs,n_train)

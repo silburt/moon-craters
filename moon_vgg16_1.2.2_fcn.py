@@ -7,7 +7,7 @@ import os
 import glob
 import numpy as np
 import pandas as pd
-import make_density_map as mdm
+import utils.make_density_map as mdm
 
 from sklearn.cross_validation import StratifiedKFold, KFold
 from sklearn.metrics import mean_absolute_error
@@ -91,12 +91,14 @@ def custom_image_generator(data, target, batch_size=32):
 #FCC vgg model (keras 1.2.2)#
 ########################################################################
 #Following https://github.com/aurora95/Keras-FCN/blob/master/models.py
+#Deconvolution - http://stackoverflow.com/questions/39018767/deconvolution2d-layer-in-keras
 def FCN(n_classes,im_width,im_height,learn_rate,lmbda):
     print('Making VGG16 autoencoder model...')
     model = Sequential()
     n_filters = 64          #vgg16 uses 64
     n_blocks = 4            #vgg16 uses 5
     n_dense = 2048          #vgg16 uses 4096
+    upsample = 25           #upsample scale
 
     #first block
     model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), input_shape=(im_width,im_height,3)))
@@ -105,19 +107,25 @@ def FCN(n_classes,im_width,im_height,learn_rate,lmbda):
 
     #subsequent blocks
     for i in np.arange(1,n_blocks):
-        n_filters_ = np.min((n_filters*2**i, 500))
+        n_filters_ = np.min((n_filters*2**i, 512))
         model.add(Conv2D(n_filters_, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
         model.add(Conv2D(n_filters_, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
-        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+        if i==1:
+            model.add(MaxPooling2D(pool_size=(2, 2), strides=(3, 3)))
+        else:
+            model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
-    #reinterpreted FC layers
-    model.add(AtrousConvolution2D(n_dense, nb_row=7, nb_col=7, activation='relu', border_mode='same', atrous_rate=(2, 2), W_regularizer=l2(lmbda), name='fc1'))
-    #model.add(Dropout(0.5))
+    #reinterpreted FC layers - could add dropouts too
+    #model.add(AtrousConvolution2D(n_dense, nb_row=7, nb_col=7, activation='relu', border_mode='same', atrous_rate=(2, 2), W_regularizer=l2(lmbda), name='fc1'))
+    model.add(Conv2D(n_dense, nb_row=7, nb_col=7, activation='relu', border_mode='same', atrous_rate=(2, 2), W_regularizer=l2(lmbda), name='fc1'))
     model.add(Conv2D(n_dense, nb_row=1, nb_col=1, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc2'))
-    #model.add(Dropout(0.5))
 
-    #need final upsample/deconv layer - Bilinear upsampling is implemented via convolution, therefore the weights
+    #Upsample and create mask
+    model.add(UpSampling2D(size=(upsample, upsample)))
+    model.add(Conv2D(1, nb_row=upsample, nb_col=upsample, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='output'))
 
+    #Deconv as alternative?
+    #model.add(Deconvolution2D(20, nb_row=4, nb_col=4, output_shape=(None,im_width,im_height,1), subsample=(4, 4), border_mode='same', activation='relu', name='Deconv'))
 
     #optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)

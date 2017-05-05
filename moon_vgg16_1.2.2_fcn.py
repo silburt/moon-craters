@@ -31,12 +31,13 @@ K.set_image_dim_ordering('tf')
 ########################################################################
 def get_im_cv2(path, img_width, img_height):
     img = cv2.imread(path)
-    resized = cv2.resize(img, (img_width, img_height))#, cv2.INTER_LINEAR)
+    resized = cv2.resize(img, (img_width, img_height))#, cv2.INTER_LINEAR) #downsampler.
     return resized
 
 def load_data(path, data_type, img_width, img_height):
-    X, X_id, y = [], [], []
-    minpix = 3                                  #minimum number of pixels for crater to count
+    X = []
+    X_id = []
+    y = []
     files = glob.glob('%s*.png'%path)
     print "number of %s files are: %d"%(data_type,len(files))
     for fl in files:
@@ -44,7 +45,7 @@ def load_data(path, data_type, img_width, img_height):
         img = get_im_cv2(fl,img_width,img_height)
         X.append(img)
         X_id.append(fl)
-        
+    
         #make mask as target
         csv = pd.read_csv('%s.csv'%fl.split('.png')[0])
         csv.drop(np.where(csv['Diameter (pix)'] < minpix)[0], inplace=True)
@@ -60,7 +61,7 @@ def read_and_normalize_data(path, img_width, img_height, data_flag):
     data = np.array(data, dtype=np.uint8)       #convert to numpy
     target = np.array(target, dtype=np.uint8)
     data = data.astype('float32')               #convert to float
-    data = data / 255                           #normalize
+    data = data / 255                           #normalize color
     print('%s shape:'%data_type, data.shape)
     return data, target, id
 
@@ -94,7 +95,7 @@ def custom_image_generator(data, target, batch_size=32):
 #Following https://github.com/aurora95/Keras-FCN/blob/master/models.py
 #and also loosely following https://blog.keras.io/building-autoencoders-in-keras.html
 def FCN(im_width,im_height,learn_rate,lmbda):
-    print('Making VGG16 autoencoder model...')
+    print('Making VGG16-style Fully Convolutional Network model...')
     model = Sequential()
     n_filters = 64          #vgg16 uses 64
     n_blocks = 4            #vgg16 uses 5

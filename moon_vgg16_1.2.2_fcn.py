@@ -36,7 +36,7 @@ def get_im_cv2(path, img_width, img_height):
 
 def load_data(path, data_type, img_width, img_height):
     X, X_id, y = [], [], []
-    minpix = 2                                  #minimum number of pixels for crater to count
+    minpix = 3                                  #minimum number of pixels for crater to count
     files = glob.glob('%s*.png'%path)
     print "number of %s files are: %d"%(data_type,len(files))
     for fl in files:
@@ -117,7 +117,7 @@ def FCN(im_width,im_height,learn_rate,lmbda):
             model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
     #reinterpreted FC layers - could add dropouts too
-    model.add(Conv2D(n_dense, nb_row=7, nb_col=7, activation='relu', border_mode='same', atrous_rate=(2, 2), W_regularizer=l2(lmbda), name='fc1'))
+    model.add(Conv2D(n_dense, nb_row=7, nb_col=7, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc1'))
     model.add(Conv2D(n_dense, nb_row=1, nb_col=1, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc2'))
 
     #Upsample and create mask

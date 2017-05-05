@@ -170,20 +170,20 @@ def run_models(learn_rate,batch_size,nb_epoch,n_train_samples,lmbda):
     #Load data
     kristen_dir = '/scratch/k/kristen/malidib/moon/'
     try:
-        train_data=np.load('training_set/train_data.npy')
-        train_target=np.load('training_set/train_target.npy')
-        test_data=np.load('test_set/test_data.npy')
-        test_target=np.load('test_set/test_target.npy')
+        train_data=np.load('training_set/train_data_mask.npy')
+        train_target=np.load('training_set/train_target_mask.npy')
+        test_data=np.load('test_set/test_data_mask.npy')
+        test_target=np.load('test_set/test_target_mask.npy')
         print "Successfully loaded files locally."
     except:
         print "Couldnt find locally saved .npy files, loading from %s."%kristen_dir
         train_path, test_path = '%straining_set/'%kristen_dir, '%stest_set/'%kristen_dir
         train_data, train_target, train_id = read_and_normalize_data(train_path, im_width, im_height, 0)
         test_data, test_target, test_id = read_and_normalize_data(test_path, im_width, im_height, 1)
-        np.save('training_set/train_data.npy',train_data)
-        np.save('training_set/train_target.npy',train_target)
-        np.save('test_set/test_data.npy',test_data)
-        np.save('test_set/test_target.npy',test_target)
+        np.save('training_set/train_data_mask.npy',train_data)
+        np.save('training_set/train_target_mask.npy',train_target)
+        np.save('test_set/test_data_mask.npy',test_data)
+        np.save('test_set/test_target_mask.npy',test_target)
     train_data = train_data[:n_train_samples]
     train_target = train_target[:n_train_samples]
 

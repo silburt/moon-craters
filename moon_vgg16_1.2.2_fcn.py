@@ -10,7 +10,7 @@ import pandas as pd
 import utils.make_density_map as mdm
 import random
 
-from sklearn.cross_validation import StratifiedKFold, KFold
+from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error
 
 from keras.models import Sequential, Model
@@ -169,8 +169,7 @@ def run_models(learn_rate,batch_size,nb_epoch,n_train_samples,lmbda):
     rs = 43                     #random_state for train/test split
     
     #Load data
-    #kristen_dir = '/scratch/k/kristen/malidib/moon/'
-    kristen_dir=''
+    kristen_dir = '/scratch/k/kristen/malidib/moon/'
     try:
         train_data=np.load('training_set/train_data_mask.npy')
         train_target=np.load('training_set/train_target_mask.npy')

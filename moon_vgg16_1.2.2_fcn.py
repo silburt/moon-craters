@@ -8,6 +8,7 @@ import glob
 import numpy as np
 import pandas as pd
 import utils.make_density_map as mdm
+import random
 
 from sklearn.cross_validation import StratifiedKFold, KFold
 from sklearn.metrics import mean_absolute_error

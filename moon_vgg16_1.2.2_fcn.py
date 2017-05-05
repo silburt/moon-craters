@@ -104,7 +104,7 @@ def FCN(im_width,im_height,learn_rate,lmbda):
     upsample = 25           #upsample scale - factor to get back to img_height, im_width
 
     #first block
-    model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), input_shape=(im_width,im_height,3)))
+    model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), input_shape=(im_width,im_height,None)))
     model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
@@ -118,8 +118,8 @@ def FCN(im_width,im_height,learn_rate,lmbda):
         else:
             model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
-    #reinterpreted FC layers - could add dropouts too
-    model.add(Conv2D(n_dense, nb_row=7, nb_col=7, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc1'))
+    #reinterpreted FC layers - http://cs231n.github.io/convolutional-networks/#convert
+    model.add(Conv2D(n_dense, nb_row=7, nb_col=7, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc1')) #need to properly convert.
     model.add(Conv2D(n_dense, nb_row=1, nb_col=1, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc2'))
 
     #Upsample and create mask
@@ -132,7 +132,7 @@ def FCN(im_width,im_height,learn_rate,lmbda):
 
     #optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-    model.compile(loss='binary_crossentropy', optimizer=optimizer)
+    model.compile(loss='mse', optimizer=optimizer)
     print model.summary()
     return model
 

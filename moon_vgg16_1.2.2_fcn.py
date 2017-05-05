@@ -39,6 +39,7 @@ def load_data(path, data_type, img_width, img_height):
     X_id = []
     y = []
     files = glob.glob('%s*.png'%path)
+    minpix = 3      #minimum pixels required for a crater to register in an image
     print "number of %s files are: %d"%(data_type,len(files))
     for fl in files:
         flbase = os.path.basename(fl)

@@ -48,7 +48,7 @@ def load_data(path, data_type, img_width, img_height):
         #make mask as target
         csv = pd.read_csv('%s.csv'%fl.split('.png')[0])
         csv.drop(np.where(csv['Diameter (pix)'] < minpix)[0], inplace=True)
-        y.append(mdm.make_mask(csv, (img_width,img_height), binary=True))
+        y.append(mdm.make_mask(csv, img, binary=True))
     return  X, y, X_id
 
 def read_and_normalize_data(path, img_width, img_height, data_flag):
@@ -169,7 +169,8 @@ def run_models(learn_rate,batch_size,nb_epoch,n_train_samples,lmbda):
     rs = 43                     #random_state for train/test split
     
     #Load data
-    kristen_dir = '/scratch/k/kristen/malidib/moon/'
+    #kristen_dir = '/scratch/k/kristen/malidib/moon/'
+    kristen_dir=''
     try:
         train_data=np.load('training_set/train_data_mask.npy')
         train_target=np.load('training_set/train_target_mask.npy')

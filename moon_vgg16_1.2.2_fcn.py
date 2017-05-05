@@ -88,17 +88,17 @@ def custom_image_generator(data, target, batch_size=32):
             yield (d, t)
 
 #############################
-#FCC vgg model (keras 1.2.2)#
+#FCN vgg model (keras 1.2.2)#
 ########################################################################
 #Following https://github.com/aurora95/Keras-FCN/blob/master/models.py
-#Deconvolution - http://stackoverflow.com/questions/39018767/deconvolution2d-layer-in-keras
-def FCN(n_classes,im_width,im_height,learn_rate,lmbda):
+#and also loosely following https://blog.keras.io/building-autoencoders-in-keras.html
+def FCN(im_width,im_height,learn_rate,lmbda):
     print('Making VGG16 autoencoder model...')
     model = Sequential()
     n_filters = 64          #vgg16 uses 64
     n_blocks = 4            #vgg16 uses 5
     n_dense = 2048          #vgg16 uses 4096
-    upsample = 25           #upsample scale
+    upsample = 25           #upsample scale - factor to get back to img_height, im_width
 
     #first block
     model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), input_shape=(im_width,im_height,3)))
@@ -116,7 +116,6 @@ def FCN(n_classes,im_width,im_height,learn_rate,lmbda):
             model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
     #reinterpreted FC layers - could add dropouts too
-    #model.add(AtrousConvolution2D(n_dense, nb_row=7, nb_col=7, activation='relu', border_mode='same', atrous_rate=(2, 2), W_regularizer=l2(lmbda), name='fc1'))
     model.add(Conv2D(n_dense, nb_row=7, nb_col=7, activation='relu', border_mode='same', atrous_rate=(2, 2), W_regularizer=l2(lmbda), name='fc1'))
     model.add(Conv2D(n_dense, nb_row=1, nb_col=1, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc2'))
 
@@ -124,12 +123,13 @@ def FCN(n_classes,im_width,im_height,learn_rate,lmbda):
     model.add(UpSampling2D(size=(upsample, upsample)))
     model.add(Conv2D(1, nb_row=upsample, nb_col=upsample, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='output'))
 
-    #Deconv as alternative?
+    #Alternative layers
+    #model.add(AtrousConvolution2D(n_dense, nb_row=7, nb_col=7, activation='relu', border_mode='same', atrous_rate=(2, 2), W_regularizer=l2(lmbda), name='fc1'))
     #model.add(Deconvolution2D(20, nb_row=4, nb_col=4, output_shape=(None,im_width,im_height,1), subsample=(4, 4), border_mode='same', activation='relu', name='Deconv'))
 
     #optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-    model.compile(loss='mae', optimizer=optimizer, metrics=['accuracy'])
+    model.compile(loss='binary_crossentropy', optimizer=optimizer)
     print model.summary()
     return model
 
@@ -138,14 +138,14 @@ def FCN(n_classes,im_width,im_height,learn_rate,lmbda):
 ########################################################################
 #Need to create this function so that memory is released every iteration (when function exits).
 #Otherwise the memory used accumulates and eventually the program crashes.
-def train_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,lmbda,nb_epoch,n_train_samples,im_width,im_height,n_classes,rs):
+def train_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,lmbda,nb_epoch,n_train_samples,im_width,im_height,rs):
     
     #Main Routine - Build/Train/Test model
     X_train, X_valid, Y_train, Y_valid = train_test_split(train_data, train_target, test_size=0.20, random_state=rs)
     print('Split train: ', len(X_train), len(Y_train))
     print('Split valid: ', len(X_valid), len(Y_valid))
 
-    model = FCN(n_classes,im_width,im_height,learn_rate,lmbda)
+    model = FCN(im_width,im_height,learn_rate,lmbda)
     model.fit_generator(custom_image_generator(X_train,Y_train,batch_size=batch_size),
                         samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
                         validation_data=(X_valid, Y_valid), #no generator for validation data
@@ -155,17 +155,16 @@ def train_test_model(train_data,train_target,test_data,test_target,learn_rate,ba
     #model_name = ''
     #model.save_weights(model_name)     #save weights of the model
     
-    test_predictions = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
+    test_predictions = model.predict(test_data, batch_size=batch_size, verbose=2)
     return mean_absolute_error(test_target, test_predictions)  #calculate test score
 
 ##############
 #Main Routine#
 ########################################################################
-def run_models(learn_rate,batch_size,lmbda,nb_epoch,n_train_samples):
+def run_models(learn_rate,batch_size,nb_epoch,n_train_samples,lmbda):
     #Static arguments
-    n_classes = 1               #number of classes in final dense layer
-    im_width = 224              #image width - 300?
-    im_height = 224             #image height - 300?
+    im_width = 300              #image width
+    im_height = 300             #image height
     rs = 43                     #random_state for train/test split
     
     #Load data
@@ -189,16 +188,13 @@ def run_models(learn_rate,batch_size,lmbda,nb_epoch,n_train_samples):
     train_target = train_target[:n_train_samples]
 
     #Iterate
-    N_runs = 10
-    lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1)
-    lmbda.append(0)
     for i in range(N_runs):
         l = lmbda[i]
-        score = train_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,l,nb_epoch,n_train_samples,im_width,im_height,n_classes,rs)
+        score = train_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,l,nb_epoch,n_train_samples,im_width,im_height,rs)
         print '###################################'
         print '##########END_OF_RUN_INFO##########'
         print('\nTest Score is %f.\n'%score)
-        print 'learning_rate=%e, batch_size=%d, lambda=%e, n_epoch=%d, n_train_samples=%d, n_classes=%d, random_state=%d, im_width=%d, im_height=%d'%(learn_rate,batch_size,l,nb_epoch,n_train_samples,n_classes,rs,im_width,im_height)
+        print 'learning_rate=%e, batch_size=%d, lambda=%e, n_epoch=%d, n_train_samples=%d, random_state=%d, im_width=%d, im_height=%d'%(learn_rate,batch_size,l,nb_epoch,n_train_samples,rs,im_width,im_height)
         print '###################################'
         print '###################################'
 
@@ -211,9 +207,13 @@ if __name__ == '__main__':
     #args
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
-    lmbda = 0           #L2 regularization strength (lambda)
     epochs = 30         #number of epochs. 1 epoch = forward/back pass thru all train data
     n_train = 16000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     
+    #iterables
+    N_runs = 10
+    lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1)           #L2 regularization strength (lambda)
+    lmbda.append(0)
+    
     #run models
-    run_models(lr,bs,lmbda,epochs,n_train)
+    run_models(lr,bs,epochs,n_train,lmbda)

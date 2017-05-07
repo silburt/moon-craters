@@ -104,7 +104,7 @@ def FCN(im_width,im_height,learn_rate,lmbda):
     upsample = 25           #upsample scale - factor to get back to img_height, im_width
 
     #first block
-    model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), input_shape=(im_width,im_height,None)))
+    model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), input_shape=(im_width,im_height,)))
     model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 

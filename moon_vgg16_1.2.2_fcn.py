@@ -41,16 +41,16 @@ def load_data(path, data_type, img_width, img_height):
     files = glob.glob('%s*.png'%path)
     minpix = 3      #minimum pixels required for a crater to register in an image
     print "number of %s files are: %d"%(data_type,len(files))
-    for fl in files:
-        flbase = os.path.basename(fl)
-        img = get_im_cv2(fl,img_width,img_height)
+    for f in files:
+        #fbase = os.path.basename(f)
+        img = get_im_cv2(f,img_width,img_height)
         X.append(img)
-        X_id.append(fl)
+        X_id.append(f)
     
         #make mask as target
-        csv = pd.read_csv('%s.csv'%fl.split('.png')[0])
+        csv = pd.read_csv('%s.csv'%f.split('.png')[0])
         csv.drop(np.where(csv['Diameter (pix)'] < minpix)[0], inplace=True)
-        y.append(mdm.make_mask(csv, img, binary=True))
+        y.append(mdm.make_mask(csv, img, binary=False, truncate=True))
     return  X, y, X_id
 
 def read_and_normalize_data(path, img_width, img_height, data_flag):
@@ -71,6 +71,7 @@ def read_and_normalize_data(path, img_width, img_height, data_flag):
 ########################################################################
 #Following https://github.com/fchollet/keras/issues/2708
 def custom_image_generator(data, target, batch_size=32):
+    L, W = data[0].shape[0], data[0].shape[1]
     while True:
         for i in range(0, len(data), batch_size):
             d, t = data[i:i+batch_size].copy(), target[i:i+batch_size].copy() #is this the most memory efficient way?
@@ -101,14 +102,14 @@ def FCN(im_width,im_height,learn_rate,lmbda):
     n_filters = 64          #vgg16 uses 64
     n_blocks = 4            #vgg16 uses 5
     n_dense = 2048          #vgg16 uses 4096
-    upsample = 25           #upsample scale - factor to get back to img_height, im_width
+    upsample = im_height    #upsample scale - factor to get back to img_height, im_width
 
     #first block
-    model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), input_shape=(im_width,im_height,)))
+    model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), input_shape=(im_width,im_height,3)))
     model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
-    #subsequent blocks
+#subsequent blocks
     for i in np.arange(1,n_blocks):
         n_filters_ = np.min((n_filters*2**i, 512))
         model.add(Conv2D(n_filters_, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
@@ -119,12 +120,13 @@ def FCN(im_width,im_height,learn_rate,lmbda):
             model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
     #reinterpreted FC layers - http://cs231n.github.io/convolutional-networks/#convert
-    model.add(Conv2D(n_dense, nb_row=7, nb_col=7, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc1')) #need to properly convert.
-    model.add(Conv2D(n_dense, nb_row=1, nb_col=1, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc2'))
+    model.add(Conv2D(n_dense, nb_row=12, nb_col=12, activation='relu', W_regularizer=l2(lmbda), name='fc1')) #filter dim = dim of previous layer
+    model.add(Conv2D(n_dense, nb_row=1, nb_col=1, activation='relu', W_regularizer=l2(lmbda), name='fc2'))
 
     #Upsample and create mask
     model.add(UpSampling2D(size=(upsample, upsample)))
     model.add(Conv2D(1, nb_row=upsample, nb_col=upsample, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='output'))
+    model.add(Reshape((im_width,im_height)))
 
     #Alternative layers
     #model.add(AtrousConvolution2D(n_dense, nb_row=7, nb_col=7, activation='relu', border_mode='same', atrous_rate=(2, 2), W_regularizer=l2(lmbda), name='fc1'))
@@ -171,7 +173,7 @@ def run_models(learn_rate,batch_size,nb_epoch,n_train_samples,lmbda):
     rs = 43                     #random_state for train/test split
     
     #Load data
-    kristen_dir = '/scratch/k/kristen/malidib/moon/'
+    dir = '/scratch/k/kristen/malidib/moon/'
     try:
         train_data=np.load('training_set/train_data_mask.npy')
         train_target=np.load('training_set/train_target_mask.npy')
@@ -179,8 +181,8 @@ def run_models(learn_rate,batch_size,nb_epoch,n_train_samples,lmbda):
         test_target=np.load('test_set/test_target_mask.npy')
         print "Successfully loaded files locally."
     except:
-        print "Couldnt find locally saved .npy files, loading from %s."%kristen_dir
-        train_path, test_path = '%straining_set/'%kristen_dir, '%stest_set/'%kristen_dir
+        print "Couldnt find locally saved .npy files, loading from %s."%dir
+        train_path, test_path = '%straining_set/'%dir, '%stest_set/'%dir
         train_data, train_target, train_id = read_and_normalize_data(train_path, im_width, im_height, 0)
         test_data, test_target, test_id = read_and_normalize_data(test_path, im_width, im_height, 1)
         np.save('training_set/train_data_mask.npy',train_data)
@@ -214,7 +216,7 @@ if __name__ == '__main__':
     n_train = 16000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     
     #iterables
-    N_runs = 10
+    N_runs = 1
     lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1)           #L2 regularization strength (lambda)
     lmbda.append(0)
     

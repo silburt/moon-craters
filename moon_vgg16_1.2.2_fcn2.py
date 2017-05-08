@@ -83,7 +83,7 @@ def FCN_model(im_width,im_height,learn_rate,lmbda):
     n_filters = 32          #vgg16 uses 64
     n_blocks = 3            #vgg16 uses 5
     n_dense = 512           #vgg16 uses 4096
-    
+
     #first block
     model = Sequential()
     model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), input_shape=(im_width,im_height,3)))

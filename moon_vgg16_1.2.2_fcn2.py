@@ -123,7 +123,7 @@ def train_and_test_model(train_data,train_target,test_data,test_target,learn_rat
     print('Split train: ', len(X_train), len(Y_train))
     print('Split valid: ', len(X_valid), len(Y_valid))
     
-    model = FCN_model2(im_width,im_height,learn_rate,lmbda)
+    model = FCN_model(im_width,im_height,learn_rate,lmbda)
     model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
               shuffle=True, verbose=1, validation_data=(X_valid, Y_valid),
               callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])

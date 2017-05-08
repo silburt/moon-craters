@@ -83,6 +83,8 @@ def FCN_model(im_width,im_height,learn_rate,lmbda):
     n_filters = 32          #vgg16 uses 64
     n_blocks = 3            #vgg16 uses 5
     n_dense = 512           #vgg16 uses 4096
+    dropout = 0
+    n_classes=1
     
     #first block
     print('Making VGG model...')

@@ -98,18 +98,18 @@ def custom_image_generator(data, target, batch_size=32):
 #and also loosely following https://blog.keras.io/building-autoencoders-in-keras.html
 def FCN(im_width,im_height,learn_rate,lmbda):
     print('Making VGG16-style Fully Convolutional Network model...')
-    model = Sequential()
     n_filters = 64          #vgg16 uses 64
     n_blocks = 4            #vgg16 uses 5
-    n_dense = 2048          #vgg16 uses 4096
+    n_dense = 512          #vgg16 uses 4096
     upsample = im_height    #upsample scale - factor to get back to img_height, im_width
 
     #first block
+    model = Sequential()
     model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), input_shape=(im_width,im_height,3)))
     model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
-#subsequent blocks
+    #subsequent blocks
     for i in np.arange(1,n_blocks):
         n_filters_ = np.min((n_filters*2**i, 512))
         model.add(Conv2D(n_filters_, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
@@ -120,8 +120,8 @@ def FCN(im_width,im_height,learn_rate,lmbda):
             model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
     #reinterpreted FC layers - http://cs231n.github.io/convolutional-networks/#convert
-    model.add(Conv2D(n_dense, nb_row=12, nb_col=12, activation='relu', W_regularizer=l2(lmbda), name='fc1')) #filter dim = dim of previous layer
-    model.add(Conv2D(n_dense, nb_row=1, nb_col=1, activation='relu', W_regularizer=l2(lmbda), name='fc2'))
+    model.add(Conv2D(n_dense, nb_row=12, nb_col=12, activation='relu', border_mode='valid', W_regularizer=l2(lmbda), name='fc1')) #filter dim = dim of previous layer
+    model.add(Conv2D(n_dense, nb_row=1, nb_col=1, activation='relu', border_mode='valid', W_regularizer=l2(lmbda), name='fc2'))
 
     #Upsample and create mask
     model.add(UpSampling2D(size=(upsample, upsample)))

@@ -31,6 +31,7 @@ print "loaded everything else"
 import utils.make_density_map as mdm
 print "loading make density map"
 
+'''
 #####################
 #load/read functions#
 ########################################################################
@@ -141,7 +142,7 @@ def train_test_model(train_data,train_target,test_data,test_target,learn_rate,ba
      
     test_predictions = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
     return mean_absolute_error(test_target, test_predictions)  #calculate test score
-
+'''
 ##############
 #Main Routine#
 ########################################################################
@@ -184,7 +185,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         print 'learning_rate=%e, batch_size=%d, lambda=%e, n_epoch=%d, n_train_samples=%d, random_state=%d, im_width=%d, im_height=%d'%(learn_rate,batch_size,l,nb_epoch,n_train_samples,rs,im_width,im_height)
         print '###################################'
         print '###################################'
-
+        
 ################
 #Arguments, Run#
 ########################################################################

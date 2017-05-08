@@ -31,7 +31,7 @@ print "loaded everything else"
 import utils.make_density_map as mdm
 print "loading make density map"
 
-'''
+
 #####################
 #load/read functions#
 ########################################################################
@@ -71,7 +71,7 @@ def read_and_normalize_data(path, img_width, img_height, data_flag):
     data = data / 255                           #normalize color
     print('%s shape:'%data_type, data.shape)
     return data, target, id
-
+'''
 #############################
 #FCN vgg model (keras 1.2.2)#
 ########################################################################

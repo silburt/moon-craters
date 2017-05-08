@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+"""Density and Mask Making
+
+Scripts for determining centroid density maps and segmentation masks as targetes for CNN.  See docstrings of functions for further help.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -96,17 +102,27 @@ def make_density_map(craters, imgshape, kernel=None, k_support = 8, k_sig=4., kn
     # Load blank density map
     dmap = np.zeros(imgshape)
 
+    # Get number of craters
+    N_ctrs = craters.shape[0]
+
     # Obtain gaussian kernel sigma values
     # callable checks if kernel is function
     if callable(kernel):
         sigma = kernel(**kdict)
+    # If knn is used
     elif kernel == "knn":
-        kdt = kd(craters[["x","y"]].as_matrix(), leafsize=10)
-        dnn = kdt.query(craters[["x","y"]].as_matrix(), \
-                                k=knn + 1)[0][:, 1:].mean(axis=1)
+        # If we have more than 1 crater, select either nearest 11 or N_ctrs
+        # neighbours, whichever is closer
+        if N_ctrs > 1:
+            kdt = kd(craters[["x","y"]].as_matrix(), leafsize=10)
+            dnn = kdt.query(craters[["x","y"]].as_matrix(), \
+                                    k=min(N_ctrs, knn + 1))[0][:, 1:].mean(axis=1)
+        # Otherwise, assume there are craters "offscreen" half an image away
+        else:
+            dnn = 0.5*imgshape[0]*np.ones(1)
         sigma = beta*dnn
     else:
-        sigma = k_sig*np.ones(craters.shape[0])
+        sigma = k_sig*np.ones(N_ctrs)
 
 
     #kdt = kd(craters[["x","y"]].as_matrix(), leafsize=10)
@@ -114,7 +130,7 @@ def make_density_map(craters, imgshape, kernel=None, k_support = 8, k_sig=4., kn
     #ker_sigma = 0.3*dnn
     #ker_sigma = 4*np.ones(dnn.shape)
 
-    for i in range(craters.shape[0]):
+    for i in range(N_ctrs):
         cx = int(craters["x"][i]); cy = int(craters["y"][i])
 
         # A bit convoluted, but ensures that kernel_support

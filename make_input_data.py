@@ -1,10 +1,24 @@
 #!/usr/bin/env python
-"""
-Usage: crater_make_dataset.py
+"""Moon Crater Input Data Generator
 
-Functions for combining LRO LOLA Elevation Model heightmap (https://astrogeology.usgs.gov/search/details/Moon/LRO/LOLA/Lunar_LRO_LOLA_Global_LDEM_118m_Mar2014/cub) and Goran Salamuniccar's database (https://astrogeology.usgs.gov/search/map/Moon/Research/Craters/GoranSalamuniccar_MoonCraters).  
+Functions for combining LRO LOLA Elevation Model heightmap (https://astrogeology.usgs.gov/search/details/Moon/LRO/LOLA/Lunar_LRO_LOLA_Global_LDEM_118m_Mar2014/cub) and crater location and size data from Goran Salamuniccar's database (https://astrogeology.usgs.gov/search/map/Moon/Research/Craters/GoranSalamuniccar_MoonCraters) and LROC data acquired for the cratering group by Alan Jackson.  
 
-The LRO image is a "simple cylindrical" projection, which is synonymous with Equidistant Cylindrical or Plate Carree (http://desktop.arcgis.com/en/arcmap/10.3/guide-books/map-projections/equidistant-cylindrical.htm).
+The LRO source image is a "simple cylindrical", or Plate Carree (http://desktop.arcgis.com/en/arcmap/10.3/guide-books/map-projections/equidistant-cylindrical.htm), image, and so a change in latitude or longitude corresponds to the same change in pixel coordinates for all points in the map.  The map was downloaded in png form using USGS's AstroCloud computing service (http://astrocloud.wr.usgs.gov/index.php).
+
+The script randomly samples images from the LRO source image, transforms them from Plate Carree to Orthographic projection, and saves them to disk in png format along with a csv file of associated craters, including their image x, y locations.  If called as a script, user must specify input file locations (use python make_input_data.py -h for help with arguments).  The script will use mpi4py multithreading to speed work up.  If calling as a module, use the GenDataSet function to access all subroutines (except for those that read in the image and crater CSV master files).
+
+Examples:
+
+Use 4 threads to make 30,000 random images from upper half of 20k LOLA source image, removing craters with diameters below 5 pixels and outputting to outhead path and file header:
+
+    mpirun -np 4 python make_input_data.py --image_path "/home/cczhu/cratering_big_data/LOLA_Global_20k.png" --outhead "/home/cczhu/
+    cratering_big_data/output/out" --cdim -180 0 0 90 --minpix 5
+
+Use 8 threads to make 10,000 random images from polar region of 20k LOLA source image, removing craters with diameters below 5 pixels and discarding those with small aspect ratios:
+
+    mpirun -np 8 python make_input_data.py --image_path "/home/cczhu/cratering_big_data/LOLA_Global_20k.png" --outhead "/home/cczhu/
+    cratering_big_data/output/out" --cdim -180 0 70 90 --minpix 5 --slivercut 0.8
+
 """
 from __future__ import absolute_import, division, print_function
 
@@ -285,7 +299,7 @@ def WarpImage(img, iproj, iextent, oproj, oextent,
     Warps images with cartopy.img_transform.warp_array,
     then plots them with imshow.  Based on
     cartopy.mpl.geoaxes.imshow.  Parameter descriptions
-    are identical to 
+    are identical to those in WarpImagePad.
     """
 
     if iproj == oproj:
@@ -614,25 +628,6 @@ def PlateCarree_to_Orthographic(img, oname, llbd, craters,
     ctr_xy.to_csv(oname.split(".png")[0] + ".csv", index=False)
 
 
-# Much hackier way of making images - don't use (unless you have to)!
-#fig = plt.figure(figsize=[img.shape[1]/200., img.shape[0]/200.])
-
-## For a uniform background without axes
-#axbg = fig.add_axes([0., 0., 1., 1.])
-#axbg.set_xlim([0,1]); axbg.set_ylim([0,1*img.shape[0]/img.shape[1]])
-#axbg.imshow(np.tile(np.array([[[200, 200, 255]]], dtype=np.uint8), [2, 2, 1]), origin='upper')
-#axbg.set_axis_off()
-#a=fig.gca(); a.set_xticks([]); a.set_yticks([])
-
-#ax = fig.add_axes([0., 0., 1., 1.], projection=projection); ax.background_patch.set_fill(False)
-#ax.set_extent([min(obounds[:,0]), max(obounds[:,0]), 
-#                min(obounds[:,1]), max(obounds[:,1])], crs=projection)
-#ax.imshow(img, transform=img_proj, extent=img_extent, cmap="Greys_r", origin="upper", regrid_shape=1.5*img.shape[0])
-#ax.set_axis_off()
-
-#plt.savefig("test.png", dpi=200, transparent=False, bbox_inches='tight', pad_inches=0)
-
-
 ############# Create Tiled Orthographic Dataset #############
 
 
@@ -764,44 +759,44 @@ def CreateOrthographicDataSet(outprefix):
 ################### Create Random Dataset ###########################
 
 
-def RandRot(img, craters, expand=False, origin="upper"):
-    """Rotates and horizontally/vertically flips image at random.
-    DOES NOT SEED ITSELF!"""
+#def RandRot(img, craters, expand=False, origin="upper"):
+#    """Rotates and horizontally/vertically flips image at random.
+#    DOES NOT SEED ITSELF!"""
 
-    # Values to shift craters after rotation
-    if origin == "upper":
-        rot_shift = [(0, img.size[0]), (img.size[0], img.size[1]), 
-                            (img.size[1],0)]
-    else:
-        rot_shift = [(img.size[1],0), (img.size[0], img.size[1]), 
-                            (0, img.size[0])]
+#    # Values to shift craters after rotation
+#    if origin == "upper":
+#        rot_shift = [(0, img.size[0]), (img.size[0], img.size[1]), 
+#                            (img.size[1],0)]
+#    else:
+#        rot_shift = [(img.size[1],0), (img.size[0], img.size[1]), 
+#                            (0, img.size[0])]
 
-    rtoken = np.random.randint(0,4)
-    if rtoken > 0:
-        img = img.rotate(90*rtoken, expand=expand)
+#    rtoken = np.random.randint(0,4)
+#    if rtoken > 0:
+#        img = img.rotate(90*rtoken, expand=expand)
 
-        # Rotate crater coordinates
-        if origin == "upper":
-            rt = -rtoken
-        else:
-            rt = rtoken
-        costheta = np.cos(90.*rt/180.*np.pi)
-        sintheta = np.sin(90.*rt/180.*np.pi)
-        xrot = craters["x"]*costheta - craters["y"]*sintheta
-        yrot = craters["x"]*sintheta + craters["y"]*costheta
-        craters["x"] = xrot + rot_transform[rtoken - 1][0]
-        craters["y"] = yrot + rot_transform[rtoken - 1][1]
+#        # Rotate crater coordinates
+#        if origin == "upper":
+#            rt = -rtoken
+#        else:
+#            rt = rtoken
+#        costheta = np.cos(90.*rt/180.*np.pi)
+#        sintheta = np.sin(90.*rt/180.*np.pi)
+#        xrot = craters["x"]*costheta - craters["y"]*sintheta
+#        yrot = craters["x"]*sintheta + craters["y"]*costheta
+#        craters["x"] = xrot + rot_transform[rtoken - 1][0]
+#        craters["y"] = yrot + rot_transform[rtoken - 1][1]
 
-    # 50% chance of flipping or mirroring
-    if np.random.randint(0,2):
-        img = ImageOps.mirror(img)
-        craters["x"] = img.size[0] - craters["x"]
+#    # 50% chance of flipping or mirroring
+#    if np.random.randint(0,2):
+#        img = ImageOps.mirror(img)
+#        craters["x"] = img.size[0] - craters["x"]
 
-    if np.random.randint(0,2):
-        img = ImageOps.flip(img)
-        craters["y"] = img.size[1] - craters["y"]
+#    if np.random.randint(0,2):
+#        img = ImageOps.flip(img)
+#        craters["y"] = img.size[1] - craters["y"]
 
-    return [img, craters]
+#    return [img, craters]
 
 
 def ResampleCraters(craters, llbd, imgheight, arad=1737.4, minpix=0):
@@ -873,8 +868,8 @@ def ResampleCraters(craters, llbd, imgheight, arad=1737.4, minpix=0):
 
 def GenDataset(img, craters, outhead, ilen_range=np.array([300., 4000.]), 
                 olen=300, cdim=[-180, 180, -90, 90],
-                minpix=0, randrot=False, amt=100, zeropad=4,
-                slivercut=0.1, outp=False, istart = 0, seed=None):
+                minpix=0, amt=100, zeropad=4, slivercut=0.1, 
+                outp=False, istart = 0, seed=None):
     """Generates random dataset from plate image.
 
     Parameters
@@ -902,10 +897,7 @@ def GenDataset(img, craters, outhead, ilen_range=np.array([300., 4000.]),
         at most a factor of 10 and our crater dataset starts at
         d = 5000 m.  However, if you use a different image, or
         setting max(ilen_range) > 10000 px, might be necessary
-        to remove craters that are less than ~3 pixels across.
-    randrot : bool - UNTESTED!
-        If True, randomly rotates and flips image (and corresponding
-        craters).  Might as well do it in Keras instead, though.
+        to remove craters that are less than ~5 pixels in diameter.
     amt : int
         Number of images to produce.
     zeropad : int
@@ -913,7 +905,7 @@ def GenDataset(img, craters, outhead, ilen_range=np.array([300., 4000.]),
     slivercut : float from 0 to 1
         Occasionally the code samples a small region near the pole,
         in which case the transformation from Plate Carree to
-        Orthographic leads to tiny slivers of the Moon surrounded
+        Orthographic produces tiny slivers of the Moon surrounded
         by padding.  These images are useless, so the code trashes
         any images whose non-padding region has an width/height ratio
         less than slivercut.  Discarded images are not counted
@@ -995,8 +987,8 @@ def GenDataset(img, craters, outhead, ilen_range=np.array([300., 4000.]),
             continue
 
         # Randomly rotate and/or flip, if user so desires
-        if randrot:
-            [imgo, ctr_xy] = RandRot(imgo, ctr_xy, origin=origin)
+        #if randrot:
+        #    [imgo, ctr_xy] = RandRot(imgo, ctr_xy, origin=origin)
 
         # Output everything
         oname = outhead + "_{i:0{zp}d}".format(i=i, zp=zeropad)
@@ -1065,23 +1057,26 @@ if __name__ == '__main__':
                         help='Path to the source image.', default="./LOLA_Global_20k.png")
     parser.add_argument('--lu_csv_path', metavar='lupath', type=str, required=False,
                         help='Path to LU78287 crater csv.', default="./LU78287GT.csv")
-    parser.add_argument('--alan_csv_path', metavar='lupath', type=str, required=False,
+    parser.add_argument('--alan_csv_path', metavar='alanpath', type=str, required=False,
                         help='Path to LROC crater csv.', default="./alanalldata.csv")
     parser.add_argument('--outhead', metavar='outhead', type=str, required=False,
-                        help='Filepath and filename prefix of outputs.', default="out/lola")
+                        help='Filepath and filename prefix of output files.', default="out/lola")
     parser.add_argument('--amt', type=int, default=7500, required=False,
                         help='Number of images each thread will make (multiply by number of \
                         threads for total number of images produced).')
     parser.add_argument('--cdim', nargs=4, type=int, required=False,
                         help='[Min longitude, max, min latitude, max] of source image crop. \
                         Crop creates global bounds for image set.')
+    parser.add_argument('--minpix', type=float, default=0., required=False,
+                        help='Minimum pixel diameter allowed in crater csv')
+    parser.add_argument('--slivercut', type=float, default=0.6, required=False,
+                        help='Minimum width/height aspect ratio to be acceptable image.')
     args = parser.parse_args()
 
-    print("rank {0} of {1}".format(rank, size))
+    print("Thread {0} of {1}".format(rank, size))
 
     img = Image.open(args.image_path).convert("L")
-    
-    
+        
     cdim = [-180, 180, -90, 90]
     if args.cdim:
         img = InitialImageCut(img, cdim, args.cdim)
@@ -1090,11 +1085,13 @@ if __name__ == '__main__':
     craters = ReadCombinedCraterCSV(filealan=args.alan_csv_path, filelu=args.lu_csv_path,
                                             dropfeatures=True)
     # Co-opt ResampleCraters to remove all craters beyond subset cdim
-    craters = ResampleCraters(craters, cdim, None, minpix=0)
+    # keep minpix = 0 (since we don't have pixel diameters yet)
+    craters = ResampleCraters(craters, cdim, None)
 
-    GenDataset(img, craters, args.outhead, ilen_range=np.array([600., 10300.]),
-                    olen=300, cdim=cdim, amt=args.amt, zeropad=5, slivercut=0.6, 
-                    outp="_p{0}.p".format(rank), istart = rank*args.amt)
+    GenDataset(img, craters, args.outhead, ilen_range=np.array([600., 2000.]),
+                    olen=300, cdim=cdim, amt=args.amt, zeropad=5, minpix=args.minpix,
+                    slivercut=args.slivercut, outp="_p{0}.p".format(rank), 
+                    istart = rank*args.amt)
 
 
 

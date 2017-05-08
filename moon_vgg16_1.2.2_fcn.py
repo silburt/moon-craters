@@ -97,7 +97,7 @@ def custom_image_generator(data, target, batch_size=32):
 #Following https://github.com/aurora95/Keras-FCN/blob/master/models.py
 #and also loosely following https://blog.keras.io/building-autoencoders-in-keras.html
 #and maybe https://github.com/nicolov/segmentation_keras
-def FCN(im_width,im_height,learn_rate,lmbda):
+def FCN_model(im_width,im_height,learn_rate,lmbda):
     print('Making VGG16-style Fully Convolutional Network model...')
     n_filters = 32          #vgg16 uses 64
     n_blocks = 4            #vgg16 uses 5
@@ -120,13 +120,13 @@ def FCN(im_width,im_height,learn_rate,lmbda):
         else:
             model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
-    #reinterpreted FC layers - http://cs231n.github.io/convolutional-networks/#convert
+    #FC->CONV layers - http://cs231n.github.io/convolutional-networks/#convert
     model.add(Conv2D(n_dense, nb_row=12, nb_col=12, activation='relu', border_mode='valid', W_regularizer=l2(lmbda), name='fc1')) #filter dim = dim of previous layer
     model.add(Conv2D(n_dense, nb_row=1, nb_col=1, activation='relu', border_mode='valid', W_regularizer=l2(lmbda), name='fc2'))
 
     #Upsample and create mask
     model.add(UpSampling2D(size=(upsample, upsample)))
-    model.add(Conv2D(1, nb_row=upsample, nb_col=upsample, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='output'))
+    model.add(Conv2D(1, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='output'))
     #model.add(Reshape((im_width,im_height)))
 
     #Alternative layers
@@ -151,7 +151,7 @@ def train_test_model(train_data,train_target,test_data,test_target,learn_rate,ba
     print('Split train: ', len(X_train), len(Y_train))
     print('Split valid: ', len(X_valid), len(Y_valid))
 
-    model = FCN(im_width,im_height,learn_rate,lmbda)
+    model = FCN_model(im_width,im_height,learn_rate,lmbda)
     model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
               shuffle=True, verbose=1, validation_data=(X_valid, Y_valid),
               callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])

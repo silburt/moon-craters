@@ -75,11 +75,9 @@ def read_and_normalize_data(path, img_width, img_height, data_flag):
 #############################
 #FCN vgg model (keras 1.2.2)#
 ########################################################################
-'''
 #Following https://github.com/aurora95/Keras-FCN/blob/master/models.py
 #and also loosely following https://blog.keras.io/building-autoencoders-in-keras.html
 #and maybe https://github.com/nicolov/segmentation_keras
-'''
 def FCN_model(im_width,im_height,learn_rate,lmbda):
     print('Making VGG16-style Fully Convolutional Network model...')
     n_filters = 32          #vgg16 uses 64
@@ -131,7 +129,7 @@ def train_and_test_model(train_data,train_target,test_data,test_target,learn_rat
     print('Split train: ', len(X_train), len(Y_train))
     print('Split valid: ', len(X_valid), len(Y_valid))
     
-    model = FCN_model(im_width,im_height,learn_rate,lmbda)
+    model = FCN_model2(im_width,im_height,learn_rate,lmbda)
     model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
               shuffle=True, verbose=1, validation_data=(X_valid, Y_valid),
               callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])

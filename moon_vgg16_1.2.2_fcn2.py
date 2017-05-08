@@ -88,8 +88,7 @@ def FCN_model(im_width,im_height,learn_rate,lmbda):
     model = Sequential()
     model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), input_shape=(im_width,im_height,3)))
     model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
-
-    model.add(Conv2D(1, nb_row=300, nb_col=300, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
+    model.add(Conv2D(1, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
 
     #optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)

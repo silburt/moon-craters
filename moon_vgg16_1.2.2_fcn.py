@@ -199,7 +199,7 @@ def run_models(learn_rate,batch_size,nb_epoch,n_train_samples,lmbda):
     train_target = train_target[:n_train_samples]
 
     #Iterate
-    for i in range(N_runs):
+    for i in range(len(lmbda)):
         l = lmbda[i]
         score = train_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,l,nb_epoch,n_train_samples,im_width,im_height,rs)
         print '###################################'

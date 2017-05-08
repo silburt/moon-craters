@@ -98,9 +98,9 @@ def custom_image_generator(data, target, batch_size=32):
 #and also loosely following https://blog.keras.io/building-autoencoders-in-keras.html
 def FCN(im_width,im_height,learn_rate,lmbda):
     print('Making VGG16-style Fully Convolutional Network model...')
-    n_filters = 64          #vgg16 uses 64
+    n_filters = 32          #vgg16 uses 64
     n_blocks = 4            #vgg16 uses 5
-    n_dense = 512          #vgg16 uses 4096
+    n_dense = 256          #vgg16 uses 4096
     upsample = im_height    #upsample scale - factor to get back to img_height, im_width
 
     #first block
@@ -213,7 +213,7 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     epochs = 30         #number of epochs. 1 epoch = forward/back pass thru all train data
-    n_train = 16000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    n_train = 8000      #number of training samples, needs to be a multiple of batch size. Big memory hog.
     
     #iterables
     N_runs = 1

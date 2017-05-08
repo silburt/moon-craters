@@ -8,7 +8,7 @@ module load gcc/6.2.1
 module load cuda/8.0 
 source /home/k/kristen/kristen/keras_venv_P8.v2/bin/activate 
 
-CUDA_VISIBLE_DEVICES=2 nohup python moon_vgg16_1.2.2_fcn.py > FCNoutput.txt &
+CUDA_VISIBLE_DEVICES=2 nohup python moon_vgg16_1.2.2_fcn2.py > FCNoutput.txt &
 CUDA_VISIBLE_DEVICES=2 nohup python moon_vgg16_1.2.2.py > vgg16output.txt &
 
 CUDA_VISIBLE_DEVICES=0 python moon_vgg16_1.2.2.py --run_fold 1 > outputfold1.txt &

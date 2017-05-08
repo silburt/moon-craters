@@ -10,7 +10,6 @@ import glob
 import numpy as np
 import pandas as pd
 import random
-import utils.make_density_map as mdm
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error
@@ -19,9 +18,6 @@ from keras.models import Sequential, Model
 from keras.layers.core import Dense, Dropout, Flatten, Reshape
 from keras.layers import AveragePooling2D
 from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D, UpSampling2D
-from keras.models import load_model
-from keras.applications.resnet50 import ResNet50
-from keras.preprocessing.image import ImageDataGenerator
 from keras.regularizers import l2
 
 from keras.optimizers import SGD, Adam, RMSprop
@@ -30,6 +26,10 @@ from keras.utils import np_utils
 from keras import __version__ as keras_version
 from keras import backend as K
 K.set_image_dim_ordering('tf')
+
+print "loaded everything else"
+import utils.make_density_map as mdm
+print "loading make density map"
 
 #####################
 #load/read functions#

@@ -7,8 +7,8 @@ import os
 import glob
 import numpy as np
 import pandas as pd
-import utils.make_density_map as mdm
 import random
+import utils.make_density_map as mdm
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error

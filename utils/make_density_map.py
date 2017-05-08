@@ -151,7 +151,7 @@ def make_mask(craters, img, binary=True, truncate=True):
     """
 
     # Load blank density map
-    imgshape = (img.shape[0], img.shape[1])     #Image dimensions [y, x], i.e. output of img.shape
+    imgshape = (img.shape[0], img.shape[1], 1)     #Image dimensions [y, x, 1], i.e. output of img.shape
     dmap = np.zeros(imgshape)
     cx, cy = craters["x"].values.astype('int'), craters["y"].values.astype('int')
     radius = craters["Diameter (pix)"].values / 2.
@@ -169,7 +169,7 @@ def make_mask(craters, img, binary=True, truncate=True):
                                                     ks_half, kernel_support)
 
         # Add kernel to image
-        dmap[imyl:imyr, imxl:imxr] += kernel[gyl:gyr, gxl:gxr]
+        dmap[imyl:imyr, imxl:imxr, 0] += kernel[gyl:gyr, gxl:gxr]
     
     if binary:
         dmap = (dmap > 0).astype(float)

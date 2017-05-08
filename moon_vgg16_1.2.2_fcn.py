@@ -127,7 +127,7 @@ def FCN(im_width,im_height,learn_rate,lmbda):
     #Upsample and create mask
     model.add(UpSampling2D(size=(upsample, upsample)))
     model.add(Conv2D(1, nb_row=upsample, nb_col=upsample, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='output'))
-    model.add(Reshape((im_width,im_height)))
+    #model.add(Reshape((im_width,im_height)))
 
     #Alternative layers
     #model.add(AtrousConvolution2D(n_dense, nb_row=7, nb_col=7, activation='relu', border_mode='same', atrous_rate=(2, 2), W_regularizer=l2(lmbda), name='fc1'))
@@ -179,7 +179,8 @@ def run_models(learn_rate,batch_size,nb_epoch,n_train_samples,lmbda):
     rs = 43                     #random_state for train/test split
     
     #Load data
-    dir = '/scratch/k/kristen/malidib/moon/'
+    #dir = '/scratch/k/kristen/malidib/moon/'
+    dir=''
     try:
         train_data=np.load('training_set/train_data_mask.npy')
         train_target=np.load('training_set/train_target_mask.npy')

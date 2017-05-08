@@ -96,6 +96,7 @@ def custom_image_generator(data, target, batch_size=32):
 ########################################################################
 #Following https://github.com/aurora95/Keras-FCN/blob/master/models.py
 #and also loosely following https://blog.keras.io/building-autoencoders-in-keras.html
+#and maybe https://github.com/nicolov/segmentation_keras
 def FCN(im_width,im_height,learn_rate,lmbda):
     print('Making VGG16-style Fully Convolutional Network model...')
     n_filters = 32          #vgg16 uses 64
@@ -151,12 +152,17 @@ def train_test_model(train_data,train_target,test_data,test_target,learn_rate,ba
     print('Split valid: ', len(X_valid), len(Y_valid))
 
     model = FCN(im_width,im_height,learn_rate,lmbda)
+    model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
+              shuffle=True, verbose=1, validation_data=(X_valid, Y_valid),
+              callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
+    '''
     model.fit_generator(custom_image_generator(X_train,Y_train,batch_size=batch_size),
                         samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
                         validation_data=(X_valid, Y_valid), #no generator for validation data
                         #validation_data=custom_image_generator(X_valid,Y_valid,batch_size=batch_size),
                         nb_val_samples=len(X_valid),
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
+    '''
     #model_name = ''
     #model.save_weights(model_name)     #save weights of the model
     

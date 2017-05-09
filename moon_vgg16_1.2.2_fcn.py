@@ -132,7 +132,7 @@ def train_and_test_model(train_data,train_target,test_data,test_target,learn_rat
               callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
     
     if save_model == 1:
-        model.save('models/FCN_lmbda%.1f.h5'%l)
+        model.save('models/FCN_lmbda%.1f.h5'%lmbda)
      
     test_pred = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
     return np.sum((test_pred - test_target)**2)/test_target.shape[0]  #calculate test score

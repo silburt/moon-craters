@@ -19,6 +19,7 @@ from keras.layers.core import Dense, Dropout, Flatten, Reshape
 from keras.layers import AveragePooling2D
 from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D, UpSampling2D
 from keras.regularizers import l2
+from keras.models import load_model
 
 from keras.optimizers import SGD, Adam, RMSprop
 from keras.callbacks import EarlyStopping, ModelCheckpoint
@@ -105,7 +106,7 @@ def FCN_model(im_width,im_height,learn_rate,lmbda):
     
     #Upsample and create mask
     model.add(UpSampling2D(size=(upsample, upsample)))
-    model.add(Conv2D(1, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='output'))
+    model.add(Conv2D(1, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='output')) #maybe try sigmoid activation?
     
     #optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
@@ -192,7 +193,14 @@ if __name__ == '__main__':
     epochs = 30         #number of epochs. 1 epoch = forward/back pass thru all train data
     n_train = 16000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
 
+    model = FCN_model(300,300,lr,lmbda)
+    model.save('my_model.h5')
+    del model
+    model = load_model('my_model.h5')
+    print 'new model'
+    print model.summary()
+
     #run models
-    run_cross_validation_create_models(lr,bs,lmbda,epochs,n_train)
+    #run_cross_validation_create_models(lr,bs,lmbda,epochs,n_train)
 
 

@@ -179,8 +179,7 @@ def run_models(learn_rate,batch_size,nb_epoch,n_train_samples,lmbda):
     rs = 43                     #random_state for train/test split
     
     #Load data
-    #dir = '/scratch/k/kristen/malidib/moon/'
-    dir=''
+    dir = '/scratch/k/kristen/malidib/moon/'
     try:
         train_data=np.load('training_set/train_data_mask.npy')
         train_target=np.load('training_set/train_target_mask.npy')

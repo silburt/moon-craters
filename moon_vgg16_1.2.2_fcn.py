@@ -12,7 +12,6 @@ import pandas as pd
 import random
 
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_absolute_error
 
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Dropout, Flatten, Reshape
@@ -107,6 +106,7 @@ def FCN_model(im_width,im_height,learn_rate,lmbda):
     #Upsample and create mask
     model.add(UpSampling2D(size=(upsample, upsample)))
     model.add(Conv2D(1, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='output')) #maybe try sigmoid activation?
+    model.add(Reshape(im_width,im_height))
     
     #optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
@@ -119,7 +119,7 @@ def FCN_model(im_width,im_height,learn_rate,lmbda):
 ########################################################################
 #Need to create this function so that memory is released every iteration (when function exits).
 #Otherwise the memory used accumulates and eventually the program crashes.
-def train_and_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,lmbda,nb_epoch,n_train_samples,im_width,im_height,rs):
+def train_and_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,lmbda,nb_epoch,n_train_samples,im_width,im_height,rs,save_model):
     
     #Main Routine - Build/Train/Test model
     X_train, X_valid, Y_train, Y_valid = train_test_split(train_data, train_target, test_size=0.20, random_state=rs)
@@ -130,12 +130,12 @@ def train_and_test_model(train_data,train_target,test_data,test_target,learn_rat
     model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
               shuffle=True, verbose=1, validation_data=(X_valid, Y_valid),
               callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
-              
-    #model_name = ''
-    #model.save_weights(model_name)     #save weights of the model
+    
+    if save_model == 1:
+        model.save('models/FCN_lmbda%.1f.h5'%l)
      
-    test_predictions = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
-    return mean_absolute_error(test_target, test_predictions)  #calculate test score
+    test_pred = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
+    return np.sum((test_pred - test_target)**2)/test_target.shape[0]  #calculate test score
 
 ##############
 #Main Routine#
@@ -172,15 +172,13 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     lmbda.append(0)
     for i in range(N_runs):
         l = lmbda[i]
-        score = train_and_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,l,nb_epoch,n_train_samples,im_width,im_height,rs)
+        score = train_and_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,l,nb_epoch,n_train_samples,im_width,im_height,rs,save_model)
         print '###################################'
         print '##########END_OF_RUN_INFO##########'
         print('\nTest Score is %f.\n'%score)
         print 'learning_rate=%e, batch_size=%d, lambda=%e, n_epoch=%d, n_train_samples=%d, random_state=%d, im_width=%d, im_height=%d'%(learn_rate,batch_size,l,nb_epoch,n_train_samples,rs,im_width,im_height)
         print '###################################'
         print '###################################'
-        if save_model == 1:
-            model.save('models/FCN_lmbda%.1f.h5'%l)
         
 ################
 #Arguments, Run#
@@ -192,7 +190,7 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 30         #number of epochs. 1 epoch = forward/back pass thru all train data
+    epochs = 5          #number of epochs. 1 epoch = forward/back pass thru all train data
     n_train = 16000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1      #save models
 

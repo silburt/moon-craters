@@ -79,29 +79,29 @@ def FCN_model(im_width,im_height,learn_rate,lmbda):
     print('Making VGG16-style Fully Convolutional Network model...')
     n_filters = 32          #vgg16 uses 64
     n_blocks = 4            #vgg16 uses 5
-    n_dense = 256          #vgg16 uses 4096
-    upsample = im_height    #upsample scale - factor to get back to img_height, im_width
-    
+    n_dense = 256           #vgg16 uses 4096
+    upsample = 25           #upsample scale - factor to get back to img_height, im_width
+
     #first block
     model = Sequential()
     model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), input_shape=(im_width,im_height,3)))
     model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
-    
+
     #subsequent blocks
     for i in np.arange(1,n_blocks):
         n_filters_ = np.min((n_filters*2**i, 512))
         model.add(Conv2D(n_filters_, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
         model.add(Conv2D(n_filters_, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
-        if i==1:
+        if i==2:
             model.add(MaxPooling2D(pool_size=(2, 2), strides=(3, 3)))
         else:
             model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
     #FC->CONV layers - http://cs231n.github.io/convolutional-networks/#convert
-    model.add(Conv2D(n_dense, nb_row=12, nb_col=12, activation='relu', border_mode='valid', W_regularizer=l2(lmbda), name='fc1')) #filter dim = dim of previous layer
-    model.add(Conv2D(n_dense, nb_row=1, nb_col=1, activation='relu', border_mode='valid', W_regularizer=l2(lmbda), name='fc2'))
-    
+    model.add(Conv2D(n_dense, nb_row=12, nb_col=12, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc1'))
+    model.add(Conv2D(n_dense, nb_row=1, nb_col=1, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc2'))
+
     #Upsample and create mask
     model.add(UpSampling2D(size=(upsample, upsample)))
     model.add(Conv2D(1, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='output')) #maybe try sigmoid activation?
@@ -131,7 +131,7 @@ def train_and_test_model(train_data,train_target,test_data,test_target,learn_rat
               callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
     
     if save_model == 1:
-        model.save('models/FCN_lmbda%.1f.h5'%lmbda)
+        model.save('models/FCN_lmbda%.0e.h5'%lmbda)
      
     test_pred = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
     return np.sum((test_pred - test_target)**2)/test_target.shape[0]  #calculate test score

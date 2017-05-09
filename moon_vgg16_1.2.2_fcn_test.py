@@ -10,13 +10,12 @@ import glob
 import numpy as np
 import pandas as pd
 import random
-
 from sklearn.model_selection import train_test_split
 
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Dropout, Flatten, Reshape
 from keras.layers import AveragePooling2D
-from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D, UpSampling2D
+from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D, UpSampling2D, Deconvolution2D
 from keras.regularizers import l2
 from keras.models import load_model
 
@@ -28,6 +27,7 @@ from keras import backend as K
 K.set_image_dim_ordering('tf')
 
 import utils.make_density_map2d as mdm
+from utils.BilinearUpSampling import *
 
 #####################
 #load/read functions#
@@ -80,7 +80,6 @@ def FCN_model(im_width,im_height,learn_rate,lmbda):
     n_filters = 32          #vgg16 uses 64
     n_blocks = 4            #vgg16 uses 5
     n_dense = 256           #vgg16 uses 4096
-    upsample = 25           #upsample scale - factor to get back to img_height, im_width
 
     #first block
     model = Sequential()
@@ -99,11 +98,15 @@ def FCN_model(im_width,im_height,learn_rate,lmbda):
             model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
     #FC->CONV layers - http://cs231n.github.io/convolutional-networks/#convert
-    model.add(Conv2D(n_dense, nb_row=12, nb_col=12, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc1'))
+    shape = model.layers[-1].output_shape[1]
+    model.add(Conv2D(n_dense, nb_row=shape, nb_col=shape, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc1'))
     model.add(Conv2D(n_dense, nb_row=1, nb_col=1, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc2'))
 
     #Upsample and create mask
-    model.add(UpSampling2D(size=(upsample, upsample)))
+    #model.add(UpSampling2D(size=(upsample, upsample)))
+    #model.add(Deconvolution2D(256, 3, 3, output_shape=(None, 300, 300, 256),subsample=(2, 2),border_mode='valid', input_shape=(12, 12, 256)))
+    upsample = int(im_width/model.layers[-1].output_shape[1])
+    model.add(BilinearUpSampling2D(size=(upsample,upsample),data_format='channels_last'))
     model.add(Conv2D(1, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='output')) #maybe try sigmoid activation?
     model.add(Reshape((im_width,im_height)))
     

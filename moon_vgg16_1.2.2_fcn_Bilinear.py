@@ -26,7 +26,7 @@ from keras import __version__ as keras_version
 from keras import backend as K
 K.set_image_dim_ordering('tf')
 
-import utils.make_density_map3d as mdm
+import utils.make_density_map2d as mdm
 from utils.BilinearUpSampling import *
 
 #####################
@@ -108,7 +108,7 @@ def FCN_model(im_width,im_height,learn_rate,lmbda):
     upsample = int(im_width/model.layers[-1].output_shape[1])
     model.add(BilinearUpSampling2D(size=(upsample,upsample),data_format='channels_last'))
     model.add(Conv2D(1, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='output')) #maybe try sigmoid activation?
-    #model.add(Reshape((im_width,im_height)))
+    model.add(Reshape((im_width,im_height)))
     
     #optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
@@ -151,20 +151,20 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     #Load data
     dir = '/scratch/k/kristen/malidib/moon/'
     try:
-        train_data=np.load('training_set/train_data_mask.npy')
-        train_target=np.load('training_set/train_target_mask.npy')
-        test_data=np.load('test_set/test_data_mask.npy')
-        test_target=np.load('test_set/test_target_mask.npy')
+        train_data=np.load('training_set/train_data_mask2d.npy')
+        train_target=np.load('training_set/train_target_mask2d.npy')
+        test_data=np.load('test_set/test_data_mask2d.npy')
+        test_target=np.load('test_set/test_target_mask2d.npy')
         print "Successfully loaded files locally."
     except:
         print "Couldnt find locally saved .npy files, loading from %s."%dir
         train_path, test_path = '%straining_set/'%dir, '%stest_set/'%dir
         train_data, train_target, train_id = read_and_normalize_data(train_path, im_width, im_height, 0)
         test_data, test_target, test_id = read_and_normalize_data(test_path, im_width, im_height, 1)
-        np.save('training_set/train_data_mask.npy',train_data)
-        np.save('training_set/train_target_mask.npy',train_target)
-        np.save('test_set/test_data_mask.npy',test_data)
-        np.save('test_set/test_target_mask.npy',test_target)
+        np.save('training_set/train_data_mask2d.npy',train_data)
+        np.save('training_set/train_target_mask2d.npy',train_target)
+        np.save('test_set/test_data_mask2d.npy',test_data)
+        np.save('test_set/test_target_mask2d.npy',test_target)
     train_data = train_data[:n_train_samples]
     train_target = train_target[:n_train_samples]
 

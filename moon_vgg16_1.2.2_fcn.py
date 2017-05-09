@@ -77,7 +77,7 @@ def read_and_normalize_data(path, img_width, img_height, data_flag):
 #and maybe https://github.com/nicolov/segmentation_keras
 def FCN_model(im_width,im_height,learn_rate,lmbda):
     print('Making VGG16-style Fully Convolutional Network model...')
-    n_filters = 32          #vgg16 uses 64
+    n_filters = 64          #vgg16 uses 64
     n_blocks = 4            #vgg16 uses 5
     n_dense = 256           #vgg16 uses 4096
     upsample = 25           #upsample scale - factor to get back to img_height, im_width
@@ -99,7 +99,7 @@ def FCN_model(im_width,im_height,learn_rate,lmbda):
             model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
     #FC->CONV layers - http://cs231n.github.io/convolutional-networks/#convert
-    model.add(Conv2D(n_dense, nb_row=12, nb_col=12, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc1'))
+    model.add(Conv2D(n_dense, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc1'))
     model.add(Conv2D(n_dense, nb_row=1, nb_col=1, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc2'))
 
     #Upsample and create mask

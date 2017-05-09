@@ -1,4 +1,4 @@
-#This tries out different modules to see if they add any benefit.
+#This model works but it doesn't do too well.
 
 #This python script is adapted from moon2.py and uses the vgg16 convnet structure.
 #The number of blocks, and other aspects of the vgg16 model can be modified.
@@ -189,7 +189,7 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 5          #number of epochs. 1 epoch = forward/back pass thru all train data
+    epochs = 30         #number of epochs. 1 epoch = forward/back pass thru all train data
     n_train = 16000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
 

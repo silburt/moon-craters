@@ -28,7 +28,6 @@ from keras import backend as K
 K.set_image_dim_ordering('tf')
 
 import utils.make_density_map2d as mdm
-print "loaded all packages"
 
 #####################
 #load/read functions#
@@ -119,7 +118,7 @@ def FCN_model(im_width,im_height,learn_rate,lmbda):
 ########################################################################
 #Need to create this function so that memory is released every iteration (when function exits).
 #Otherwise the memory used accumulates and eventually the program crashes.
-def train_and_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,lmbda,nb_epoch,n_train_samples,im_width,im_height,rs,save_model):
+def train_and_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,lmbda,nb_epoch,im_width,im_height,rs,save_model):
     
     #Main Routine - Build/Train/Test model
     X_train, X_valid, Y_train, Y_valid = train_test_split(train_data, train_target, test_size=0.20, random_state=rs)
@@ -167,12 +166,12 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     train_target = train_target[:n_train_samples]
 
     #Iterate
-    N_runs = 3
+    N_runs = 1
     lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1)
     lmbda.append(0)
     for i in range(N_runs):
         l = lmbda[i]
-        score = train_and_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,l,nb_epoch,n_train_samples,im_width,im_height,rs,save_models)
+        score = train_and_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,l,nb_epoch,im_width,im_height,rs,save_models)
         print '###################################'
         print '##########END_OF_RUN_INFO##########'
         print('\nTest Score is %f.\n'%score)
@@ -192,7 +191,7 @@ if __name__ == '__main__':
     lmbda = 0           #L2 regularization strength (lambda)
     epochs = 5          #number of epochs. 1 epoch = forward/back pass thru all train data
     n_train = 16000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
-    save_models = 1      #save models
+    save_models = 1     #save models
 
     #run models
     run_cross_validation_create_models(lr,bs,lmbda,epochs,n_train,save_models)

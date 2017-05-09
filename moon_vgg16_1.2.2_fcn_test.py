@@ -79,7 +79,7 @@ def FCN_model(im_width,im_height,learn_rate,lmbda):
     print('Making VGG16-style Fully Convolutional Network model...')
     n_filters = 32          #vgg16 uses 64
     n_blocks = 4            #vgg16 uses 5
-    n_dense = 512           #vgg16 uses 4096
+    n_dense = 256           #vgg16 uses 4096
     upsample = 25           #upsample scale - factor to get back to img_height, im_width
 
     #first block

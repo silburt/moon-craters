@@ -108,7 +108,7 @@ def FCN_model(im_width,im_height,learn_rate,lmbda):
     upsample = int(im_width/model.layers[-1].output_shape[1])
     model.add(BilinearUpSampling2D(size=(upsample,upsample),data_format='channels_last'))
     model.add(Conv2D(1, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='output')) #maybe try sigmoid activation?
-    model.add(Reshape((im_width,im_height)))
+#model.add(Reshape((im_width,im_height)))
     
     #optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)

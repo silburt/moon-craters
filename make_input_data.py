@@ -842,6 +842,7 @@ def ResampleCraters(craters, llbd, imgheight, arad=1737.4, minpix=0):
         
         # Remove craters smaller than pixel limit
         ctr_sub = ctr_sub[ctr_sub["Diameter (km)"] >= minkm]
+        ctr_sub.reset_index(inplace=True, drop=True)
     
     return ctr_sub
 

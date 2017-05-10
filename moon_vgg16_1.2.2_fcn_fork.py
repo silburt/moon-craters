@@ -1,5 +1,5 @@
-#This model works but it doesn't work too well.
-#****Next is to add the data manipulation routine.**** It trains very well on the validation set but sucks on the test set... why?
+#This model tries to stitch differnet levels together to have scale aware analysis.
+#See "Residual connection on a convolution layer" in https://jtymes.github.io/keras_docs/1.2.2/getting-started/functional-api-guide/#multi-input-and-multi-output-models
 
 #This python script is adapted from moon2.py and uses the vgg16 convnet structure.
 #The number of blocks, and other aspects of the vgg16 model can be modified.
@@ -16,8 +16,8 @@ from sklearn.model_selection import train_test_split
 
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Dropout, Flatten, Reshape
-from keras.layers import AveragePooling2D
-from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D, UpSampling2D
+from keras.layers import AveragePooling2D, merge, Input, BatchNormalization
+from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D, UpSampling2D
 from keras.regularizers import l2
 from keras.models import load_model
 
@@ -74,20 +74,86 @@ def read_and_normalize_data(path, img_width, img_height, data_flag):
 #FCN vgg model (keras 1.2.2)#
 ########################################################################
 #Following https://github.com/aurora95/Keras-FCN/blob/master/models.py
-#and also loosely following https://blog.keras.io/building-autoencoders-in-keras.html
-#and maybe https://github.com/nicolov/segmentation_keras
-def FCN_model(im_width,im_height,learn_rate,lmbda):
-    print('Making VGG16-style Fully Convolutional Network model...')
-    n_filters = 64          #vgg16 uses 64
-    n_blocks = 4            #vgg16 uses 5
-    n_dense = 256           #vgg16 uses 4096
-    upsample = 25           #upsample scale - factor to get back to img_height, im_width
+#and also loosely following: https://blog.keras.io/building-autoencoders-in-keras.html
+#and maybe: https://github.com/nicolov/segmentation_keras
+#and this!: https://gist.github.com/Neltherion/f070913fd6284c4a0b60abb86a0cd642
+def FCN_fork_model(im_width,im_height,learn_rate,lmbda):
+print('Making VGG16-style Fully Convolutional Network model...')
+n_filters = 32          #vgg16 uses 64
+n_blocks = 4            #vgg16 uses 5
+n_dense = 256           #vgg16 uses 4096
+im_width = im_height = 256
+lmbda = 0
+
+img_input = Input(batch_shape=(None, im_width, im_height, 3))
+l1 = Convolution2D(n_filters, 3, 3, activation='relu', name='conv1_1', border_mode='same')(img_input)
+l1 = Convolution2D(n_filters, 3, 3, activation='relu', name='conv1_2', border_mode='same')(l1)
+l1P = MaxPooling2D((2, 2), name='maxpool_1')(l1)
+
+l2 = Convolution2D(n_filters*2, 3, 3, activation='relu', name='conv2_1', border_mode='same')(l1P)
+l2 = Convolution2D(n_filters*2, 3, 3, activation='relu', name='conv2_2', border_mode='same')(l2)
+l2P = MaxPooling2D((2, 2), name='maxpool_2')(l2)
+
+l3 = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv3_1', border_mode='same')(l2P)
+l3 = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv3_2', border_mode='same')(l3)
+l3P = MaxPooling2D((2, 2), name='maxpool_3')(l3)
+
+l4 = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv4_1', border_mode='same')(l3P)
+l4 = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv4_2', border_mode='same')(l4)
+
+u = UpSampling2D((2,2), name='up4->3')(l4)
+u = BatchNormalization(axis=1, name='normu3')(u)
+u = merge((BatchNormalization(axis=1, name='norml3')(l3), u), mode='concat', name='merge3')
+u = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv_merge3', border_mode='same')(u)
+    
+u = UpSampling2D((2,2), name='up3->2')(u)
+u = BatchNormalization(axis=1, name='normu2')(u)
+u = merge((BatchNormalization(axis=1, name='norml2')(l2), u), mode='concat', name='merge2')
+u = Convolution2D(n_filters*2, 3, 3, activation='relu', name='conv_merge2', border_mode='same')(u)
+
+u = UpSampling2D((2,2), name='up2->1')(u)
+u = BatchNormalization(axis=1, name='normu1')(u)
+u = merge((BatchNormalization(axis=1, name='norml1')(l1), u), mode='concat', name='merge1')
+u = Convolution2D(n_filters, 3, 3, activation='relu', name='conv_merge1', border_mode='same')(u)
+u = Convolution2D(1, 3, 3, activation='relu', name='output', border_mode='same')(u)
+u = Reshape((im_width, im_height))(u)
+
+model = Model(input=img_input, output=u)
+
 
     #first block
-    model = Sequential()
-    model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), input_shape=(im_width,im_height,3)))
-    model.add(Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
-    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    img_input = Input(batch_shape=(None,im_width,im_height,3))
+    l1 = Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda))(img_input)
+    l1 = Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda))(l1)
+    l1P = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(l1)
+
+    l2 = Conv2D(n_filters*2, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda))(l1P)
+    l2 = Conv2D(n_filters*2, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda))(l2)
+    l2P = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(l2)
+
+    l3 = Conv2D(n_filters*4, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda))(l2P)
+    l3 = Conv2D(n_filters*4, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda))(l3)
+    l3P = MaxPooling2D(pool_size=(2, 2), strides=(3, 3))(l3)
+
+    l4 = Conv2D(n_filters*4, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda))(l3P)
+    l4 = Conv2D(n_filters*4, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda))(l4)
+    l4P = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(l3)
+
+    fc = Conv2D(n_dense, nb_row=12, nb_col=12, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc1')(l4P)
+    fc = Conv2D(n_dense, nb_row=1, nb_col=1, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc2')(fc)
+    
+    #upsample all levels
+    fc_up = UpSampling2D(size=(25,25))(fc)
+    l4_up = UpSampling2D(size=(12,12))(l4)
+    l3_up = Upsamplling2D(size=(4,4))(l3)
+    l2_up = Upsamplling2D(size=(2,2))(l2)
+    
+    merge = Merge([fc_up, l4_up, l3_up, l2_up, l1], mode='concat')
+    final = Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda))(merge)
+    final = Conv2D(1, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda))(final)
+    final = Reshape((im_width,im_height))(final)
+
+    model = Model(final, (im_width,im_height))
 
     #subsequent blocks
     for i in np.arange(1,n_blocks):
@@ -100,7 +166,7 @@ def FCN_model(im_width,im_height,learn_rate,lmbda):
             model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
     #FC->CONV layers - http://cs231n.github.io/convolutional-networks/#convert
-    model.add(Conv2D(n_dense, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc1'))
+    model.add(Conv2D(n_dense, nb_row=12, nb_col=12, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc1'))
     model.add(Conv2D(n_dense, nb_row=1, nb_col=1, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc2'))
 
     #Upsample and create mask
@@ -190,7 +256,7 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 30         #number of epochs. 1 epoch = forward/back pass thru all train data
+    epochs = 5          #number of epochs. 1 epoch = forward/back pass thru all train data
     n_train = 16000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
 

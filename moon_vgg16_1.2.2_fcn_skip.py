@@ -78,7 +78,7 @@ def read_and_normalize_data(path, img_width, img_height, data_flag):
 #and maybe: https://github.com/nicolov/segmentation_keras
 #and this!: https://gist.github.com/Neltherion/f070913fd6284c4a0b60abb86a0cd642
 def FCN_skip_model(im_width,im_height,learn_rate,lmbda):
-print('Making VGG16-style Fully Convolutional Network model...')
+    print('Making VGG16-style Fully Convolutional Network model...')
     n_filters = 32          #vgg16 uses 64
     n_blocks = 4            #vgg16 uses 5
     n_dense = 256           #vgg16 uses 4096

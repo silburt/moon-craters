@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+"""Density and Mask Making
+
+Scripts for determining centroid density maps and segmentation masks as targetes for CNN.  See docstrings of functions for further help.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -62,16 +68,16 @@ def get_merge_indices(cen, imglen, ks_h, ker_shp):
     return [img_l, img_r, g_l, g_r]
 
 
-def make_density_map(craters, imgshape, kernel=None, k_support = 8, k_sig=4., knn=10, 
-                        beta=0.3, kdict={}):
+def make_density_map(craters, img, kernel=None, k_support = 8, k_sig=4., knn=10, 
+                        beta=0.3, kdict={}, truncate=True):
     """Makes Gaussian kernel density maps.
 
     Parameters
     ----------
     craters : pandas.DataFrame
         craters dataframe that includes pixel x and y columns
-    imgshape : listlike
-        Image dimensions [y, x], i.e. output of img.shape
+    img : numpy.ndarray
+        original image; assumes colour channel is last axis (tf standard)
     kernel : function, "knn" or None
         If a function is inputted, function must return an array of 
         length craters.shape[0].  If "knn",  uses variable kernel with 
@@ -91,30 +97,38 @@ def make_density_map(craters, imgshape, kernel=None, k_support = 8, k_sig=4., kn
         is 0.3.
     kdict : dict
         If kernel is custom function, dictionary of arguments passed to kernel.
+    truncate : bool
+        If True, truncate mask where image truncates
     """
 
     # Load blank density map
+    imgshape = img.shape[:2]
     dmap = np.zeros(imgshape)
+
+    # Get number of craters
+    N_ctrs = craters.shape[0]
 
     # Obtain gaussian kernel sigma values
     # callable checks if kernel is function
     if callable(kernel):
         sigma = kernel(**kdict)
+    # If knn is used
     elif kernel == "knn":
-        kdt = kd(craters[["x","y"]].as_matrix(), leafsize=10)
-        dnn = kdt.query(craters[["x","y"]].as_matrix(), \
-                                k=knn + 1)[0][:, 1:].mean(axis=1)
+        # If we have more than 1 crater, select either nearest 11 or N_ctrs
+        # neighbours, whichever is closer
+        if N_ctrs > 1:
+            kdt = kd(craters[["x","y"]].as_matrix(), leafsize=10)
+            dnn = kdt.query(craters[["x","y"]].as_matrix(), \
+                                    k=min(N_ctrs, knn + 1))[0][:, 1:].mean(axis=1)
+        # Otherwise, assume there are craters "offscreen" half an image away
+        else:
+            dnn = 0.5*imgshape[0]*np.ones(1)
         sigma = beta*dnn
     else:
-        sigma = k_sig*np.ones(craters.shape[0])
+        sigma = k_sig*np.ones(N_ctrs)
 
-
-    #kdt = kd(craters[["x","y"]].as_matrix(), leafsize=10)
-    #dnn = kdt.query(craters[["x","y"]].as_matrix(), k=11)[0][:, 1:].mean(axis=1)
-    #ker_sigma = 0.3*dnn
-    #ker_sigma = 4*np.ones(dnn.shape)
-
-    for i in range(craters.shape[0]):
+    # Gaussian adding loop
+    for i in range(N_ctrs):
         cx = int(craters["x"][i]); cy = int(craters["y"][i])
 
         # A bit convoluted, but ensures that kernel_support
@@ -133,6 +147,13 @@ def make_density_map(craters, imgshape, kernel=None, k_support = 8, k_sig=4., kn
         # Add kernel to image
         dmap[imyl:imyr, imxl:imxr] += kernel[gyl:gyr, gxl:gxr]
 
+    # Removes
+    if truncate:
+        if img.ndim == 3:
+            dmap[img[:,:,0] == 0] = 0
+        else:
+            dmap[img == 0] = 0
+
     return dmap
 
 
@@ -143,8 +164,8 @@ def make_mask(craters, img, binary=True, truncate=True):
     ----------
     craters : pandas.DataFrame
         craters dataframe that includes pixel x and y columns
-    img : 3D numpy array
-        original image. 
+    img : numpy.ndarray
+        original image; assumes colour channel is last axis (tf standard)
     binary : bool
         If True, returns a binary image of crater masks
     truncate : bool
@@ -152,7 +173,7 @@ def make_mask(craters, img, binary=True, truncate=True):
     """
 
     # Load blank density map
-    imgshape = (img.shape[0], img.shape[1])     #Image dimensions [y, x], i.e. output of img.shape
+    imgshape = img.shape[:2]
     dmap = np.zeros(imgshape)
     cx, cy = craters["x"].values.astype('int'), craters["y"].values.astype('int')
     radius = craters["Diameter (pix)"].values / 2.
@@ -176,7 +197,10 @@ def make_mask(craters, img, binary=True, truncate=True):
         dmap = (dmap > 0).astype(float)
     
     if truncate:
-        dmap[img[:,:,0] == 0] = 0
+        if img.ndim == 3:
+            dmap[img[:,:,0] == 0] = 0
+        else:
+            dmap[img == 0] = 0
     
     #add centroids to image
     #dmap[cy,cx] = 2

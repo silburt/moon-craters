@@ -187,7 +187,7 @@ def make_dmaps(path, maketype, outshp, minpix, dmap_args, savepng=False):
 
     files = sorted([fn for fn in glob.glob('%s*.png'%path)
              if (not os.path.basename(fn).endswith('mask.png') and
-            not os.path.basename(fn).endswith('map.png'))])
+            not os.path.basename(fn).endswith('dens.png'))])
     print("number of input image files: %d"%(len(files)))
     print("Generating target tmages ({0:s}).".format(maketype))
 

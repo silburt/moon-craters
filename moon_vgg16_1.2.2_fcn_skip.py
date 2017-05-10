@@ -70,6 +70,31 @@ def read_and_normalize_data(path, img_width, img_height, data_flag):
     print('%s shape:'%data_type, data.shape)
     return data, target, id
 
+########################
+#custom image generator#
+########################################################################
+#Following https://github.com/fchollet/keras/issues/2708
+def custom_image_generator(data, target, batch_size=32):
+    L, W = data[0].shape[0], data[0].shape[1]
+    while True:
+        for i in range(0, len(data), batch_size):
+            d, t = data[i:i+batch_size].copy(), target[i:i+batch_size].copy() #most efficient for memory?
+            
+            #horizontal/vertical flips
+            for j in np.where(np.random.randint(0,2,batch_size)==1)[0]:
+                d[j], t[j] = np.fliplr(d[j]), np.fliplr(t[j])                 #left/right
+            for j in np.where(np.random.randint(0,2,batch_size)==1)[0]:
+                d[j], t[j] = np.flipud(d[j]), np.flipud(t[j])                 #up/down
+            
+            #random up/down and left/right pixel shifts
+            npix = 10
+            h = np.random.randint(-npix,npix+1,batch_size)                         #horizontal shift
+            v = np.random.randint(-npix,npix+1,batch_size)                         #vertical shift
+            for j in range(batch_size):
+                d[j] = np.pad(d[j], ((npix,npix),(npix,npix),(0,0)), mode='constant')[npix+h[j]:L+h[j]+npix,npix+v[j]:W+v[j]+npix,:]
+                t[j] = np.pad(t[j], (npix,), mode='constant')[npix+h[j]:L+h[j]+npix,npix+v[j]:W+v[j]+npix]
+            yield (d, t)
+
 #############################
 #FCN vgg model (keras 1.2.2)#
 ########################################################################
@@ -79,39 +104,40 @@ def read_and_normalize_data(path, img_width, img_height, data_flag):
 #and this!: https://gist.github.com/Neltherion/f070913fd6284c4a0b60abb86a0cd642
 def FCN_skip_model(im_width,im_height,learn_rate,lmbda):
     print('Making VGG16-style Fully Convolutional Network model...')
-    n_filters = 32          #vgg16 uses 64
-    n_blocks = 4            #vgg16 uses 5
-    n_dense = 256           #vgg16 uses 4096
-    
+    n_filters = 64          #vgg16 uses 64
+
     img_input = Input(batch_shape=(None, im_width, im_height, 3))
     l1 = Convolution2D(n_filters, 3, 3, activation='relu', name='conv1_1', border_mode='same')(img_input)
     l1 = Convolution2D(n_filters, 3, 3, activation='relu', name='conv1_2', border_mode='same')(l1)
-    l1P = MaxPooling2D((2, 2), name='maxpool_1')(l1)
+    l1P = MaxPooling2D((2, 2), strides=(2, 2), name='maxpool_1')(l1)
 
     l2 = Convolution2D(n_filters*2, 3, 3, activation='relu', name='conv2_1', border_mode='same')(l1P)
     l2 = Convolution2D(n_filters*2, 3, 3, activation='relu', name='conv2_2', border_mode='same')(l2)
-    l2P = MaxPooling2D((2, 2), name='maxpool_2')(l2)
+    l2P = MaxPooling2D((2, 2), strides=(2, 2), name='maxpool_2')(l2)
 
     l3 = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv3_1', border_mode='same')(l2P)
     l3 = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv3_2', border_mode='same')(l3)
-    l3P = MaxPooling2D((3, 3), name='maxpool_3')(l3)
+    l3P = MaxPooling2D((2, 2), strides=(3, 3), name='maxpool_3')(l3)
 
-    l4 = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv4_1', border_mode='same')(l3P)
-    l4 = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv4_2', border_mode='same')(l4)
+    l4 = Convolution2D(n_filters*8, 3, 3, activation='relu', name='conv4_1', border_mode='same')(l3P)
+    l4 = Convolution2D(n_filters*8, 3, 3, activation='relu', name='conv4_2', border_mode='same')(l4)
 
     u = UpSampling2D((3,3), name='up4->3')(l4)
-    u = BatchNormalization(axis=1, name='normu3')(u)
-    u = merge((BatchNormalization(axis=1, name='norml3')(l3), u), mode='concat', name='merge3')
+    #u = BatchNormalization(axis=1, name='normu3')(u)
+    #l3 = BatchNormalization(axis=1, name='norml3')(l3)
+    u = merge((l3, u), mode='concat', name='merge3')
     u = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv_merge3', border_mode='same')(u)
-        
+
     u = UpSampling2D((2,2), name='up3->2')(u)
-    u = BatchNormalization(axis=1, name='normu2')(u)
-    u = merge((BatchNormalization(axis=1, name='norml2')(l2), u), mode='concat', name='merge2')
+    #u = BatchNormalization(axis=1, name='normu2')(u)
+    #l2 = BatchNormalization(axis=1, name='norml2')(l2)
+    u = merge((l2, u), mode='concat', name='merge2')
     u = Convolution2D(n_filters*2, 3, 3, activation='relu', name='conv_merge2', border_mode='same')(u)
 
     u = UpSampling2D((2,2), name='up2->1')(u)
-    u = BatchNormalization(axis=1, name='normu1')(u)
-    u = merge((BatchNormalization(axis=1, name='norml1')(l1), u), mode='concat', name='merge1')
+    #u = BatchNormalization(axis=1, name='normu1')(u)
+    #l1 = BatchNormalization(axis=1, name='norml1')(l1)
+    u = merge((l1, u), mode='concat', name='merge1')
     u = Convolution2D(n_filters, 3, 3, activation='relu', name='conv_merge1', border_mode='same')(u)
 
     #final output
@@ -131,7 +157,7 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda):
 ########################################################################
 #Need to create this function so that memory is released every iteration (when function exits).
 #Otherwise the memory used accumulates and eventually the program crashes.
-def train_and_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,lmbda,nb_epoch,im_width,im_height,rs,save_model):
+def train_and_test_model(train_data,train_target,test_data,test_target,n_train_samples,learn_rate,batch_size,lmbda,nb_epoch,im_width,im_height,rs,save_model):
     
     #Main Routine - Build/Train/Test model
     X_train, X_valid, Y_train, Y_valid = train_test_split(train_data, train_target, test_size=0.20, random_state=rs)
@@ -139,15 +165,24 @@ def train_and_test_model(train_data,train_target,test_data,test_target,learn_rat
     print('Split valid: ', len(X_valid), len(Y_valid))
     
     model = FCN_skip_model(im_width,im_height,learn_rate,lmbda)
+
     model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
               shuffle=True, verbose=1, validation_data=(X_valid, Y_valid),
               callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
-    
+    '''
+    model.fit_generator(custom_image_generator(X_train,Y_train,batch_size=batch_size),
+                        samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
+                        #validation_data=(X_valid, Y_valid), #no generator for validation data
+                        validation_data=custom_image_generator(X_valid,Y_valid,batch_size=batch_size),
+                        nb_val_samples=len(X_valid),
+                        callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
+    '''
     if save_model == 1:
         model.save('models/FCNskip_lmbda%.0e.h5'%lmbda)
      
     test_pred = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
-    return np.sum((test_pred - test_target)**2)/test_target.shape[0]  #calculate test score
+    npix = test_target.shape[0]*test_target.shape[1]*test_target.shape[2]
+    return np.sum((test_pred - test_target)**2)/npix    #calculate test score
 
 ##############
 #Main Routine#
@@ -184,7 +219,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     lmbda.append(0)
     for i in range(N_runs):
         l = lmbda[i]
-        score = train_and_test_model(train_data,train_target,test_data,test_target,learn_rate,batch_size,l,nb_epoch,im_width,im_height,rs,save_models)
+        score = train_and_test_model(train_data,train_target,test_data,test_target,n_train_samples,learn_rate,batch_size,l,nb_epoch,im_width,im_height,rs,save_models)
         print '###################################'
         print '##########END_OF_RUN_INFO##########'
         print('\nTest Score is %f.\n'%score)
@@ -202,7 +237,7 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 5          #number of epochs. 1 epoch = forward/back pass thru all train data
+    epochs = 8          #number of epochs. 1 epoch = forward/back pass thru all train data
     n_train = 16000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
 

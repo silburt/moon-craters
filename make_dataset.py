@@ -8,22 +8,20 @@ The script uses mpi4py to speed up the processing.  Comment out the MPI code blo
 
 ########################### Imports ###########################
 
-
+# Past-proofing
 from __future__ import absolute_import, division, print_function
 
-#import numpy as np
-#import pandas as pd
-from PIL import Image, ImageChops, ImageOps
-#import cartopy.crs as ccrs
-#import cartopy.img_transform as cimg
-#import matplotlib.pyplot as plt
-#import matplotlib.axes as mplax
-#import image_slicer as imsl
-#import glob
-#import collections
-#import pickle
-#import re
+# System modules
+import os
+import sys
+import glob
 
+# I/O and math stuff
+import pandas as pd
+import numpy as np
+from PIL import Image, ImageChops, ImageOps
+
+# Input making modules
 import make_input_data as mkid
 import make_density_map as densmap
 
@@ -68,11 +66,45 @@ outp = False                                    # If str, script dumps pickle co
                                                 # bounds of all images.  Filename will be of the form outhead + outp.
                                                 # If multithreading is enabled, rank will be appended to filename.
 
-# SCRIPT OPTIONS (bools)
-make_nparray = True                             # Makes .npy files in addition to pngs
-make_mask = False
-make_
 
+# Density map and mask arguments
+
+maketype = "dens"                               # Type of target to make - "dens" for density map, "mask" for mask
+
+savepng = False                                 # If true, save density maps as pngs
+
+savenpy = True                                  # If true, dumps input images to outhead + "input.npy" , and target density maps or masks to
+                                                # outhead + "targets.npy"
+
+dmap_args = {}                                  # dmap kernel args
+
+dmap_args["truncate"] = True                    # If True, truncate mask where image truncates (i.e. has padding rather than image content)
+
+
+# Density map args
+dmap_args["kernel"] = None                      # Specifies type of kernel to use.  Can be a function, "knn" (k nearest neighbours), or None.
+                                                # If a function is inputted, function must return an array of 
+                                                # length craters.shape[0].  If "knn",  uses variable kernel with 
+                                                #    sigma = beta*<d_knn>,
+                                                # where <d_knn> is the mean Euclidean distance of the k = knn nearest 
+                                                # neighbouring craters.  If anything else is inputted, will use
+                                                # constant kernel size with sigma = k_sigma.
+
+dmap_args["k_support"] = 8                      # Kernel support (i.e. size of kernel stencil) coefficient.  Support
+                                                # is determined by kernel_support = k_support*sigma.
+
+dmap_args["k_sig"] = 1.                         # Sigma for constant sigma kernel (kernel = None).
+
+dmap_args["knn"] = 10                           # k nearest neighbours, used when kernel = "knn".
+
+dmap_args["beta"] = 0.2                         # Beta value used to calculate sigma when kernel = "knn" (see above).
+
+dmap_args["kdict"] = {}                         # If kernel is custom function, dictionary of arguments passed to kernel.
+
+
+# Mask arguments
+
+dmap_args["binary"] = True                      # If True, returns a binary image of crater masks 
 
 
 ########################### MPI ###########################
@@ -96,6 +128,75 @@ if outp: # Append rank to outp filename
 ########################### Script ###########################
 
 
+def load_img_make_target(filename, maketype, outshp, dmap_args):
+    """Loads individual image.
+    """
+    # Load base image
+    img = Image.open(filename).convert('L')
+    omg = np.asanyarray(img.resize(outshp))
+    img = np.asanyarray(img)
+
+    # Load craters CSV
+    craters = pd.read_csv(filename.split(".png")[0] + ".csv")
+
+    if maketype == "mask":
+        dmap = make_mask(craters, img, binary=dmap_args["binary"], 
+                                        truncate=dmap_args["truncate"])
+    else:
+        dmap = make_density_map(craters, img, kernel=dmap_args["kernel"], 
+                        k_support=dmap_args["k_support"], 
+                        k_sig=dmap_args["k_sig"], knn=dmap_args["knn"], 
+                        beta=dmap_args["beta"], kdict=dmap_args["kdict"], 
+                        truncate=dmap_args["truncate"])
+
+    return img, dmap
+
+
+def make_dmaps(path, maketype, outshp, dmap_args, savepng=False):
+    """Chain-loads input data pngs and make density maps/masks
+
+    Parameters
+    ----------
+    path : str
+        Filepath
+    maketype : str
+        "dens" or "mask", depending on if you want to make
+        a density map or a mask
+    makeargs : dict
+        Dictionary of arguments to pass to 
+    outshp : listlike
+        [height, width] of mask/density map image
+    dmap_args : dict
+        Dictionary of arguments to pass to mask generation 
+        functions.
+    savepng : bool
+        If True, saves mask to output file with name = 
+        filename.split(".png") + maketype + ".png"
+    """
+    X = []
+    X_id = []
+    Y = []
+    Y_id = []
+
+    files = [fn for fn in glob.glob('%s*.png'%path)
+             if (not os.path.basename(fn).endswith('mask.png') or
+            not os.path.basename(fn).endswith('map.png'))]
+    print("number of input image files: %d"%(len(files)))
+
+    for fl in files:
+        cX, cY = load_img_make_target(fl, maketype, outshp, dmap_args)
+        X.append(cX)
+        X_id.append(fl)
+        Y.append(cY)
+        mname = fl.split(".png") + maketype + ".png"
+        Y_id.append(mname)
+        if save:
+            imgo = Image.fromarray(cY, mode="L")
+            imgo.save(mname);
+
+    return X, Y, X_id, Y_id
+
+
 # Read source image
 img = Image.open(source_image_path).convert("L")
     
@@ -108,8 +209,18 @@ craters = mkin.ReadCombinedCraterCSV(filealan=alan_csv_path, filelu=lu_csv_path,
 # keep minpix = 0 (since we don't have pixel diameters yet)
 craters = ResampleCraters(craters, sub_cdim, None)
 
+# Generate input images
 mkin.GenDataset(img, craters, outhead, ilen_range=ilen_range,
                 olen=olen, cdim=sub_cdim, amt=amt, zeropad=zeropad, minpix=minpix,
                 slivercut=slivercut, outp=outp, istart = rank*amt)
 
+# Generate target density maps/masks
+outshp = (dmlen, dmlen)
+X, Y, X_id, Y_id = make_dmaps(outhead, maketype, outshp, dmap_args, savepng=savepng)
 
+# Optionally, save data as npy file
+if savenpy:
+    X = np.array(X, dtype=np.float32)
+    Y = np.array(Y, dtype=np.float32)
+    np.save(outhead + "input.npy", X)
+    np.save(outhead + "targets.npy", Y)

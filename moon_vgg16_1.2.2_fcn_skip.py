@@ -1,4 +1,4 @@
-#This model tries to stitch differnet levels together to have scale aware analysis.
+#This model uses skip connections to merge the where with the what, and have scale aware analysis.
 #See "Residual connection on a convolution layer" in https://jtymes.github.io/keras_docs/1.2.2/getting-started/functional-api-guide/#multi-input-and-multi-output-models
 
 #This python script is adapted from moon2.py and uses the vgg16 convnet structure.
@@ -77,103 +77,49 @@ def read_and_normalize_data(path, img_width, img_height, data_flag):
 #and also loosely following: https://blog.keras.io/building-autoencoders-in-keras.html
 #and maybe: https://github.com/nicolov/segmentation_keras
 #and this!: https://gist.github.com/Neltherion/f070913fd6284c4a0b60abb86a0cd642
-def FCN_fork_model(im_width,im_height,learn_rate,lmbda):
+def FCN_skip_model(im_width,im_height,learn_rate,lmbda):
 print('Making VGG16-style Fully Convolutional Network model...')
-n_filters = 32          #vgg16 uses 64
-n_blocks = 4            #vgg16 uses 5
-n_dense = 256           #vgg16 uses 4096
-im_width = im_height = 256
-lmbda = 0
-
-img_input = Input(batch_shape=(None, im_width, im_height, 3))
-l1 = Convolution2D(n_filters, 3, 3, activation='relu', name='conv1_1', border_mode='same')(img_input)
-l1 = Convolution2D(n_filters, 3, 3, activation='relu', name='conv1_2', border_mode='same')(l1)
-l1P = MaxPooling2D((2, 2), name='maxpool_1')(l1)
-
-l2 = Convolution2D(n_filters*2, 3, 3, activation='relu', name='conv2_1', border_mode='same')(l1P)
-l2 = Convolution2D(n_filters*2, 3, 3, activation='relu', name='conv2_2', border_mode='same')(l2)
-l2P = MaxPooling2D((2, 2), name='maxpool_2')(l2)
-
-l3 = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv3_1', border_mode='same')(l2P)
-l3 = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv3_2', border_mode='same')(l3)
-l3P = MaxPooling2D((2, 2), name='maxpool_3')(l3)
-
-l4 = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv4_1', border_mode='same')(l3P)
-l4 = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv4_2', border_mode='same')(l4)
-
-u = UpSampling2D((2,2), name='up4->3')(l4)
-u = BatchNormalization(axis=1, name='normu3')(u)
-u = merge((BatchNormalization(axis=1, name='norml3')(l3), u), mode='concat', name='merge3')
-u = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv_merge3', border_mode='same')(u)
+    n_filters = 32          #vgg16 uses 64
+    n_blocks = 4            #vgg16 uses 5
+    n_dense = 256           #vgg16 uses 4096
     
-u = UpSampling2D((2,2), name='up3->2')(u)
-u = BatchNormalization(axis=1, name='normu2')(u)
-u = merge((BatchNormalization(axis=1, name='norml2')(l2), u), mode='concat', name='merge2')
-u = Convolution2D(n_filters*2, 3, 3, activation='relu', name='conv_merge2', border_mode='same')(u)
+    img_input = Input(batch_shape=(None, im_width, im_height, 3))
+    l1 = Convolution2D(n_filters, 3, 3, activation='relu', name='conv1_1', border_mode='same')(img_input)
+    l1 = Convolution2D(n_filters, 3, 3, activation='relu', name='conv1_2', border_mode='same')(l1)
+    l1P = MaxPooling2D((2, 2), name='maxpool_1')(l1)
 
-u = UpSampling2D((2,2), name='up2->1')(u)
-u = BatchNormalization(axis=1, name='normu1')(u)
-u = merge((BatchNormalization(axis=1, name='norml1')(l1), u), mode='concat', name='merge1')
-u = Convolution2D(n_filters, 3, 3, activation='relu', name='conv_merge1', border_mode='same')(u)
-u = Convolution2D(1, 3, 3, activation='relu', name='output', border_mode='same')(u)
-u = Reshape((im_width, im_height))(u)
+    l2 = Convolution2D(n_filters*2, 3, 3, activation='relu', name='conv2_1', border_mode='same')(l1P)
+    l2 = Convolution2D(n_filters*2, 3, 3, activation='relu', name='conv2_2', border_mode='same')(l2)
+    l2P = MaxPooling2D((2, 2), name='maxpool_2')(l2)
 
-model = Model(input=img_input, output=u)
+    l3 = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv3_1', border_mode='same')(l2P)
+    l3 = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv3_2', border_mode='same')(l3)
+    l3P = MaxPooling2D((3, 3), name='maxpool_3')(l3)
 
+    l4 = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv4_1', border_mode='same')(l3P)
+    l4 = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv4_2', border_mode='same')(l4)
 
-    #first block
-    img_input = Input(batch_shape=(None,im_width,im_height,3))
-    l1 = Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda))(img_input)
-    l1 = Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda))(l1)
-    l1P = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(l1)
+    u = UpSampling2D((3,3), name='up4->3')(l4)
+    u = BatchNormalization(axis=1, name='normu3')(u)
+    u = merge((BatchNormalization(axis=1, name='norml3')(l3), u), mode='concat', name='merge3')
+    u = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv_merge3', border_mode='same')(u)
+        
+    u = UpSampling2D((2,2), name='up3->2')(u)
+    u = BatchNormalization(axis=1, name='normu2')(u)
+    u = merge((BatchNormalization(axis=1, name='norml2')(l2), u), mode='concat', name='merge2')
+    u = Convolution2D(n_filters*2, 3, 3, activation='relu', name='conv_merge2', border_mode='same')(u)
 
-    l2 = Conv2D(n_filters*2, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda))(l1P)
-    l2 = Conv2D(n_filters*2, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda))(l2)
-    l2P = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(l2)
+    u = UpSampling2D((2,2), name='up2->1')(u)
+    u = BatchNormalization(axis=1, name='normu1')(u)
+    u = merge((BatchNormalization(axis=1, name='norml1')(l1), u), mode='concat', name='merge1')
+    u = Convolution2D(n_filters, 3, 3, activation='relu', name='conv_merge1', border_mode='same')(u)
 
-    l3 = Conv2D(n_filters*4, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda))(l2P)
-    l3 = Conv2D(n_filters*4, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda))(l3)
-    l3P = MaxPooling2D(pool_size=(2, 2), strides=(3, 3))(l3)
-
-    l4 = Conv2D(n_filters*4, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda))(l3P)
-    l4 = Conv2D(n_filters*4, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda))(l4)
-    l4P = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(l3)
-
-    fc = Conv2D(n_dense, nb_row=12, nb_col=12, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc1')(l4P)
-    fc = Conv2D(n_dense, nb_row=1, nb_col=1, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc2')(fc)
+    #final output
+    u = Convolution2D(1, 3, 3, activation='relu', name='output', border_mode='same')(u)
+    u = Reshape((im_width, im_height))(u)
+    model = Model(input=img_input, output=u)
     
-    #upsample all levels
-    fc_up = UpSampling2D(size=(25,25))(fc)
-    l4_up = UpSampling2D(size=(12,12))(l4)
-    l3_up = Upsamplling2D(size=(4,4))(l3)
-    l2_up = Upsamplling2D(size=(2,2))(l2)
-    
-    merge = Merge([fc_up, l4_up, l3_up, l2_up, l1], mode='concat')
-    final = Conv2D(n_filters, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda))(merge)
-    final = Conv2D(1, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda))(final)
-    final = Reshape((im_width,im_height))(final)
-
-    model = Model(final, (im_width,im_height))
-
-    #subsequent blocks
-    for i in np.arange(1,n_blocks):
-        n_filters_ = np.min((n_filters*2**i, 512))
-        model.add(Conv2D(n_filters_, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
-        model.add(Conv2D(n_filters_, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda)))
-        if i==2:
-            model.add(MaxPooling2D(pool_size=(2, 2), strides=(3, 3)))
-        else:
-            model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
-
-    #FC->CONV layers - http://cs231n.github.io/convolutional-networks/#convert
-    model.add(Conv2D(n_dense, nb_row=12, nb_col=12, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc1'))
-    model.add(Conv2D(n_dense, nb_row=1, nb_col=1, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='fc2'))
-
-    #Upsample and create mask
-    model.add(UpSampling2D(size=(upsample, upsample)))
-    model.add(Conv2D(1, nb_row=3, nb_col=3, activation='relu', border_mode='same', W_regularizer=l2(lmbda), name='output')) #maybe try sigmoid activation?
-    model.add(Reshape((im_width,im_height)))
-    
+    #optimizer/compile
     #optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
     model.compile(loss='mse', optimizer=optimizer)
@@ -192,13 +138,13 @@ def train_and_test_model(train_data,train_target,test_data,test_target,learn_rat
     print('Split train: ', len(X_train), len(Y_train))
     print('Split valid: ', len(X_valid), len(Y_valid))
     
-    model = FCN_model(im_width,im_height,learn_rate,lmbda)
+    model = FCN_skip_model(im_width,im_height,learn_rate,lmbda)
     model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
               shuffle=True, verbose=1, validation_data=(X_valid, Y_valid),
               callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
     
     if save_model == 1:
-        model.save('models/FCN_lmbda%.0e.h5'%lmbda)
+        model.save('models/FCNskip_lmbda%.0e.h5'%lmbda)
      
     test_pred = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
     return np.sum((test_pred - test_target)**2)/test_target.shape[0]  #calculate test score
@@ -210,7 +156,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     #Static arguments
     im_width = 300              #image width
     im_height = 300             #image height
-    rs = 43                     #random_state for train/test split
+    rs = 42                     #random_state for train/test split
 
     #Load data
     dir = '/scratch/k/kristen/malidib/moon/'

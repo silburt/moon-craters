@@ -129,7 +129,7 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda):
     #model 2 - large receptive field for large craters via dilated conv
     FDF = 3             #Filter Dilation Factor
     FL_b = 4            #Filter Length
-    b1 = Convolution2D(n_filters, FL_b, FL_b, activation='relu', name='conv1_b1', border_mode='same')(img_input)
+    b1 = AtrousConvolution2D(n_filters, FL_b, FL_b, activation='relu', name='conv1_b1', border_mode='same')(img_input)
     b1 = AtrousConvolution2D(n_filters, FL_b, FL_b, atrous_rate=(FDF,FDF), activation='relu', name='aconv1_b2', border_mode='same')(b1)
     b1P = MaxPooling2D((2, 2), strides=(2, 2), name='pool1_b1')(b1)
     
@@ -147,22 +147,22 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda):
     #merge models 1 and 2
     u = merge((a4, b4), mode='concat', name='merge4')
     u = Convolution2D(n_filters*4, FL_a, FL_a, activation='relu', name='conv_merge4', border_mode='same')(u)
-    u = AtrousConvolution2D(n_filters*4, FL_b, FL_b, atrous_rate=(FDF,FDF), activation='relu', name='aconv_merge4', border_mode='same')(u)
+    #u = AtrousConvolution2D(n_filters*4, FL_b, FL_b, atrous_rate=(FDF,FDF), activation='relu', name='aconv_merge4', border_mode='same')(u)
     u = UpSampling2D((3,3), name='up4->3')(u)
 
     u = merge((a3, b3, u), mode='concat', name='merge3')
     u = Convolution2D(n_filters*4, FL_a, FL_a, activation='relu', name='conv_merge3', border_mode='same')(u)
-    u = AtrousConvolution2D(n_filters*4, FL_b, FL_b, atrous_rate=(FDF,FDF), activation='relu', name='aconv_merge3', border_mode='same')(u)
+    #u = AtrousConvolution2D(n_filters*4, FL_b, FL_b, atrous_rate=(FDF,FDF), activation='relu', name='aconv_merge3', border_mode='same')(u)
     u = UpSampling2D((2,2), name='up3->2')(u)
 
     u = merge((a2, b2, u), mode='concat', name='merge2')
     u = Convolution2D(n_filters*2, FL_a, FL_a, activation='relu', name='conv_merge2', border_mode='same')(u)
-    u = AtrousConvolution2D(n_filters*2, FL_b, FL_b, atrous_rate=(FDF,FDF), activation='relu', name='aconv_merge2', border_mode='same')(u)
+    #u = AtrousConvolution2D(n_filters*2, FL_b, FL_b, atrous_rate=(FDF,FDF), activation='relu', name='aconv_merge2', border_mode='same')(u)
     u = UpSampling2D((2,2), name='up2->1')(u)
 
     u = merge((a1, b1, u), mode='concat', name='merge1')
     u = Convolution2D(n_filters, FL_a, FL_a, activation='relu', name='conv_merge1', border_mode='same')(u)
-    u = AtrousConvolution2D(n_filters, FL_b, FL_b, atrous_rate=(FDF,FDF), activation='relu', name='aconv_merge1', border_mode='same')(u)
+    #u = AtrousConvolution2D(n_filters, FL_b, FL_b, atrous_rate=(FDF,FDF), activation='relu', name='aconv_merge1', border_mode='same')(u)
 
     #final output
     u = Convolution2D(1, 3, 3, activation='relu', name='output', border_mode='same')(u)

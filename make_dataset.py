@@ -159,13 +159,13 @@ def load_img_make_target(filename, maketype, outshp, minpix, dmap_args):
     return img, dmap
 
 
-def make_dmaps(path, maketype, outshp, minpix, dmap_args, savepng=False):
+def make_dmaps(files, maketype, outshp, minpix, dmap_args, savepng=False):
     """Chain-loads input data pngs and make target density maps/masks
 
     Parameters
     ----------
-    path : str
-        Filepath
+    files : list
+        List of files to process
     maketype : str
         "dens" or "mask", depending on if you want to make
         a density map or a mask
@@ -185,9 +185,9 @@ def make_dmaps(path, maketype, outshp, minpix, dmap_args, savepng=False):
     Y = []
     Y_id = []
 
-    files = sorted([fn for fn in glob.glob('%s*.png'%path)
-             if (not os.path.basename(fn).endswith('mask.png') and
-            not os.path.basename(fn).endswith('dens.png'))])
+    #files = sorted([fn for fn in glob.glob('%s*.png'%path)
+    #         if (not os.path.basename(fn).endswith('mask.png') and
+    #        not os.path.basename(fn).endswith('dens.png'))])
     print("number of input image files: %d"%(len(files)))
     print("Generating target tmages ({0:s}).".format(maketype))
 
@@ -223,13 +223,16 @@ mkin.GenDataset(img, craters, outhead, ilen_range=ilen_range,
                 olen=olen, cdim=sub_cdim, amt=amt, zeropad=zeropad, minpix=minpix,
                 slivercut=slivercut, outp=outp, istart = rank*amt)
 
+files = [outhead + "_{i:0{zp}d}.png".format(i=i, zp=zeropad) 
+                                            for i in range(rank*amt, (rank+1)*amt)]
+
 # Generate target density maps/masks
 outshp = (dmlen, dmlen)
-X, Y, X_id, Y_id = make_dmaps(outhead, maketype, outshp, minpix, dmap_args, savepng=savepng)
+X, Y, X_id, Y_id = make_dmaps(files, maketype, outshp, minpix, dmap_args, savepng=savepng)
 
 # Optionally, save data as npy file
 if savenpy:
     X = np.array(X, dtype=np.float32)
     Y = np.array(Y, dtype=np.float32)
-    np.save(outhead + "_input.npy", X)
-    np.save(outhead + "_targets.npy", Y)
+    np.save(outhead + "_{rank:01d}_input.npy".format(rank=rank), X)
+    np.save(outhead + "_{rank:01d}_targets.npy".format(rank=rank), Y)

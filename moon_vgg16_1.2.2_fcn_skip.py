@@ -87,7 +87,7 @@ def custom_image_generator(data, target, batch_size=32):
                 d[j], t[j] = np.flipud(d[j]), np.flipud(t[j])                 #up/down
             
             #random up/down and left/right pixel shifts
-            npix = 10
+            npix = 20
             h = np.random.randint(-npix,npix+1,batch_size)                         #horizontal shift
             v = np.random.randint(-npix,npix+1,batch_size)                         #vertical shift
             for j in range(batch_size):
@@ -123,20 +123,14 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda):
     l4 = Convolution2D(n_filters*8, 3, 3, activation='relu', name='conv4_2', border_mode='same')(l4)
 
     u = UpSampling2D((3,3), name='up4->3')(l4)
-    #u = BatchNormalization(axis=1, name='normu3')(u)
-    #l3 = BatchNormalization(axis=1, name='norml3')(l3)
     u = merge((l3, u), mode='concat', name='merge3')
     u = Convolution2D(n_filters*4, 3, 3, activation='relu', name='conv_merge3', border_mode='same')(u)
 
     u = UpSampling2D((2,2), name='up3->2')(u)
-    #u = BatchNormalization(axis=1, name='normu2')(u)
-    #l2 = BatchNormalization(axis=1, name='norml2')(l2)
     u = merge((l2, u), mode='concat', name='merge2')
     u = Convolution2D(n_filters*2, 3, 3, activation='relu', name='conv_merge2', border_mode='same')(u)
 
     u = UpSampling2D((2,2), name='up2->1')(u)
-    #u = BatchNormalization(axis=1, name='normu1')(u)
-    #l1 = BatchNormalization(axis=1, name='norml1')(l1)
     u = merge((l1, u), mode='concat', name='merge1')
     u = Convolution2D(n_filters, 3, 3, activation='relu', name='conv_merge1', border_mode='same')(u)
 
@@ -165,7 +159,7 @@ def train_and_test_model(train_data,train_target,test_data,test_target,n_train_s
     print('Split valid: ', len(X_valid), len(Y_valid))
     
     model = FCN_skip_model(im_width,im_height,learn_rate,lmbda)
-
+    '''
     model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
               shuffle=True, verbose=1, validation_data=(X_valid, Y_valid),
               callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
@@ -176,9 +170,9 @@ def train_and_test_model(train_data,train_target,test_data,test_target,n_train_s
                         validation_data=custom_image_generator(X_valid,Y_valid,batch_size=batch_size),
                         nb_val_samples=len(X_valid),
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
-    '''
+                        
     if save_model == 1:
-        model.save('models/FCNskip_lmbda%.0e.h5'%lmbda)
+        model.save('models/FCNskip_imggen.h5')
      
     test_pred = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
     npix = test_target.shape[0]*test_target.shape[1]*test_target.shape[2]
@@ -237,7 +231,7 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 8          #number of epochs. 1 epoch = forward/back pass thru all train data
+    epochs = 30          #number of epochs. 1 epoch = forward/back pass thru all train data
     n_train = 16000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
 

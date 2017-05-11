@@ -109,8 +109,8 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda):
     n_filters = 32          #vgg16 uses 64
     img_input = Input(batch_shape=(None, im_width, im_height, 3))
 
-    #model 1 - small receptive field for small craters
-    FL_a = 3            #Filter Length
+    #model a - small receptive field for small craters
+    FL_a = 3            #Receptive Field
     a1 = Convolution2D(n_filters, FL_a, FL_a, activation='relu', name='conv1_a1', border_mode='same')(img_input)
     a1 = Convolution2D(n_filters, FL_a, FL_a, activation='relu', name='conv1_a2', border_mode='same')(a1)
     a1P = MaxPooling2D((2, 2), strides=(2, 2), name='pool1_a1')(a1)
@@ -126,43 +126,44 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda):
     a4 = Convolution2D(n_filters*8, FL_a, FL_a, activation='relu', name='conv4_a1', border_mode='same')(a3P)
     a4 = Convolution2D(n_filters*8, FL_a, FL_a, activation='relu', name='conv4_a2', border_mode='same')(a4)
 
-    #model 2 - large receptive field for large craters via dilated conv
-    FDF = 3             #Filter Dilation Factor
-    FL_b = 4            #Filter Length
-    b1 = AtrousConvolution2D(n_filters, FL_b, FL_b, activation='relu', name='conv1_b1', border_mode='same')(img_input)
-    b1 = AtrousConvolution2D(n_filters, FL_b, FL_b, atrous_rate=(FDF,FDF), activation='relu', name='aconv1_b2', border_mode='same')(b1)
+    #model b - large receptive field for large craters via dilated conv
+    #RFL = receptive field length = (DF - 1)(FL - 1) + FL
+    DF = 4              #Dilation Factor
+    FL_b = 9           #Filter Length of model b
+    b1 = AtrousConvolution2D(n_filters, FL_b, FL_b, atrous_rate=(DF,DF), activation='relu', name='conv1_b1', border_mode='same')(img_input)
+    b1 = AtrousConvolution2D(n_filters, FL_b, FL_b, atrous_rate=(DF,DF), activation='relu', name='aconv1_b2', border_mode='same')(b1)
     b1P = MaxPooling2D((2, 2), strides=(2, 2), name='pool1_b1')(b1)
-    
-    b2 = AtrousConvolution2D(n_filters*2, FL_b, FL_b, atrous_rate=(FDF,FDF), activation='relu', name='aconv2_b1', border_mode='same')(b1P)
-    b2 = AtrousConvolution2D(n_filters*2, FL_b, FL_b, atrous_rate=(FDF,FDF), activation='relu', name='aconv2_b2', border_mode='same')(b2)
+
+    b2 = AtrousConvolution2D(n_filters*2, FL_b, FL_b, atrous_rate=(DF,DF), activation='relu', name='aconv2_b1', border_mode='same')(b1P)
+    b2 = AtrousConvolution2D(n_filters*2, FL_b, FL_b, atrous_rate=(DF,DF), activation='relu', name='aconv2_b2', border_mode='same')(b2)
     b2P = MaxPooling2D((2, 2), strides=(2, 2), name='pool2_b1')(b2)
-    
-    b3 = AtrousConvolution2D(n_filters*4, FL_b, FL_b, atrous_rate=(FDF,FDF), activation='relu', name='aconv3_b1', border_mode='same')(b2P)
-    b3 = AtrousConvolution2D(n_filters*4, FL_b, FL_b, atrous_rate=(FDF,FDF), activation='relu', name='aconv3_b2', border_mode='same')(b3)
+
+    b3 = AtrousConvolution2D(n_filters*4, FL_b, FL_b, atrous_rate=(DF,DF), activation='relu', name='aconv3_b1', border_mode='same')(b2P)
+    b3 = AtrousConvolution2D(n_filters*4, FL_b, FL_b, atrous_rate=(DF,DF), activation='relu', name='aconv3_b2', border_mode='same')(b3)
     b3P = MaxPooling2D((2, 2), strides=(3, 3), name='pool3_b1')(b3)
-    
-    b4 = AtrousConvolution2D(n_filters*8, FL_b, FL_b, atrous_rate=(FDF,FDF), activation='relu', name='aconv4_b1', border_mode='same')(b3P)
-    b4 = AtrousConvolution2D(n_filters*8, FL_b, FL_b, atrous_rate=(FDF,FDF), activation='relu', name='aconv4_b2', border_mode='same')(b4)
+
+    b4 = AtrousConvolution2D(n_filters*8, FL_b, FL_b, atrous_rate=(DF,DF), activation='relu', name='aconv4_b1', border_mode='same')(b3P)
+    b4 = AtrousConvolution2D(n_filters*8, FL_b, FL_b, atrous_rate=(DF,DF), activation='relu', name='aconv4_b2', border_mode='same')(b4)
 
     #merge models 1 and 2
     u = merge((a4, b4), mode='concat', name='merge4')
     u = Convolution2D(n_filters*4, FL_a, FL_a, activation='relu', name='conv_merge4', border_mode='same')(u)
-    #u = AtrousConvolution2D(n_filters*4, FL_b, FL_b, atrous_rate=(FDF,FDF), activation='relu', name='aconv_merge4', border_mode='same')(u)
+    #u = AtrousConvolution2D(n_filters*4, FL_b, FL_b, atrous_rate=(DF,DF), activation='relu', name='aconv_merge4', border_mode='same')(u) #something about these cause an error
     u = UpSampling2D((3,3), name='up4->3')(u)
 
     u = merge((a3, b3, u), mode='concat', name='merge3')
     u = Convolution2D(n_filters*4, FL_a, FL_a, activation='relu', name='conv_merge3', border_mode='same')(u)
-    #u = AtrousConvolution2D(n_filters*4, FL_b, FL_b, atrous_rate=(FDF,FDF), activation='relu', name='aconv_merge3', border_mode='same')(u)
+    #u = AtrousConvolution2D(n_filters*4, FL_b, FL_b, atrous_rate=(DF,DF), activation='relu', name='aconv_merge3', border_mode='same')(u)
     u = UpSampling2D((2,2), name='up3->2')(u)
 
     u = merge((a2, b2, u), mode='concat', name='merge2')
     u = Convolution2D(n_filters*2, FL_a, FL_a, activation='relu', name='conv_merge2', border_mode='same')(u)
-    #u = AtrousConvolution2D(n_filters*2, FL_b, FL_b, atrous_rate=(FDF,FDF), activation='relu', name='aconv_merge2', border_mode='same')(u)
+    #u = AtrousConvolution2D(n_filters*2, FL_b, FL_b, atrous_rate=(DF,DF), activation='relu', name='aconv_merge2', border_mode='same')(u)
     u = UpSampling2D((2,2), name='up2->1')(u)
 
     u = merge((a1, b1, u), mode='concat', name='merge1')
     u = Convolution2D(n_filters, FL_a, FL_a, activation='relu', name='conv_merge1', border_mode='same')(u)
-    #u = AtrousConvolution2D(n_filters, FL_b, FL_b, atrous_rate=(FDF,FDF), activation='relu', name='aconv_merge1', border_mode='same')(u)
+    #u = AtrousConvolution2D(n_filters, FL_b, FL_b, atrous_rate=(DF,DF), activation='relu', name='aconv_merge1', border_mode='same')(u)
 
     #final output
     u = Convolution2D(1, 3, 3, activation='relu', name='output', border_mode='same')(u)
@@ -202,7 +203,7 @@ def train_and_test_model(train_data,train_target,test_data,test_target,n_train_s
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
                         
     if save_model == 1:
-        model.save('models/FCNskip_imggen.h5')
+        model.save('models/FCNforkskip_imggen.h5')
      
     test_pred = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
     npix = test_target.shape[0]*test_target.shape[1]*test_target.shape[2]
@@ -261,7 +262,7 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 10         #number of epochs. 1 epoch = forward/back pass thru all train data
+    epochs = 9          #number of epochs. 1 epoch = forward/back pass thru all train data
     n_train = 16000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
 

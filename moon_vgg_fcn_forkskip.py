@@ -151,26 +151,26 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda):
     #merge models 1 and 2
     u = merge((a4, b4), mode='concat', name='merge4')
     u = Convolution2D(n_filters*8, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge4_1', border_mode='same')(u)
-    #u = Convolution2D(n_filters*8, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge4_2', border_mode='same')(u)
-    u = AtrousConvolution2D(n_filters*4, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='aconv_merge4_1', border_mode='same')(u)
+    u = Convolution2D(n_filters*8, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge4_2', border_mode='same')(u)
+    #u = AtrousConvolution2D(n_filters*4, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='aconv_merge4_1', border_mode='same')(u)
     u = UpSampling2D((3,3), name='up4->3')(u)
 
     u = merge((a3, b3, u), mode='concat', name='merge3')
     u = Convolution2D(n_filters*4, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge3_1', border_mode='same')(u)
-    #u = Convolution2D(n_filters*4, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge3_2', border_mode='same')(u)
-    u = AtrousConvolution2D(n_filters*2, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='aconv_merge3_1', border_mode='same')(u)
+    u = Convolution2D(n_filters*4, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge3_2', border_mode='same')(u)
+    #u = AtrousConvolution2D(n_filters*2, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='aconv_merge3_1', border_mode='same')(u)
     u = UpSampling2D((2,2), name='up3->2')(u)
 
     u = merge((a2, b2, u), mode='concat', name='merge2')
     u = Convolution2D(n_filters*2, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge2_1', border_mode='same')(u)
-    #u = Convolution2D(n_filters*2, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge2_2', border_mode='same')(u)
-    u = AtrousConvolution2D(n_filters, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='aconv_merge2_1', border_mode='same')(u)
+    u = Convolution2D(n_filters*2, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge2_2', border_mode='same')(u)
+    #u = AtrousConvolution2D(n_filters, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='aconv_merge2_1', border_mode='same')(u)
     u = UpSampling2D((2,2), name='up2->1')(u)
 
     u = merge((a1, b1, u), mode='concat', name='merge1')
     u = Convolution2D(n_filters, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge1_1', border_mode='same')(u)
-    #u = Convolution2D(n_filters, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge1_2', border_mode='same')(u)
-    u = AtrousConvolution2D(n_filters, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='aconv_merge1_1', border_mode='same')(u)
+    u = Convolution2D(n_filters, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge1_2', border_mode='same')(u)
+    #u = AtrousConvolution2D(n_filters, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='aconv_merge1_1', border_mode='same')(u)
 
     #final output
     u = Convolution2D(1, 3, 3, activation='relu', W_regularizer=l2(lmbda), name='output', border_mode='same')(u)

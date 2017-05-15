@@ -246,10 +246,10 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     train_target = train_target[:n_train_samples]
 
     #Iterate
-    N_runs = 3
+    N_runs = 1
     #lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1); lmbda.append(0)
-    lmbda = [0,0.1,1]
-    for i in range(N_runs):
+    lmbda = [0]
+    for i in range(len(lmbda)):
         l = lmbda[i]
         score = train_and_test_model(train_data,train_target,test_data,test_target,n_train_samples,learn_rate,batch_size,l,nb_epoch,im_width,im_height,rs,save_models)
         print '###################################'
@@ -269,7 +269,7 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 30          #number of epochs. 1 epoch = forward/back pass thru all train data
+    epochs = 8          #number of epochs. 1 epoch = forward/back pass thru all train data
     n_train = 18000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
 

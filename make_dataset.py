@@ -135,7 +135,11 @@ def load_img_make_target(filename, maketype, outshp, minpix, dmap_args):
     """
     # Load base image
     img = Image.open(filename).convert('L')
-    omg = np.asanyarray(img.resize(outshp))     # Dummy image of target size
+    # Dummy image of target size.  Bilinear interpolation is compromise
+    # between Image.NEAREST, which creates artifacts, and Image.LANZCOS,
+    # which is more expensive (though try that one if BILINEAR gives
+    # crap)
+    omg = np.asanyarray(img.resize(outshp, resample=Image.BILINEAR))
     img = np.asanyarray(img)
 
     # Load craters CSV

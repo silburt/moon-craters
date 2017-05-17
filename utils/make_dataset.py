@@ -38,8 +38,8 @@ outhead = "/home/cczhu/cratering/test/train/lola"   # Output filepath and file h
 zeropad = 5                                         # Number of zeros to pad numbers in output files (number of
                                                     # Xs in "...XXXX.png" above)
 
-amt = 60000                                         # Number of images each thread will make (multiply by number of
-                                                    # threads for total number of images produced)
+#amt = 60000                                         # Number of images each thread will make (multiply by number of
+amt = 10                                                    # threads for total number of images produced)
 
 ilen_range = [600., 2000.]                          # Range of image widths, in pixels, to crop from source image.  For
                                                     # the LOLA 20k image, 23040 pixels = 180 degrees of latitude, so

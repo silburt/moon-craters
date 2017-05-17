@@ -29,10 +29,10 @@ import make_density_map as densmap
 ########################### Global Variables ###########################
 
 
-source_image_path = "/home/cczhu/public_html/LOLA_Global_20k.png"     # Source image path
-lu_csv_path = "./LU78287GT.csv"                     # Salamuniccar crater dataset csv path
-alan_csv_path = "./alanalldata.csv"                 # LROC crater dataset (from Alan) csv path
-outhead = "/home/cczhu/cratering/test/train/lola"   # Output filepath and file header (if 
+source_image_path = "LOLA_Global_20k.png"     # Source image path
+lu_csv_path = "LU78287GT.csv"                     # Salamuniccar crater dataset csv path
+alan_csv_path = "alanalldata.csv"                 # LROC crater dataset (from Alan) csv path
+outhead = "lola"   # Output filepath and file header (if 
                                                     # outhead = "./out/lola", files will have extension
                                                     # "./out/lola_XXXX.png", "./out/lola_XXXX_mask.png", etc.)
 zeropad = 5                                         # Number of zeros to pad numbers in output files (number of

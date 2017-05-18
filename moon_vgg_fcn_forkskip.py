@@ -44,7 +44,7 @@ def load_data(path, data_type, img_width, img_height):
     X_id = []
     y = []
     files = glob.glob('%s*.png'%path)
-    minpix = 3      #minimum pixels required for a crater to register in an image
+    minpix = 3                          #minimum pixels required for a crater to register in an image
     print "number of %s files are: %d"%(data_type,len(files))
     for f in files:
         #fbase = os.path.basename(f)
@@ -55,7 +55,9 @@ def load_data(path, data_type, img_width, img_height):
         #make mask as target
         csv = pd.read_csv('%s.csv'%f.split('.png')[0])
         csv.drop(np.where(csv['Diameter (pix)'] < minpix)[0], inplace=True)
-        y.append(mdm.make_mask(csv, img, binary=False, truncate=True))
+        target = mdm.make_mask(csv, img, binary=False, truncate=True)
+        target /= np.max(target)            #normalizing between 0-1
+        y.append(target)
     return  X, y, X_id
 
 def read_and_normalize_data(path, img_width, img_height, data_flag):
@@ -173,7 +175,7 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda):
     #u = AtrousConvolution2D(n_filters, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='aconv_merge1_1', border_mode='same')(u)
 
     #final output
-    u = Convolution2D(1, 3, 3, activation='relu', W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
+    u = Convolution2D(1, 3, 3, activation='sigmoid', W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
     u = Reshape((im_width, im_height))(u)
     model = Model(input=img_input, output=u)
     
@@ -228,20 +230,20 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     #Load data
     dir = '/scratch/k/kristen/malidib/moon/'
     try:
-        train_data=np.load('training_set/train_data_mask2d.npy')
-        train_target=np.load('training_set/train_target_mask2d.npy')
-        test_data=np.load('test_set/test_data_mask2d.npy')
-        test_target=np.load('test_set/test_target_mask2d.npy')
+        train_data=np.load('training_set/train_data_mask2d_norm.npy')
+        train_target=np.load('training_set/train_target_mask2d_norm.npy')
+        test_data=np.load('test_set/test_data_mask2d_norm.npy')
+        test_target=np.load('test_set/test_target_mask2d_norm.npy')
         print "Successfully loaded files locally."
     except:
         print "Couldnt find locally saved .npy files, loading from %s."%dir
         train_path, test_path = '%straining_set/'%dir, '%stest_set/'%dir
         train_data, train_target, train_id = read_and_normalize_data(train_path, im_width, im_height, 0)
         test_data, test_target, test_id = read_and_normalize_data(test_path, im_width, im_height, 1)
-        np.save('training_set/train_data_mask2d.npy',train_data)
-        np.save('training_set/train_target_mask2d.npy',train_target)
-        np.save('test_set/test_data_mask2d.npy',test_data)
-        np.save('test_set/test_target_mask2d.npy',test_target)
+        np.save('training_set/train_data_mask2d_norm.npy',train_data)
+        np.save('training_set/train_target_mask2d_norm.npy',train_target)
+        np.save('test_set/test_data_mask2d_norm.npy',test_data)
+        np.save('test_set/test_target_mask2d_norm.npy',test_target)
     train_data = train_data[:n_train_samples]
     train_target = train_target[:n_train_samples]
 

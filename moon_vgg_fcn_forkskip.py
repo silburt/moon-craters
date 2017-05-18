@@ -56,7 +56,7 @@ def load_data(path, data_type, img_width, img_height):
         csv = pd.read_csv('%s.csv'%f.split('.png')[0])
         csv.drop(np.where(csv['Diameter (pix)'] < minpix)[0], inplace=True)
         target = mdm.make_mask(csv, img, binary=False, truncate=True)
-        target /= np.max(target)            #normalizing between 0-1
+        target /= target.max()            #normalizing between 0-1
         y.append(target)
     return  X, y, X_id
 
@@ -66,8 +66,8 @@ def read_and_normalize_data(path, img_width, img_height, data_flag):
     elif data_flag == 1:
         data_type = 'test'
     data, target, id = load_data(path, data_type, img_width, img_height)
-    data = np.array(data, dtype=np.uint8)       #convert to numpy
-    target = np.array(target, dtype=np.uint8)
+    data = np.array(data)                       #convert to numpy
+    target = np.array(target)
     data = data.astype('float32')               #convert to float
     data = data / 255                           #normalize color
     print('%s shape:'%data_type, data.shape)
@@ -133,8 +133,8 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda):
 
     #model b - large receptive field for large craters via dilated conv
     #RFL = receptive field length = (DF - 1)(FL - 1) + FL
-    DF = 5              #Dilation Factor - previous success = 4
-    FL_b = 12           #Filter Length of model b - previous success = 10
+    DF = 4              #Dilation Factor - previous success = 4
+    FL_b = 10           #Filter Length of model b - previous success = 10
     b1 = AtrousConvolution2D(n_filters, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='conv1_b1', border_mode='same')(img_input)
     b1 = AtrousConvolution2D(n_filters, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='aconv1_b2', border_mode='same')(b1)
     b1P = MaxPooling2D((2, 2), strides=(2, 2), name='pool1_b1')(b1)
@@ -212,7 +212,7 @@ def train_and_test_model(train_data,train_target,test_data,test_target,n_train_s
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
                         
     if save_model == 1:
-        model.save('models/FCNforkskip_imggen_lmbda%.1e.h5'%lmbda)
+        model.save('models/FCNforkskip_norm_lmbda%.1e.h5'%lmbda)
      
     test_pred = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
     npix = test_target.shape[0]*test_target.shape[1]*test_target.shape[2]

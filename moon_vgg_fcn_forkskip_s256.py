@@ -46,6 +46,7 @@ def load_data(n_train_samples,im_width,im_height):
     test_data /= 255
 
     #reshape data to 3D array
+    print "shape:", train_data.shape, test_data.shape, train_target.shape, test_target.shape
     train_data = np.reshape(train_data, (n_train_samples,im_width,im_height,1))
     test_data = np.reshape(test_data, (n_train_samples,im_width,im_height,1))
     

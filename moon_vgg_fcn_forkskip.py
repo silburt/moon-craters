@@ -174,7 +174,7 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda):
     #u = AtrousConvolution2D(n_filters, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='aconv_merge1_1', border_mode='same')(u)
 
     #final output
-    u = Convolution2D(1, 3, 3, activation='sigmoid', W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
+    u = Convolution2D(1, 3, 3, activation='relu', W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
     u = Reshape((im_width, im_height))(u)
     model = Model(input=img_input, output=u)
     

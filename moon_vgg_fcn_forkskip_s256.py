@@ -47,13 +47,13 @@ def load_data(n_train_samples):
     
     #norm train targets
     for i in range(len(train_target)):
-        maxx = np.max(train_target[i]):
+        maxx = np.max(train_target[i])
         if maxx > 0:
             train_target[i] /= maxx
 
     #norm test targets
     for i in range(len(test_target)):
-        maxx = np.max(test_target[i]):
+        maxx = np.max(test_target[i])
         if maxx > 0:
             test_target[i] /= maxx
 

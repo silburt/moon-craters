@@ -272,8 +272,8 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 5          #number of epochs. 1 epoch = forward/back pass thru all train data
-    n_train = 20000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    epochs = 1          #number of epochs. 1 epoch = forward/back pass thru all train data
+    n_train = 10000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
 
     #run models

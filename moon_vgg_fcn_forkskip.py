@@ -66,9 +66,8 @@ def read_and_normalize_data(path, img_width, img_height, data_flag):
     elif data_flag == 1:
         data_type = 'test'
     data, target, id = load_data(path, data_type, img_width, img_height)
-    data = np.array(data)                       #convert to numpy
-    target = np.array(target)
-    data = data.astype('float32')               #convert to float
+    data = np.array(data).astype('float32')     #convert to numpy, convert to float
+    target = np.array(target).astype('float32')
     data = data / 255                           #normalize color
     print('%s shape:'%data_type, data.shape)
     return data, target, id
@@ -271,7 +270,7 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 8          #number of epochs. 1 epoch = forward/back pass thru all train data
+    epochs = 20         #number of epochs. 1 epoch = forward/back pass thru all train data
     n_train = 20000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
 

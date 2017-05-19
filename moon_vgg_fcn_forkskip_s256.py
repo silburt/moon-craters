@@ -83,7 +83,7 @@ def custom_image_generator(data, target, batch_size=32):
             v = np.random.randint(-npix,npix+1,batch_size)                  #vertical shift
             r = np.random.randint(0,4,batch_size)                           #90 degree rotations
             for j in range(batch_size):
-                d[j] = np.pad(d[j], ((npix,npix),(npix,npix),(0,0)), mode='constant')[npix+h[j]:L+h[j]+npix,npix+v[j]:W+v[j]+npix,:]
+                d[j] = np.pad(d[j], (npix,), mode='constant')[npix+h[j]:L+h[j]+npix,npix+v[j]:W+v[j]+npix]
                 t[j] = np.pad(t[j], (npix,), mode='constant')[npix+h[j]:L+h[j]+npix,npix+v[j]:W+v[j]+npix]
                 d[j], t[j] = np.rot90(d[j],r[j]), np.rot90(t[j],r[j])
             

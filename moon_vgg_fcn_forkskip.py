@@ -56,7 +56,9 @@ def load_data(path, data_type, img_width, img_height):
         csv = pd.read_csv('%s.csv'%f.split('.png')[0])
         csv.drop(np.where(csv['Diameter (pix)'] < minpix)[0], inplace=True)
         target = mdm.make_mask(csv, img, binary=False, truncate=True)
-        target /= target.max()            #normalizing between 0-1
+        maxx = target.max()
+        if maxx > 0:
+            target /= maxx            #normalizing between 0-1
         y.append(target)
     return  X, y, X_id
 

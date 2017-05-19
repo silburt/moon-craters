@@ -34,7 +34,7 @@ import utils.make_density_map as mdm
 ###########
 #load data#
 ########################################################################
-def load_data(n_train_samples):
+def load_data(n_train_samples,im_width,im_height):
     train_data=np.load('training_set/lola_0_input.npy')[:n_train_samples]
     train_target=np.load('training_set/lola_0_targets.npy')[:n_train_samples]
     test_data=np.load('test_set/lola_1_input.npy')
@@ -44,6 +44,10 @@ def load_data(n_train_samples):
     #norm data
     train_data /= 255
     test_data /= 255
+
+    #reshape data to 3D array
+    train_data = np.reshape(train_data, (n_train_samples,im_width,im_height,1))
+    test_data = np.reshape(test_data, (n_train_samples,im_width,im_height,1))
     
     #norm train targets
     for i in range(len(train_target)):
@@ -208,7 +212,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     rs = 42                     #random_state for train/test split
 
     #Load data
-    train_data, train_target, test_data, test_target = load_data(n_train_samples)
+    train_data, train_target, test_data, test_target = load_data(n_train_samples,im_width,im_height)
 
     #Iterate
     N_runs = 1

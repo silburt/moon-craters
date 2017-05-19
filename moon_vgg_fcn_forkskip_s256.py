@@ -100,7 +100,7 @@ def custom_image_generator(data, target, batch_size=32):
 def FCN_skip_model(im_width,im_height,learn_rate,lmbda):
     print('Making VGG16-style Fully Convolutional Network model...')
     n_filters = 32          #vgg16 uses 64
-    img_input = Input(batch_shape=(None, im_width, im_height, 1))
+    img_input = Input(batch_shape=(None, im_width, im_height, None))
 
     #model a - small receptive field for small craters
     FL_a = 3            #Receptive Field

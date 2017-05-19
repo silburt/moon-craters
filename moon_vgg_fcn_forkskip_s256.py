@@ -37,8 +37,8 @@ import utils.make_density_map as mdm
 def load_data(n_train_samples,im_width,im_height):
     train_data=np.load('training_set/lola_0_input.npy')[:n_train_samples]
     train_target=np.load('training_set/lola_0_targets.npy')[:n_train_samples]
-    test_data=np.load('test_set/lola_1_input.npy')
-    test_target=np.load('test_set/lola_1_targets.npy')
+    test_data=np.load('test_set/lola_1_input.npy')[:n_train_samples]
+    test_target=np.load('test_set/lola_1_targets.npy')[:n_train_samples]
     print "Successfully loaded files locally."
 
     #norm data
@@ -46,9 +46,8 @@ def load_data(n_train_samples,im_width,im_height):
     test_data /= 255
 
     #reshape data to 3D array
-    print "shape:", train_data.shape, test_data.shape, train_target.shape, test_target.shape
     train_data = np.reshape(train_data, (n_train_samples,im_width,im_height,1))
-    test_data = np.reshape(test_data, (n_train_samples,im_width,im_height,1))
+    test_data = np.reshape(test_data, (len(test_data),im_width,im_height,1))
     
     #norm train targets
     for i in range(len(train_target)):

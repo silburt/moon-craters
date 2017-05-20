@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from PIL import Image
+import cv2
 
 from scipy.spatial import cKDTree as kd
 
@@ -38,6 +39,35 @@ def circlemaker(r=10.):
     circle = (xx**2 + yy**2) <= r**2
 
     return circle.astype(float)
+
+# http://docs.opencv.org/2.4/modules/core/doc/drawing_functions.html#circle
+# Though that autodoc is terrible, and should be supplemented with
+# http://docs.opencv.org/3.1.0/dc/da5/tutorial_py_drawing_functions.html
+# and (file that defines static void Circle(...))
+# https://github.com/opencv/opencv/blob/05b15943d6a42c99e5f921b7dbaa8323f3c042c6/modules/imgproc/src/drawing.cpp
+def ringmaker(r=10., dr=1):
+    """
+    Creates ring of radius r and thickness dr.
+
+    Parameters
+    ----------
+    r : float
+        Ring radius
+    dr : int
+        Ring thickness (cv2.circle requires int)
+    """
+
+    # mask grid extent (dr/2 +1 to ensure we capture ring width
+    # and radius); same philosophy as above
+    rhext = int(np.ceil(r + dr/2.)) + 1
+
+    # cv2.circle requires integer radius
+    mask = np.zeros([2*rhext + 1, 2*rhext + 1], np.uint8)
+
+    # Generate ring
+    ring = cv2.circle(mask, (rhext,rhext), int(np.round(r)), 1, thickness=dr)
+
+    return ring.astype(float)
 
 
 def get_merge_indices(cen, imglen, ks_h, ker_shp):
@@ -157,7 +187,8 @@ def make_density_map(craters, img, kernel=None, k_support = 8, k_sig=4., knn=10,
     return dmap
 
 
-def make_mask(craters, img, binary=True, truncate=True):
+def make_mask(craters, img, binary=True, rings=False, 
+                                ringwidth=1, truncate=True):
     """Makes crater mask binary image (does not yet consider crater overlap).
 
     Parameters
@@ -168,6 +199,11 @@ def make_mask(craters, img, binary=True, truncate=True):
         original image; assumes colour channel is last axis (tf standard)
     binary : bool
         If True, returns a binary image of crater masks
+    rings : bool
+        If True, mask uses hollow rings rather than filled circles
+    ringwiddth : int
+        If rings is True, ringwidth sets the width (dr) of the ring.
+        
     truncate : bool
         If True, truncate mask where image truncates
     """
@@ -179,7 +215,10 @@ def make_mask(craters, img, binary=True, truncate=True):
     radius = craters["Diameter (pix)"].values / 2.
 
     for i in range(craters.shape[0]):
-        kernel = circlemaker(r=radius[i])
+        if rings:
+            kernel = ringmaker(r=radius[i], dr=ringwidth)
+        else:
+            kernel = circlemaker(r=radius[i])
         # "Dummy values" so we can use get_merge_indices
         kernel_support = kernel.shape[0]
         ks_half = kernel_support // 2

@@ -72,7 +72,8 @@ outp = "outp"                                       # If str, script dumps pickl
 
 maketype = "mask"                                   # Type of target to make - "dens" for density map, "mask" for mask
 
-savepng = True                                      # If true, save density maps as pngs
+savetiff = True                                     # If true, save density maps as tiff files (8-bit pngs don't work for intensity maps)
+                                                    # with arbitrary scaling.
 
 savenpy = True                                      # If true, dumps input images to outhead + "input.npy" , and target density maps or masks to
                                                     # outhead + "targets.npy"
@@ -105,6 +106,10 @@ dmap_args["kdict"] = {}                             # If kernel is custom functi
 
 # Mask arguments
 
+dmap_args["rings"] = False                          # If True, use rings as masks rather than circles
+
+dmap_args["ringwidth"] = 1                          # If dmap_args["rings"] = True, thickness of ring
+
 dmap_args["binary"] = True                          # If True, returns a binary image of crater masks 
 
 
@@ -135,7 +140,11 @@ def load_img_make_target(filename, maketype, outshp, minpix, dmap_args):
     """
     # Load base image
     img = Image.open(filename).convert('L')
-    omg = np.asanyarray(img.resize(outshp))     # Dummy image of target size
+    # Dummy image of target size.  Bilinear interpolation is compromise
+    # between Image.NEAREST, which creates artifacts, and Image.LANZCOS,
+    # which is more expensive (though try that one if BILINEAR gives
+    # crap)
+    omg = np.asanyarray(img.resize(outshp, resample=Image.BILINEAR))
     img = np.asanyarray(img)
 
     # Load craters CSV
@@ -147,7 +156,9 @@ def load_img_make_target(filename, maketype, outshp, minpix, dmap_args):
     craters.reset_index(inplace=True, drop=True)
 
     if maketype == "mask":
-        dmap = densmap.make_mask(craters, omg, binary=dmap_args["binary"], 
+        dmap = densmap.make_mask(craters, omg, binary=dmap_args["binary"],
+                                        rings=dmap_args["rings"],
+                                        ringwidth=dmap_args["ringwidth"],
                                         truncate=dmap_args["truncate"])
     else:
         dmap = densmap.make_density_map(craters, omg, kernel=dmap_args["kernel"], 
@@ -159,7 +170,7 @@ def load_img_make_target(filename, maketype, outshp, minpix, dmap_args):
     return img, dmap
 
 
-def make_dmaps(files, maketype, outshp, minpix, dmap_args, savepng=False):
+def make_dmaps(files, maketype, outshp, minpix, dmap_args, savetiff=False):
     """Chain-loads input data pngs and make target density maps/masks
 
     Parameters
@@ -176,9 +187,12 @@ def make_dmaps(files, maketype, outshp, minpix, dmap_args, savepng=False):
     dmap_args : dict
         Dictionary of arguments to pass to target generation 
         functions.
-    savepng : bool
+    savetiff : bool
         If True, saves target to output file with name = 
-        filename.split(".png") + maketype + ".png"
+        filename.split(".png") + maketype + ".tiff".  Using
+        tiff as file format because target is density map with
+        arbitrary intensities, while most image formats go from 
+        0 - 256 between 3 channels.        
     """
     X = []
     X_id = []
@@ -196,10 +210,10 @@ def make_dmaps(files, maketype, outshp, minpix, dmap_args, savepng=False):
         X.append(cX)
         X_id.append(fl)
         Y.append(cY)
-        mname = fl.split(".png")[0] + maketype + ".png"
+        mname = fl.split(".png")[0] + maketype + ".tiff"
         Y_id.append(mname)
-        if savepng:
-            imgo = Image.fromarray(cY, mode="L")
+        if savetiff:
+            imgo = Image.fromarray(cY)
             imgo.save(mname);
 
     return X, Y, X_id, Y_id
@@ -228,7 +242,7 @@ files = [outhead + "_{i:0{zp}d}.png".format(i=i, zp=zeropad)
 
 # Generate target density maps/masks
 outshp = (dmlen, dmlen)
-X, Y, X_id, Y_id = make_dmaps(files, maketype, outshp, minpix, dmap_args, savepng=savepng)
+X, Y, X_id, Y_id = make_dmaps(files, maketype, outshp, minpix, dmap_args, savetiff=savetiff)
 
 # Optionally, save data as npy file
 if savenpy:

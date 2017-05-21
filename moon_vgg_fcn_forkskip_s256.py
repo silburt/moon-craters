@@ -196,7 +196,7 @@ def train_and_test_model(train_data,train_target,test_data,test_target,n_train_s
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
                         
     if save_model == 1:
-        model.save('models/FCNforkskip_norm_s256')
+        model.save('models/FCNforkskip_norm_s256.h5')
      
     test_pred = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
     npix = test_target.shape[0]*test_target.shape[1]*test_target.shape[2]

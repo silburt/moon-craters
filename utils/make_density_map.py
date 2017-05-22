@@ -19,7 +19,7 @@ def gkern(l=5, sig=1.):
 
 
 # https://stackoverflow.com/questions/10031580/how-to-write-simple-geometric-shapes-into-numpy-arrays
-def circlemaker(r=10.):
+def circlemaker(r=10., rings=False):
     """
     Creates circle mask of radius r.
     """
@@ -28,7 +28,10 @@ def circlemaker(r=10.):
     rhext = int(r) + 1
 
     xx, yy = np.mgrid[-rhext:rhext + 1, -rhext:rhext + 1]
-    circle = (xx**2 + yy**2) <= r**2
+    if rings == True:
+        circle = np.abs((xx**2 + yy**2) - r**2) <= 2*r
+    else:
+        circle = (xx**2 + yy**2) <= r**2
 
     return circle.astype(float)
 
@@ -135,7 +138,7 @@ def make_density_map(craters, imgshape, kernel=None, k_support = 8, k_sig=4., kn
     return dmap
 
 
-def make_mask(craters, img, binary=True, truncate=True):
+def make_mask(craters, img, binary=True, truncate=True, rings=False):
     """Makes crater mask binary image (does not yet consider crater overlap).
 
     Parameters
@@ -148,6 +151,8 @@ def make_mask(craters, img, binary=True, truncate=True):
         If True, returns a binary image of crater masks
     truncate : bool
         If True, truncate mask where image truncates
+    rings : bool
+        If True, make rings instead of circles.
     """
 
     # Load blank density map
@@ -157,7 +162,7 @@ def make_mask(craters, img, binary=True, truncate=True):
     radius = craters["Diameter (pix)"].values / 2.
 
     for i in range(craters.shape[0]):
-        kernel = circlemaker(r=radius[i])
+        kernel = circlemaker(radius[i], rings)
         # "Dummy values" so we can use get_merge_indices
         kernel_support = kernel.shape[0]
         ks_half = kernel_support // 2

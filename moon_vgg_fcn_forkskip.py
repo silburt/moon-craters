@@ -55,7 +55,7 @@ def load_data(path, data_type, img_width, img_height):
         #make mask as target
         csv = pd.read_csv('%s.csv'%f.split('.png')[0])
         csv.drop(np.where(csv['Diameter (pix)'] < minpix)[0], inplace=True)
-        target = mdm.make_mask(csv, img, binary=False, truncate=True)
+        target = mdm.make_mask(csv, img, binary=True, truncate=True, rings=True)
         maxx = target.max()
         if maxx > 0:
             target /= maxx            #normalizing between 0-1
@@ -213,7 +213,7 @@ def train_and_test_model(train_data,train_target,test_data,test_target,n_train_s
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
                         
     if save_model == 1:
-        model.save('models/FCNforkskip_norm_lmbda%.1e.h5'%lmbda)
+        model.save('models/FCNforkskip_rings.h5')
      
     test_pred = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
     npix = test_target.shape[0]*test_target.shape[1]*test_target.shape[2]
@@ -231,20 +231,20 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     #Load data
     dir = '/scratch/k/kristen/malidib/moon/'
     try:
-        train_data=np.load('training_set/train_data_mask2d_norm.npy')
-        train_target=np.load('training_set/train_target_mask2d_norm.npy')
-        test_data=np.load('test_set/test_data_mask2d_norm.npy')
-        test_target=np.load('test_set/test_target_mask2d_norm.npy')
+        train_data=np.load('training_set/train_data_rings.npy')
+        train_target=np.load('training_set/train_target_rings.npy')
+        test_data=np.load('test_set/test_data_rings.npy')
+        test_target=np.load('test_set/test_target_rings.npy')
         print "Successfully loaded files locally."
     except:
         print "Couldnt find locally saved .npy files, loading from %s."%dir
         train_path, test_path = '%straining_set/'%dir, '%stest_set/'%dir
         train_data, train_target, train_id = read_and_normalize_data(train_path, im_width, im_height, 0)
         test_data, test_target, test_id = read_and_normalize_data(test_path, im_width, im_height, 1)
-        np.save('training_set/train_data_mask2d_norm.npy',train_data)
-        np.save('training_set/train_target_mask2d_norm.npy',train_target)
-        np.save('test_set/test_data_mask2d_norm.npy',test_data)
-        np.save('test_set/test_target_mask2d_norm.npy',test_target)
+        np.save('training_set/train_data_rings.npy',train_data)
+        np.save('training_set/train_target_rings.npy',train_target)
+        np.save('test_set/test_data_rings.npy',test_data)
+        np.save('test_set/test_target_rings.npy',test_target)
     train_data = train_data[:n_train_samples]
     train_target = train_target[:n_train_samples]
 
@@ -272,8 +272,8 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 15         #number of epochs. 1 epoch = forward/back pass thru all train data
-    n_train = 20000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    epochs = 5         #number of epochs. 1 epoch = forward/back pass thru all train data
+    n_train = 10080     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
 
     #run models

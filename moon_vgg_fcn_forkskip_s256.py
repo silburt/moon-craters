@@ -194,10 +194,13 @@ def train_and_test_model(train_data,train_target,test_data,test_target,n_train_s
     print('Split valid: ', len(X_valid), len(Y_valid))
     
     model = FCN_skip_model(im_width,im_height,learn_rate,lmbda)
-
-    model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
-              shuffle=True, verbose=1, validation_data=(X_valid, Y_valid),
-              callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
+    
+    model.fit_generator(custom_image_generator(X_train,Y_train,batch_size=batch_size),
+                        samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
+                        #validation_data=(X_valid, Y_valid), #no generator for validation data
+                        validation_data=custom_image_generator(X_valid,Y_valid,batch_size=batch_size),
+                        nb_val_samples=len(X_valid),
+                        callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
               
     if save_model == 1:
         model.save('models/FCNforkskip_norm_s256.h5')
@@ -207,13 +210,10 @@ def train_and_test_model(train_data,train_target,test_data,test_target,n_train_s
     return np.sum((test_pred - test_target)**2)/npix    #calculate test score
 
 '''
-    model.fit_generator(custom_image_generator(X_train,Y_train,batch_size=batch_size),
-    samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
-    #validation_data=(X_valid, Y_valid), #no generator for validation data
-    validation_data=custom_image_generator(X_valid,Y_valid,batch_size=batch_size),
-    nb_val_samples=len(X_valid),
+    model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
+    shuffle=True, verbose=1, validation_data=(X_valid, Y_valid),
     callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
- '''
+'''
 
 ##############
 #Main Routine#
@@ -251,8 +251,8 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 2          #number of epochs. 1 epoch = forward/back pass thru all train data
-    n_train = 2528      #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    epochs = 15          #number of epochs. 1 epoch = forward/back pass thru all train data
+    n_train = 20000      #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
 
     #run models

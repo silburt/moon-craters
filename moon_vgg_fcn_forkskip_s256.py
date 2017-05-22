@@ -40,7 +40,14 @@ def load_data(n_train_samples,im_width,im_height):
     test_data=np.load('test_set/lola_1_input.npy')[:n_train_samples]
     test_target=np.load('test_set/lola_1_targets.npy')[:n_train_samples]
     print "Successfully loaded files locally."
-
+    
+    save_sample = 1
+    if save_sample == 1:
+        np.save('training_set/lola_0_input_sample.npy',train_data[0:50])
+        np.save('training_set/lola_0_targets_sample.npy',train_target[0:50])
+        np.save('test_set/lola_1_input_sample.npy',test_data[0:50])
+        np.save('test_set/lola_1_targets_sample.npy',test_target[0:50])
+    
     #norm data
     train_data /= 255
     test_data /= 255

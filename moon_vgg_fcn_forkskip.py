@@ -1,3 +1,4 @@
+#I am also convinced now that using rings is better for the network.
 #Fork: From my pure skip connection model I'm noticing that the small craters are being captured nicely, but the large craters are not being recognized. So, I need a separate fork on the onset with a large receptive field to capture the large craters as well.
 #Skip: This model uses skip connections to merge the where with the what, and have scale aware analysis.
 #See "Residual connection on a convolution layer" in https://jtymes.github.io/keras_docs/1.2.2/getting-started/functional-api-guide/#multi-input-and-multi-output-models
@@ -91,7 +92,7 @@ def custom_image_generator(data, target, batch_size=32):
                 d[j], t[j] = np.flipud(d[j]), np.flipud(t[j])               #up/down
             
             #random up/down & left/right pixel shifts, 90 degree rotations
-            npix = 10
+            npix = 15
             h = np.random.randint(-npix,npix+1,batch_size)                  #horizontal shift
             v = np.random.randint(-npix,npix+1,batch_size)                  #vertical shift
             r = np.random.randint(0,4,batch_size)                           #90 degree rotations
@@ -272,8 +273,8 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 5         #number of epochs. 1 epoch = forward/back pass thru all train data
-    n_train = 10080     #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    epochs = 15         #number of epochs. 1 epoch = forward/back pass thru all train data
+    n_train = 25056     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
 
     #run models

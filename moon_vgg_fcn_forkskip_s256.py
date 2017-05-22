@@ -198,22 +198,22 @@ def train_and_test_model(train_data,train_target,test_data,test_target,n_train_s
     model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
               shuffle=True, verbose=1, validation_data=(X_valid, Y_valid),
               callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
-
-'''
-    model.fit_generator(custom_image_generator(X_train,Y_train,batch_size=batch_size),
-                        samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
-                        #validation_data=(X_valid, Y_valid), #no generator for validation data
-                        validation_data=custom_image_generator(X_valid,Y_valid,batch_size=batch_size),
-                        nb_val_samples=len(X_valid),
-                        callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
-'''
-                        
+              
     if save_model == 1:
         model.save('models/FCNforkskip_norm_s256.h5')
      
     test_pred = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
     npix = test_target.shape[0]*test_target.shape[1]*test_target.shape[2]
     return np.sum((test_pred - test_target)**2)/npix    #calculate test score
+
+'''
+    model.fit_generator(custom_image_generator(X_train,Y_train,batch_size=batch_size),
+    samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
+    #validation_data=(X_valid, Y_valid), #no generator for validation data
+    validation_data=custom_image_generator(X_valid,Y_valid,batch_size=batch_size),
+    nb_val_samples=len(X_valid),
+    callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
+ '''
 
 ##############
 #Main Routine#

@@ -92,7 +92,7 @@ def custom_image_generator(data, target, batch_size=32):
                 d[j], t[j] = np.flipud(d[j]), np.flipud(t[j])               #up/down
             
             #random up/down & left/right pixel shifts, 90 degree rotations
-            npix = 15
+            npix = 10
             h = np.random.randint(-npix,npix+1,batch_size)                  #horizontal shift
             v = np.random.randint(-npix,npix+1,batch_size)                  #vertical shift
             r = np.random.randint(0,4,batch_size)                           #90 degree rotations
@@ -274,7 +274,7 @@ if __name__ == '__main__':
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
     epochs = 15         #number of epochs. 1 epoch = forward/back pass thru all train data
-    n_train = 25056     #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    n_train = 20000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
 
     #run models

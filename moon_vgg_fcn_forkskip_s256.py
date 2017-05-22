@@ -35,13 +35,13 @@ import utils.make_density_map as mdm
 #load data#
 ########################################################################
 def load_data(n_train_samples,im_width,im_height):
-    train_data=np.load('training_set/lola_0_input.npy')[:n_train_samples]
-    train_target=np.load('training_set/lola_0_targets.npy')[:n_train_samples]
-    test_data=np.load('test_set/lola_1_input.npy')[:n_train_samples]
-    test_target=np.load('test_set/lola_1_targets.npy')[:n_train_samples]
+    train_data=np.load('training_set/lola_0_input.npy')[:n_train_samples].astype('float32')
+    train_target=np.load('training_set/lola_0_targets.npy')[:n_train_samples].astype('float32')
+    test_data=np.load('test_set/lola_1_input.npy')[:n_train_samples].astype('float32')
+    test_target=np.load('test_set/lola_1_targets.npy')[:n_train_samples].astype('float32')
     print "Successfully loaded files locally."
     
-    save_sample = 1
+    save_sample = 0
     if save_sample == 1:
         np.save('training_set/lola_0_input_sample.npy',train_data[0:50])
         np.save('training_set/lola_0_targets_sample.npy',train_target[0:50])
@@ -245,8 +245,8 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 15          #number of epochs. 1 epoch = forward/back pass thru all train data
-    n_train = 20080     #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    epochs = 2          #number of epochs. 1 epoch = forward/back pass thru all train data
+    n_train = 2520      #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
 
     #run models

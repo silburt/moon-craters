@@ -1,4 +1,4 @@
-#rings: uses binary rings, and I think a sigmoid final activation is going to help this.
+#circle rings: Uses circles for craters which have a value of 0.5, and then the crater rim is a binary ring with a value of 1.
 #Fork: From my pure skip connection model I'm noticing that the small craters are being captured nicely, but the large craters are not being recognized. So, I need a separate fork on the onset with a large receptive field to capture the large craters as well.
 #Skip: This model uses skip connections to merge the where with the what, and have scale aware analysis.
 #See "Residual connection on a convolution layer" in https://jtymes.github.io/keras_docs/1.2.2/getting-started/functional-api-guide/#multi-input-and-multi-output-models
@@ -176,7 +176,8 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda):
     u = Convolution2D(n_filters, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge1_2', border_mode='same')(u)
     #u = AtrousConvolution2D(n_filters, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='aconv_merge1_1', border_mode='same')(u)
 
-    #final output
+    #final output - I think this should be a sigmoid but how to get it to work - or maybe it is working and just all the values are small and get squashed to 0.
+    u = BatchNormalization()(u)
     u = Convolution2D(1, 3, 3, activation='sigmoid', W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
     u = Reshape((im_width, im_height))(u)
     model = Model(input=img_input, output=u)

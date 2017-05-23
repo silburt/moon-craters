@@ -29,7 +29,7 @@ def circlemaker(r=10., rings=False):
 
     xx, yy = np.mgrid[-rhext:rhext + 1, -rhext:rhext + 1]
     if rings == True:
-        circle = np.abs((xx**2 + yy**2) - r**2) <= 2*r
+        circle = np.abs((xx**2 + yy**2) - r**2) <= 3*r
     else:
         circle = (xx**2 + yy**2) <= r**2
 
@@ -157,29 +157,53 @@ def make_mask(craters, img, binary=True, truncate=True, rings=False):
 
     # Load blank density map
     imgshape = (img.shape[0], img.shape[1])     #Image dimensions [y, x], i.e. output of img.shape
-    dmap = np.zeros(imgshape)
     cx, cy = craters["x"].values.astype('int'), craters["y"].values.astype('int')
     radius = craters["Diameter (pix)"].values / 2.
+    dmap_rings, dmap_circles = np.zeros(imgshape), np.zeros(imgshape)
+
+    #generate circles
+    for i in range(craters.shape[0]):
+        kernel = circlemaker(radius[i])
+        # "Dummy values" so we can use get_merge_indices
+        kernel_support = kernel.shape[0]
+        ks_half = kernel_support // 2
+        
+        # Calculate indices on image where kernel should be added
+        [imxl, imxr, gxl, gxr] = get_merge_indices(cx[i], imgshape[1],
+                                                   ks_half, kernel_support)
+        [imyl, imyr, gyl, gyr] = get_merge_indices(cy[i], imgshape[0],
+                                                   ks_half, kernel_support)
+                                                   
+        # Add kernel to image
+        dmap_circles[imyl:imyr, imxl:imxr] += kernel[gyl:gyr, gxl:gxr]
+    
+    if binary:
+        dmap_circles[dmap_circles > 0] = 0.5
+    if truncate:
+        dmap_circles[img[:,:,0] == 0] = 0
+
+#generate rings
 
     for i in range(craters.shape[0]):
         kernel = circlemaker(radius[i], rings)
         # "Dummy values" so we can use get_merge_indices
         kernel_support = kernel.shape[0]
         ks_half = kernel_support // 2
-
+        
         # Calculate indices on image where kernel should be added
         [imxl, imxr, gxl, gxr] = get_merge_indices(cx[i], imgshape[1],
-                                                    ks_half, kernel_support)
+                                                   ks_half, kernel_support)
         [imyl, imyr, gyl, gyr] = get_merge_indices(cy[i], imgshape[0],
-                                                    ks_half, kernel_support)
-
+                                                   ks_half, kernel_support)
         # Add kernel to image
-        dmap[imyl:imyr, imxl:imxr] += kernel[gyl:gyr, gxl:gxr]
-    
-    if binary:
-        dmap = (dmap > 0).astype(float)
-    
-    if truncate:
-        dmap[img[:,:,0] == 0] = 0
+        dmap_rings[imyl:imyr, imxl:imxr] += kernel[gyl:gyr, gxl:gxr]
+
+        if binary:
+            dmap_rings[dmap_rings > 0] = 1
+        if truncate:
+            dmap_rings[img[:,:,0] == 0] = 0
+
+    dmap = dmap_circles + dmap_rings
+    dmap[dmap > 1] = 1
 
     return dmap

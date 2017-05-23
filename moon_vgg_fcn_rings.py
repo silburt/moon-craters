@@ -1,4 +1,4 @@
-#I am also convinced now that using rings is better for the network.
+#rings: This makes use of binary rings as the target. 
 #Fork: From my pure skip connection model I'm noticing that the small craters are being captured nicely, but the large craters are not being recognized. So, I need a separate fork on the onset with a large receptive field to capture the large craters as well.
 #Skip: This model uses skip connections to merge the where with the what, and have scale aware analysis.
 #See "Residual connection on a convolution layer" in https://jtymes.github.io/keras_docs/1.2.2/getting-started/functional-api-guide/#multi-input-and-multi-output-models

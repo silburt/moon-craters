@@ -181,7 +181,7 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda):
     #optimizer/compile
     #optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-    model.compile(loss='mse', optimizer=optimizer)
+    model.compile(loss='mse', optimizer=optimizer)      #try binary_crossentropy
     print model.summary()
     return model
 

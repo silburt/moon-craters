@@ -137,9 +137,55 @@ def make_density_map(craters, imgshape, kernel=None, k_support = 8, k_sig=4., kn
 
     return dmap
 
-
 def make_mask(craters, img, binary=True, truncate=True, rings=False):
-    """Makes crater mask binary image (does not yet consider crater overlap).
+    """Makes crater mask binary image.
+        
+        Parameters
+        ----------
+        craters : pandas.DataFrame
+        craters dataframe that includes pixel x and y columns
+        img : 3D numpy array
+        original image.
+        binary : bool
+        If True, returns a binary image of crater masks
+        truncate : bool
+        If True, truncate mask where image truncates
+        rings : bool
+        If True, make rings instead of circles.
+        """
+    
+    # Load blank density map
+    imgshape = (img.shape[0], img.shape[1])     #Image dimensions [y, x], i.e. output of img.shape
+    cx, cy = craters["x"].values.astype('int'), craters["y"].values.astype('int')
+    radius = craters["Diameter (pix)"].values / 2.
+    
+    dmap = np.zeros(imgshape)
+    for i in range(craters.shape[0]):
+        kernel = circlemaker(radius[i], rings)
+        # "Dummy values" so we can use get_merge_indices
+        kernel_support = kernel.shape[0]
+        ks_half = kernel_support // 2
+        
+        # Calculate indices on image where kernel should be added
+        [imxl, imxr, gxl, gxr] = get_merge_indices(cx[i], imgshape[1],
+                                                   ks_half, kernel_support)
+        [imyl, imyr, gyl, gyr] = get_merge_indices(cy[i], imgshape[0],
+                                                   ks_half, kernel_support)
+                                                   
+        # Add kernel to image
+        dmap[imyl:imyr, imxl:imxr] += kernel[gyl:gyr, gxl:gxr]
+    
+    if binary:
+        dmap = (dmap > 0).astype(float)
+    
+    if truncate:
+        dmap[img[:,:,0] == 0] = 0
+    
+    return dmap
+
+#A.S. defined function
+def make_circlering_mask(craters, img, binary=True, truncate=True):
+    """Makes circlering masks, i.e. crater edge -> ring = 1, crater itself -> circle = 0.5
 
     Parameters
     ----------
@@ -163,7 +209,7 @@ def make_mask(craters, img, binary=True, truncate=True, rings=False):
 
     #generate circles
     for i in range(craters.shape[0]):
-        kernel = circlemaker(radius[i])
+        kernel = circlemaker(radius[i], 0)
         # "Dummy values" so we can use get_merge_indices
         kernel_support = kernel.shape[0]
         ks_half = kernel_support // 2
@@ -182,10 +228,9 @@ def make_mask(craters, img, binary=True, truncate=True, rings=False):
     if truncate:
         dmap_circles[img[:,:,0] == 0] = 0
 
-#generate rings
-
+    #generate rings
     for i in range(craters.shape[0]):
-        kernel = circlemaker(radius[i], rings)
+        kernel = circlemaker(radius[i], 1)
         # "Dummy values" so we can use get_merge_indices
         kernel_support = kernel.shape[0]
         ks_half = kernel_support // 2

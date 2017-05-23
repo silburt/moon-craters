@@ -178,8 +178,7 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda):
 
     #final output - I think this should be a sigmoid but how to get it to work - or maybe it is working and just all the values are small and get squashed to 0.
     #final conv layer used to be 3x3, but now 1x1. 
-    u = BatchNormalization()(u)
-    u = Convolution2D(1, 1, 1, activation='sigmoid', W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
+    u = Convolution2D(1, 1, 1, activation='relu', W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
     u = Reshape((im_width, im_height))(u)
     model = Model(input=img_input, output=u)
     
@@ -251,13 +250,13 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     train_data = train_data[:n_train_samples]
     train_target = train_target[:n_train_samples]
 
-    save_sample = 1
+    save_sample = 0
     if save_sample == 1:
         np.save('training_set/train_data_rings_sample.npy',train_data[0:50])
         np.save('training_set/train_target_rings_sample.npy',train_target[0:50])
         np.save('test_set/test_data_rings_sample.npy',test_data[0:50])
         np.save('test_set/test_target_rings_sample.npy',test_target[0:50])
-'''
+
     #Iterate
     N_runs = 1
     #lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1); lmbda.append(0)
@@ -271,7 +270,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         print 'learning_rate=%e, batch_size=%d, lambda=%e, n_epoch=%d, n_train_samples=%d, random_state=%d, im_width=%d, im_height=%d'%(learn_rate,batch_size,l,nb_epoch,n_train_samples,rs,im_width,im_height)
         print '###################################'
         print '###################################'
-'''
+
 ################
 #Arguments, Run#
 ########################################################################

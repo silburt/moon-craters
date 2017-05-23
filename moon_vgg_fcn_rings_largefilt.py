@@ -237,7 +237,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     for i in range(N_runs):
         FL = filter_length[i]
         l=0
-        score = train_and_test_model(train_data,train_target,test_data,test_target,n_train_samples,learn_rate,batch_size,l,nb_epoch,im_width,im_height,rs,save_models)
+        score = train_and_test_model(train_data,train_target,test_data,test_target,n_train_samples,learn_rate,batch_size,l,FL,nb_epoch,im_width,im_height,rs,save_models)
         print '###################################'
         print '##########END_OF_RUN_INFO##########'
         print('\nTest Score is %f \n'%score)

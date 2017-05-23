@@ -246,6 +246,13 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     train_data = train_data[:n_train_samples]
     train_target = train_target[:n_train_samples]
 
+    save_sample = 1s
+    if save_sample == 1:
+        np.save('training_set/train_data_circlerings_sample.npy',train_data[0:50])
+        np.save('training_set/train_target_circlerings_sample.npy',train_target[0:50])
+        np.save('test_set/test_data_circlerings_sample.npy',test_data[0:50])
+        np.save('test_set/test_target_circlerings_sample.npy',test_target[0:50])
+'''
     #Iterate
     N_runs = 1
     #lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1); lmbda.append(0)
@@ -259,7 +266,8 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         print 'learning_rate=%e, batch_size=%d, lambda=%e, n_epoch=%d, n_train_samples=%d, random_state=%d, im_width=%d, im_height=%d'%(learn_rate,batch_size,l,nb_epoch,n_train_samples,rs,im_width,im_height)
         print '###################################'
         print '###################################'
-        
+'''
+
 ################
 #Arguments, Run#
 ########################################################################

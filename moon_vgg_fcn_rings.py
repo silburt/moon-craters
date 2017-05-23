@@ -177,8 +177,9 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda):
     #u = AtrousConvolution2D(n_filters, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='aconv_merge1_1', border_mode='same')(u)
 
     #final output - I think this should be a sigmoid but how to get it to work - or maybe it is working and just all the values are small and get squashed to 0.
+    #final conv layer used to be 3x3, but now 1x1. 
     u = BatchNormalization()(u)
-    u = Convolution2D(1, 3, 3, activation='sigmoid', W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
+    u = Convolution2D(1, 1, 1, activation='sigmoid', W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
     u = Reshape((im_width, im_height))(u)
     model = Model(input=img_input, output=u)
     

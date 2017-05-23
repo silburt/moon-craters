@@ -246,7 +246,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     train_data = train_data[:n_train_samples]
     train_target = train_target[:n_train_samples]
 
-    save_sample = 1s
+    save_sample = 1
     if save_sample == 1:
         np.save('training_set/train_data_circlerings_sample.npy',train_data[0:50])
         np.save('training_set/train_target_circlerings_sample.npy',train_target[0:50])

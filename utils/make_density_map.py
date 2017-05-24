@@ -37,7 +37,7 @@ def circlemaker(r=10.):
     xx, yy = np.mgrid[-rhext:rhext + 1, -rhext:rhext + 1]
     circle = (xx**2 + yy**2) <= r**2
 
-    return circle.astype(float)
+    return circle.astype(float32)
 
 # http://docs.opencv.org/2.4/modules/core/doc/drawing_functions.html#circle
 # Though that autodoc is terrible, and should be supplemented with
@@ -66,7 +66,7 @@ def ringmaker(r=10., dr=1):
     # Generate ring
     ring = cv2.circle(mask, (rhext,rhext), int(np.round(r)), 1, thickness=dr)
 
-    return ring
+    return ring.astype(float32)
 
 
 def get_merge_indices(cen, imglen, ks_h, ker_shp):

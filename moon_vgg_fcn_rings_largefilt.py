@@ -1,3 +1,4 @@
+#adding large contast too
 #making things simple and using no Dilated convolution and just large filters.
 #rings: This makes use of binary rings as the target.
 #Fork: From my pure skip connection model I'm noticing that the small craters are being captured nicely, but the large craters are not being recognized. So, I need a separate fork on the onset with a large receptive field to capture the large craters as well.
@@ -49,15 +50,24 @@ def load_data(path, data_type, img_width, img_height):
     minpix = 3                          #minimum pixels required for a crater to register in an image
     print "number of %s files are: %d"%(data_type,len(files))
     for f in files:
-        #fbase = os.path.basename(f)
-        img = get_im_cv2(f,img_width,img_height)
+        img = get_im_cv2(fl,img_width,img_height)
+        
+        #experimenting with bigger contrast
+        #https://www.mathworks.com/help/vision/ref/contrastadjustment.html
+        img /= 255.
+        img[img > 0.] = 1. - img[img > 0.]   #since maxpooling is used, we want the interesting stuff (craters) to be 1, not 0. But ignore null background pixels, keep them at 0.
+        minn, maxx = np.min(img[img>0]), np.max(img[img>0])
+        low, hi = 0.1, 1    #low, hi rescaling values
+        img[img>0] = low + (img[img>0] - minn)*(hi - low)/(maxx - minn) #linear re-scaling
+
+        
         X.append(img)
         X_id.append(f)
         
         #make mask as target
         csv = pd.read_csv('%s.csv'%f.split('.png')[0])
         csv.drop(np.where(csv['Diameter (pix)'] < minpix)[0], inplace=True)
-        target = mdm.make_mask(csv, img, binary=True, truncate=True, rings=True)
+        target = mdm.make_mask(csv, img, binary=True, rings=True, ringwidth=2, truncate=True)
         maxx = target.max()
         if maxx > 0:
             target /= maxx            #normalizing between 0-1
@@ -223,7 +233,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     train_data = train_data[:n_train_samples]
     train_target = train_target[:n_train_samples]
 
-    save_sample = 0
+    save_sample = 1
     if save_sample == 1:
         np.save('training_set/train_data_rings_sample.npy',train_data[0:50])
         np.save('training_set/train_target_rings_sample.npy',train_target[0:50])
@@ -231,12 +241,14 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         np.save('test_set/test_target_rings_sample.npy',test_target[0:50])
 
     #Iterate
-    N_runs = 4
+    N_runs = 5
     #lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1); lmbda.append(0)
-    filter_length = [6,8,10,12]
+    filter_length = [6,8,10,12,15]
+    epochs = [8,8,10,10,12]
     for i in range(N_runs):
         FL = filter_length[i]
         l=0
+        nb_epoch = epochs[i]
         score = train_and_test_model(train_data,train_target,test_data,test_target,n_train_samples,learn_rate,batch_size,l,FL,nb_epoch,im_width,im_height,rs,save_models)
         print '###################################'
         print '##########END_OF_RUN_INFO##########'

@@ -50,7 +50,7 @@ def load_data(path, data_type, img_width, img_height):
     minpix = 2                          #minimum pixels required for a crater to register in an image
     print "number of %s files are: %d"%(data_type,len(files))
     for f in files:
-        img = get_im_cv2(fl,img_width,img_height)
+        img = get_im_cv2(f,img_width,img_height)
         
         #experimenting with bigger contrast
         #https://www.mathworks.com/help/vision/ref/contrastadjustment.html

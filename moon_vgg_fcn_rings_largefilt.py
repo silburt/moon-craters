@@ -77,8 +77,6 @@ def read_and_normalize_data(path, img_width, img_height, data_flag):
         data_type = 'test'
     data, target, id = load_data(path, data_type, img_width, img_height)
     data = np.array(data).astype('float32')     #convert to numpy, convert to float
-    target = np.array(target).astype('float32')
-    data = data / 255                           #normalize color
     print('%s shape:'%data_type, data.shape)
     return data, target, id
 

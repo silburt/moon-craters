@@ -65,7 +65,8 @@ def load_data(path, data_type, img_width, img_height):
         #make mask as target
         csv = pd.read_csv('%s.csv'%f.split('.png')[0])
         csv.drop(np.where(csv['Diameter (pix)'] < minpix)[0], inplace=True)
-        target = mdm.make_mask(csv, img, binary=True, rings=True, ringwidth=2, truncate=True)
+        #target = mdm.make_mask(csv, img, binary=True, rings=True, ringwidth=2, truncate=True)
+        target = mdm.make_mask(csv, img, binary=True, truncate=True, rings=True)
         y.append(target)
     return  X, y, X_id
 

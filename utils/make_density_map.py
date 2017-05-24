@@ -4,7 +4,6 @@
 Scripts for determining centroid density maps and segmentation masks as targetes for CNN.  See docstrings of functions for further help.
 """
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from PIL import Image

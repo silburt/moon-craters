@@ -8,7 +8,6 @@ module load gcc/6.2.1
 module load cuda/8.0 
 source /home/k/kristen/kristen/keras_venv_P8.v2/bin/activate 
 
-
 CUDA_VISIBLE_DEVICES=2 nohup python moon_vgg_fcn_circlerings.py > FCNforkskip_circlerings.txt &
 CUDA_VISIBLE_DEVICES=1 nohup python moon_vgg_fcn_rings.py > FCNforkskip_rings2.txt &
 CUDA_VISIBLE_DEVICES=1 nohup python moon_vgg_fcn_forkskip_s256.py > FCNforkskip_s256.txt &

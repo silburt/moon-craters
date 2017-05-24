@@ -50,11 +50,10 @@ def load_data(path, data_type, img_width, img_height):
     minpix = 2                          #minimum pixels required for a crater to register in an image
     print "number of %s files are: %d"%(data_type,len(files))
     for f in files:
-        img = get_im_cv2(f,img_width,img_height)
+        img = get_im_cv2(f,img_width,img_height)/255.
         
         #experimenting with bigger contrast
         #https://www.mathworks.com/help/vision/ref/contrastadjustment.html
-        img /= 255.
         img[img > 0.] = 1. - img[img > 0.]   #since maxpooling is used, we want the interesting stuff (craters) to be 1, not 0. But ignore null background pixels, keep them at 0.
         minn, maxx = np.min(img[img>0]), np.max(img[img>0])
         low, hi = 0.1, 1    #low, hi rescaling values

@@ -47,7 +47,7 @@ def load_data(path, data_type, img_width, img_height):
     X_id = []
     y = []
     files = glob.glob('%s*.png'%path)
-    minpix = 3                          #minimum pixels required for a crater to register in an image
+    minpix = 2                          #minimum pixels required for a crater to register in an image
     print "number of %s files are: %d"%(data_type,len(files))
     for f in files:
         img = get_im_cv2(fl,img_width,img_height)
@@ -60,7 +60,6 @@ def load_data(path, data_type, img_width, img_height):
         low, hi = 0.1, 1    #low, hi rescaling values
         img[img>0] = low + (img[img>0] - minn)*(hi - low)/(maxx - minn) #linear re-scaling
 
-        
         X.append(img)
         X_id.append(f)
         
@@ -68,9 +67,6 @@ def load_data(path, data_type, img_width, img_height):
         csv = pd.read_csv('%s.csv'%f.split('.png')[0])
         csv.drop(np.where(csv['Diameter (pix)'] < minpix)[0], inplace=True)
         target = mdm.make_mask(csv, img, binary=True, rings=True, ringwidth=2, truncate=True)
-        maxx = target.max()
-        if maxx > 0:
-            target /= maxx            #normalizing between 0-1
         y.append(target)
     return  X, y, X_id
 

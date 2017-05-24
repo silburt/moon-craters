@@ -64,9 +64,9 @@ def ringmaker(r=10., dr=1):
     mask = np.zeros([2*rhext + 1, 2*rhext + 1], np.uint8)
 
     # Generate ring
-    ring = cv2.circle(mask, (rhext,rhext), int(np.round(r)), 1, thickness=dr)/1.
+    ring = cv2.circle(mask, (rhext,rhext), int(np.round(r)), 1, thickness=dr)
 
-    return ring
+    return ring.astype(float)
 
 
 def get_merge_indices(cen, imglen, ks_h, ker_shp):

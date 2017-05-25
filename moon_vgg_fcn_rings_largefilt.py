@@ -119,7 +119,7 @@ def custom_image_generator(data, target, batch_size=32):
 #DC: https://arxiv.org/pdf/1511.07122.pdf
 def FCN_skip_model(im_width,im_height,learn_rate,lmbda,FL):
     print('Making VGG16-style Fully Convolutional Network model...')
-    n_filters = 25          #vgg16 uses 64
+    n_filters = 15          #vgg16 uses 64
     #FL = 12            #Receptive Field
     img_input = Input(batch_shape=(None, im_width, im_height, 3))
     
@@ -239,7 +239,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     N_runs = 5
     #lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1); lmbda.append(0)
     filter_length = [10,15,20]
-    epochs = [10,13,16]
+    epochs = [15,20,25]
     for i in range(N_runs):
         FL = filter_length[i]
         l=0

@@ -172,7 +172,7 @@ def train_and_test_model(train_data,train_target,test_data,test_target,n_train_s
     print('Split train: ', len(X_train), len(Y_train))
     print('Split valid: ', len(X_valid), len(Y_valid))
     
-    model = FCN_skip_model(im_width,im_height,learn_rate)
+    model = FCN_inception_model(im_width,im_height,learn_rate)
     '''
     model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
               shuffle=True, verbose=1, validation_data=(X_valid, Y_valid),

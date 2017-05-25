@@ -192,10 +192,10 @@ def train_and_test_model(train_data,train_target,test_data,test_target,n_train_s
                         nb_val_samples=len(X_valid),
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
         
-                        if save_model == 1:
-                            model.save('models/FCNforkskip_rings_FL%d.h5'%FL)
+    if save_model == 1:
+        model.save('models/FCNforkskip_rings_FL%d.h5'%FL)
 
-test_pred = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
+    test_pred = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
     npix = test_target.shape[0]*test_target.shape[1]*test_target.shape[2]
     return np.sum((test_pred - test_target)**2)/npix    #calculate test score
 
@@ -228,15 +228,15 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     train_data = train_data[:n_train_samples]
     train_target = train_target[:n_train_samples]
 
-save_sample = 1
+    save_sample = 1
     if save_sample == 1:
         np.save('training_set/train_data_rings_sample.npy',train_data[0:50])
         np.save('training_set/train_target_rings_sample.npy',train_target[0:50])
         np.save('test_set/test_data_rings_sample.npy',test_data[0:50])
         np.save('test_set/test_target_rings_sample.npy',test_target[0:50])
 
-#Iterate
-N_runs = 5
+    #Iterate
+    N_runs = 5
     #lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1); lmbda.append(0)
     filter_length = [10,15,20]
     epochs = [10,13,16]

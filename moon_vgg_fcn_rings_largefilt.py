@@ -122,7 +122,7 @@ def inception_layer(input,n_filters):
 #Following http://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Szegedy_Going_Deeper_With_2015_CVPR_paper.pdf
 def FCN_inception_model(im_width,im_height,learn_rate):
     print('Making VGG16-style Fully Convolutional Network model...')
-    n_filters = 64          #vgg16 uses 64
+    n_filters = 50          #vgg16 uses 64
     img_input = Input(batch_shape=(None, im_width, im_height, 3))
 
     a1 = inception_layer(img_input,n_filters)

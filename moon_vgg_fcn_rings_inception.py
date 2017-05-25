@@ -1,9 +1,4 @@
-#adding large contast too
-#making things simple and using no Dilated convolution and just large filters.
-#rings: This makes use of binary rings as the target.
-#Fork: From my pure skip connection model I'm noticing that the small craters are being captured nicely, but the large craters are not being recognized. So, I need a separate fork on the onset with a large receptive field to capture the large craters as well.
-#Skip: This model uses skip connections to merge the where with the what, and have scale aware analysis.
-#See "Residual connection on a convolution layer" in https://jtymes.github.io/keras_docs/1.2.2/getting-started/functional-api-guide/#multi-input-and-multi-output-models
+#inception module a la http://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Szegedy_Going_Deeper_With_2015_CVPR_paper.pdf
 
 #This python script is adapted from moon2.py and uses the vgg16 convnet structure.
 #The number of blocks, and other aspects of the vgg16 model can be modified.
@@ -58,7 +53,7 @@ def load_data(path, data_type, img_width, img_height):
         minn, maxx = np.min(img[img>0]), np.max(img[img>0])
         low, hi = 0.1, 1    #low, hi rescaling values
         img[img>0] = low + (img[img>0] - minn)*(hi - low)/(maxx - minn) #linear re-scaling
-        
+
         X.append(img)
         X_id.append(f)
         
@@ -109,54 +104,47 @@ def custom_image_generator(data, target, batch_size=32):
             
             yield (d, t)
 
+def inception_layer(input,n_filters):
+    i1 = Convolution2D(n_filters, 8, 8, activation='relu', border_mode='same')(input)
+    i2 = Convolution2D(n_filters, 3, 3, activation='relu', border_mode='same')(input)
+    i = merge((i1, i2), mode='concat')
+    i = Convolution2D(n_filters/2, 1, 1, activation='relu', border_mode='same')(i)
+    return i
+
 #############################
 #FCN vgg model (keras 1.2.2)#
 ########################################################################
-#Following https://github.com/aurora95/Keras-FCN/blob/master/models.py
-#and also loosely following: https://blog.keras.io/building-autoencoders-in-keras.html
-#and maybe: https://github.com/nicolov/segmentation_keras
-#and this!: https://gist.github.com/Neltherion/f070913fd6284c4a0b60abb86a0cd642
-#DC: https://arxiv.org/pdf/1511.07122.pdf
-def FCN_skip_model(im_width,im_height,learn_rate,lmbda,FL):
+#Following http://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Szegedy_Going_Deeper_With_2015_CVPR_paper.pdf
+def FCN_inception_model(im_width,im_height,learn_rate):
     print('Making VGG16-style Fully Convolutional Network model...')
-    n_filters = 25          #vgg16 uses 64
-    #FL = 12            #Receptive Field
+    n_filters = 50          #vgg16 uses 64
     img_input = Input(batch_shape=(None, im_width, im_height, 3))
-    
-    #model a - small receptive field for small craters
-    a1 = Convolution2D(n_filters, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv1_a1', border_mode='same')(img_input)
-    a1 = Convolution2D(n_filters, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv1_a2', border_mode='same')(a1)
-    a1P = MaxPooling2D((2, 2), strides=(2, 2), name='pool1_a1')(a1)
-    
-    a2 = Convolution2D(n_filters*2, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv2_a1', border_mode='same')(a1P)
-    a2 = Convolution2D(n_filters*2, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv2_a2', border_mode='same')(a2)
-    a2P = MaxPooling2D((2, 2), strides=(2, 2), name='pool2_a1')(a2)
-    
-    a3 = Convolution2D(n_filters*4, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv3_a1', border_mode='same')(a2P)
-    a3 = Convolution2D(n_filters*4, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv3_a2', border_mode='same')(a3)
-    a3P = MaxPooling2D((2, 2), strides=(3, 3), name='pool3_a1')(a3)
-    
-    u = Convolution2D(n_filters*4, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv4_a1', border_mode='same')(a3P)
-    u = Convolution2D(n_filters*4, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv4_a2', border_mode='same')(u)
-    
-    u = UpSampling2D((3,3), name='up4->3')(u)
-    u = merge((a3, u), mode='concat', name='merge3')
-    u = Convolution2D(n_filters*4, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv_merge3_1', border_mode='same')(u)
-    u = Convolution2D(n_filters*4, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv_merge3_2', border_mode='same')(u)
-    
-    u = UpSampling2D((2,2), name='up3->2')(u)
-    u = merge((a2, u), mode='concat', name='merge2')
-    u = Convolution2D(n_filters*2, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv_merge2_1', border_mode='same')(u)
-    u = Convolution2D(n_filters*2, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv_merge2_2', border_mode='same')(u)
-    
-    u = UpSampling2D((2,2), name='up2->1')(u)
-    u = merge((a1, u), mode='concat', name='merge1')
-    u = Convolution2D(n_filters, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv_merge1_1', border_mode='same')(u)
-    u = Convolution2D(n_filters, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv_merge1_2', border_mode='same')(u)
-    
+
+    a1 = inception_layer(img_input,n_filters)
+    a1P = MaxPooling2D((2, 2), strides=(2, 2))(a1)
+
+    a2 = inception_layer(a1P,n_filters*2)
+    a2P = MaxPooling2D((2, 2), strides=(2, 2))(a2)
+
+    a3 = inception_layer(a2P,n_filters*4)
+    a3P = MaxPooling2D((2, 2), strides=(3, 3))(a3)
+
+    u = inception_layer(a3P,n_filters*8)
+
+    u = UpSampling2D((3,3))(u)
+    u = merge((a3, u), mode='concat')
+    u = inception_layer(u,n_filters*4)
+
+    u = UpSampling2D((2,2))(u)
+    u = merge((a2, u), mode='concat')
+    u = inception_layer(u,n_filters*2)
+
+    u = UpSampling2D((2,2))(u)
+    u = merge((a1, u), mode='concat')
+    u = inception_layer(u,n_filters)
+
     #final output
-    #final conv layer used to be 3x3, but now 1x1.
-    u = Convolution2D(1, 1, 1, activation='relu', W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
+    u = Convolution2D(1, 1, 1, activation='relu', border_mode='same')(u)
     u = Reshape((im_width, im_height))(u)
     model = Model(input=img_input, output=u)
     
@@ -172,42 +160,42 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda,FL):
 ########################################################################
 #Need to create this function so that memory is released every iteration (when function exits).
 #Otherwise the memory used accumulates and eventually the program crashes.
-def train_and_test_model(train_data,train_target,test_data,test_target,n_train_samples,learn_rate,batch_size,lmbda,FL,nb_epoch,im_width,im_height,rs,save_model):
+def train_and_test_model(train_data,train_target,test_data,test_target,n_train_samples,learn_rate,batch_size,nb_epoch,im_width,im_height,rs,save_model):
     
     #Main Routine - Build/Train/Test model
     X_train, X_valid, Y_train, Y_valid = train_test_split(train_data, train_target, test_size=0.20, random_state=rs)
     print('Split train: ', len(X_train), len(Y_train))
     print('Split valid: ', len(X_valid), len(Y_valid))
     
-    model = FCN_skip_model(im_width,im_height,learn_rate,lmbda,FL)
+    model = FCN_inception_model(im_width,im_height,learn_rate)
     '''
-        model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
-        shuffle=True, verbose=1, validation_data=(X_valid, Y_valid),
-        callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
-        '''
+    model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
+              shuffle=True, verbose=1, validation_data=(X_valid, Y_valid),
+              callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
+    '''
     model.fit_generator(custom_image_generator(X_train,Y_train,batch_size=batch_size),
                         samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
                         #validation_data=(X_valid, Y_valid), #no generator for validation data
                         validation_data=custom_image_generator(X_valid,Y_valid,batch_size=batch_size),
                         nb_val_samples=len(X_valid),
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
-        
-                        if save_model == 1:
-                            model.save('models/FCNforkskip_rings_FL%d.h5'%FL)
-
-test_pred = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
+                        
+    if save_model == 1:
+        model.save('models/FCNinception_rings.h5')
+     
+    test_pred = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
     npix = test_target.shape[0]*test_target.shape[1]*test_target.shape[2]
     return np.sum((test_pred - test_target)**2)/npix    #calculate test score
 
 ##############
 #Main Routine#
 ########################################################################
-def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_train_samples,save_models):
+def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,n_train_samples,save_models):
     #Static arguments
     im_width = 300              #image width
     im_height = 300             #image height
     rs = 42                     #random_state for train/test split
-    
+
     #Load data
     dir = '/scratch/k/kristen/malidib/moon/'
     try:
@@ -228,29 +216,21 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     train_data = train_data[:n_train_samples]
     train_target = train_target[:n_train_samples]
 
-save_sample = 1
+    save_sample = 1
     if save_sample == 1:
         np.save('training_set/train_data_rings_sample.npy',train_data[0:50])
         np.save('training_set/train_target_rings_sample.npy',train_target[0:50])
         np.save('test_set/test_data_rings_sample.npy',test_data[0:50])
         np.save('test_set/test_target_rings_sample.npy',test_target[0:50])
 
-#Iterate
-N_runs = 5
-    #lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1); lmbda.append(0)
-    filter_length = [10,15,20]
-    epochs = [10,13,16]
-    for i in range(N_runs):
-        FL = filter_length[i]
-        l=0
-        nb_epoch = epochs[i]
-        score = train_and_test_model(train_data,train_target,test_data,test_target,n_train_samples,learn_rate,batch_size,l,FL,nb_epoch,im_width,im_height,rs,save_models)
-        print '###################################'
-        print '##########END_OF_RUN_INFO##########'
-        print('\nTest Score is %f \n'%score)
-        print 'learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train_samples=%d, random_state=%d, im_width=%d, im_height=%d'%(learn_rate,batch_size,FL,nb_epoch,n_train_samples,rs,im_width,im_height)
-        print '###################################'
-        print '###################################'
+    #Iterate
+    score = train_and_test_model(train_data,train_target,test_data,test_target,n_train_samples,learn_rate,batch_size,nb_epoch,im_width,im_height,rs,save_models)
+    print '###################################'
+    print '##########END_OF_RUN_INFO##########'
+    print('\nTest Score is %f \n'%score)
+    print 'learning_rate=%e, batch_size=%d, n_epoch=%d, n_train_samples=%d, random_state=%d, im_width=%d, im_height=%d'%(learn_rate,batch_size,nb_epoch,n_train_samples,rs,im_width,im_height)
+    print '###################################'
+    print '###################################'
 
 ################
 #Arguments, Run#
@@ -261,10 +241,11 @@ if __name__ == '__main__':
     #args
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
-    lmbda = 0           #L2 regularization strength (lambda)
     epochs = 8          #number of epochs. 1 epoch = forward/back pass thru all train data
     n_train = 10080     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
-    
+
     #run models
-    run_cross_validation_create_models(lr,bs,lmbda,epochs,n_train,save_models)
+    run_cross_validation_create_models(lr,bs,epochs,n_train,save_models)
+
+

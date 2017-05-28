@@ -1,3 +1,5 @@
+#I've tried convolutional Filter lengths of 6,8,10,12, and still cant seem to recognize large circles. Trying some really big ones - 15, 20, 25. If not those, then I'm not sure what else to do.
+
 #adding large contast too
 #making things simple and using no Dilated convolution and just large filters.
 #rings: This makes use of binary rings as the target.

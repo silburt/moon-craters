@@ -1,3 +1,4 @@
+#Tried out this inception-style FCN and it still didn't recognize big craters... wonder what the issue is..
 #inception module a la http://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Szegedy_Going_Deeper_With_2015_CVPR_paper.pdf
 
 #This python script is adapted from moon2.py and uses the vgg16 convnet structure.

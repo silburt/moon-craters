@@ -49,7 +49,7 @@ def load_data(path, data_type, img_width, img_height):
     X_id = []
     y = []
     files = glob.glob('%s*.png'%path)
-    minpix = 2                          #minimum pixels required for a crater to register in an image
+    minpix, maxpix = 2, 75                          #minimum pixels required for a crater to register in an image
     print "number of %s files are: %d"%(data_type,len(files))
     for f in files:
         img = get_im_cv2(f,img_width,img_height)/255.
@@ -67,6 +67,7 @@ def load_data(path, data_type, img_width, img_height):
         #make mask as target
         csv = pd.read_csv('%s.csv'%f.split('.png')[0])
         csv.drop(np.where(csv['Diameter (pix)'] < minpix)[0], inplace=True)
+        csv.drop(np.where(csv['Diameter (pix)'] > maxpix)[0], inplace=True)
         #target = mdm.make_mask(csv, img, binary=True, rings=True, ringwidth=2, truncate=True)
         #target = mdm.make_mask(csv, img, binary=True, truncate=True, rings=True)
         target = mdm.make_mask(csv, img, binary=True, rings=True, ringwidth=2, truncate=True)

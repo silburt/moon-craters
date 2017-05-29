@@ -34,7 +34,7 @@ from keras import __version__ as keras_version
 from keras import backend as K
 K.set_image_dim_ordering('tf')
 
-import utils.make_density_map as mdm
+import utils.make_density_map_charles as mdm
 
 #####################
 #load/read functions#
@@ -68,7 +68,8 @@ def load_data(path, data_type, img_width, img_height):
         csv = pd.read_csv('%s.csv'%f.split('.png')[0])
         csv.drop(np.where(csv['Diameter (pix)'] < minpix)[0], inplace=True)
         #target = mdm.make_mask(csv, img, binary=True, rings=True, ringwidth=2, truncate=True)
-        target = mdm.make_mask(csv, img, binary=True, truncate=True, rings=True)
+        #target = mdm.make_mask(csv, img, binary=True, truncate=True, rings=True)
+        target = mdm.make_mask(csv, img, binary=True, rings=True, ringwidth=2, truncate=True)
         y.append(target)
     return  X, y, X_id
 
@@ -195,7 +196,7 @@ def train_and_test_model(train_data,train_target,test_data,test_target,n_train_s
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
         
     if save_model == 1:
-        model.save('models/FCNforkskip_rings_FL%d.h5'%FL)
+        model.save('models/FCNforkskip_ringwidth_FL%d.h5'%FL)
 
     test_pred = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
     npix = test_target.shape[0]*test_target.shape[1]*test_target.shape[2]
@@ -213,29 +214,29 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     #Load data
     dir = '/scratch/k/kristen/malidib/moon/'
     try:
-        train_data=np.load('training_set/train_data_rings.npy')
-        train_target=np.load('training_set/train_target_rings.npy')
-        test_data=np.load('test_set/test_data_rings.npy')
-        test_target=np.load('test_set/test_target_rings.npy')
+        train_data=np.load('training_set/train_data_ringwidth.npy')
+        train_target=np.load('training_set/train_target_ringwidth.npy')
+        test_data=np.load('test_set/test_data_ringwidth.npy')
+        test_target=np.load('test_set/test_target_ringwidth.npy')
         print "Successfully loaded files locally."
     except:
         print "Couldnt find locally saved .npy files, loading from %s."%dir
         train_path, test_path = '%straining_set/'%dir, '%stest_set/'%dir
         train_data, train_target, train_id = read_and_normalize_data(train_path, im_width, im_height, 0)
         test_data, test_target, test_id = read_and_normalize_data(test_path, im_width, im_height, 1)
-        np.save('training_set/train_data_rings.npy',train_data)
-        np.save('training_set/train_target_rings.npy',train_target)
-        np.save('test_set/test_data_rings.npy',test_data)
-        np.save('test_set/test_target_rings.npy',test_target)
+        np.save('training_set/train_data_ringwidth.npy',train_data)
+        np.save('training_set/train_target_ringwidth.npy',train_target)
+        np.save('test_set/test_data_ringwidth.npy',test_data)
+        np.save('test_set/test_target_ringwidth.npy',test_target)
     train_data = train_data[:n_train_samples]
     train_target = train_target[:n_train_samples]
 
     save_sample = 1
     if save_sample == 1:
-        np.save('training_set/train_data_rings_sample.npy',train_data[0:50])
-        np.save('training_set/train_target_rings_sample.npy',train_target[0:50])
-        np.save('test_set/test_data_rings_sample.npy',test_data[0:50])
-        np.save('test_set/test_target_rings_sample.npy',test_target[0:50])
+        np.save('training_set/train_data_ringwidth_sample.npy',train_data[0:50])
+        np.save('training_set/train_target_ringwidth_sample.npy',train_target[0:50])
+        np.save('test_set/test_data_ringwidth_sample.npy',test_data[0:50])
+        np.save('test_set/test_target_ringwidth_sample.npy',test_target[0:50])
 
     #Iterate
     N_runs = 5

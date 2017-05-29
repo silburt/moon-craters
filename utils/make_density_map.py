@@ -29,7 +29,7 @@ def circlemaker(r=10., rings=False):
 
     xx, yy = np.mgrid[-rhext:rhext + 1, -rhext:rhext + 1]
     if rings == True:
-        circle = np.abs((xx**2 + yy**2) - r**2) <= 3*r
+        circle = np.abs((xx**2 + yy**2) - r**2) <= r
     else:
         circle = (xx**2 + yy**2) <= r**2
 

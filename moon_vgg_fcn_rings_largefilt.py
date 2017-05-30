@@ -125,7 +125,7 @@ def custom_image_generator(data, target, batch_size=32):
 #DC: https://arxiv.org/pdf/1511.07122.pdf
 def FCN_skip_model(im_width,im_height,learn_rate,lmbda,FL):
     print('Making VGG16-style Fully Convolutional Network model...')
-    n_filters = 15          #vgg16 uses 64
+    n_filters = 32      #vgg16 uses 64
     #FL = 12            #Receptive Field
     img_input = Input(batch_shape=(None, im_width, im_height, 3))
     
@@ -200,7 +200,7 @@ def train_and_test_model(train_data,train_target,test_data,test_target,n_train_s
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
         
     if save_model == 1:
-        model.save('models/FCNforkskip_ringwidth_FL%d.h5'%FL)
+        model.save('models/FCNforkskip_sigmoid_FL%d.h5'%FL)
 
     test_pred = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
     npix = test_target.shape[0]*test_target.shape[1]*test_target.shape[2]
@@ -244,9 +244,9 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         np.save('test_set/test_target_%s_sample.npy'%ext,test_target[0:50])
 
     #Iterate
-    N_runs = 1
+    N_runs = 2
     #lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1); lmbda.append(0)
-    filter_length = [10]
+    filter_length = [3,10]
     #epochs = [15,20,25]
     for i in range(N_runs):
         FL = filter_length[i]
@@ -270,7 +270,7 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 2          #number of epochs. 1 epoch = forward/back pass thru all train data
+    epochs = 20          #number of epochs. 1 epoch = forward/back pass thru all train data
     n_train = 10080     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
     

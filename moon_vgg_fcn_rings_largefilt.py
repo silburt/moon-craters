@@ -217,30 +217,31 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     
     #Load data
     dir = '/scratch/k/kristen/malidib/moon/'
+    ext = 'rings'
     try:
-        train_data=np.load('training_set/train_data_ringwidth.npy')
-        train_target=np.load('training_set/train_target_ringwidth.npy')
-        test_data=np.load('test_set/test_data_ringwidth.npy')
-        test_target=np.load('test_set/test_target_ringwidth.npy')
+        train_data=np.load('training_set/train_data_%s.npy'%ext)
+        train_target=np.load('training_set/train_target_%s.npy'%ext)
+        test_data=np.load('test_set/test_data_%s.npy'%ext)
+        test_target=np.load('test_set/test_target_%s.npy'%ext)
         print "Successfully loaded files locally."
     except:
         print "Couldnt find locally saved .npy files, loading from %s."%dir
         train_path, test_path = '%straining_set/'%dir, '%stest_set/'%dir
         train_data, train_target, train_id = read_and_normalize_data(train_path, im_width, im_height, 0)
         test_data, test_target, test_id = read_and_normalize_data(test_path, im_width, im_height, 1)
-        np.save('training_set/train_data_ringwidth.npy',train_data)
-        np.save('training_set/train_target_ringwidth.npy',train_target)
-        np.save('test_set/test_data_ringwidth.npy',test_data)
-        np.save('test_set/test_target_ringwidth.npy',test_target)
+        np.save('training_set/train_data_%s.npy'%ext,train_data)
+        np.save('training_set/train_target_%s.npy'%ext,train_target)
+        np.save('test_set/test_data_%s.npy'%ext,test_data)
+        np.save('test_set/test_target_%s.npy'%ext,test_target)
     train_data = train_data[:n_train_samples]
     train_target = train_target[:n_train_samples]
 
     save_sample = 1
     if save_sample == 1:
-        np.save('training_set/train_data_ringwidth_sample.npy',train_data[0:50])
-        np.save('training_set/train_target_ringwidth_sample.npy',train_target[0:50])
-        np.save('test_set/test_data_ringwidth_sample.npy',test_data[0:50])
-        np.save('test_set/test_target_ringwidth_sample.npy',test_target[0:50])
+        np.save('training_set/train_data_%s_sample.npy'%ext,train_data[0:50])
+        np.save('training_set/train_target_%s_sample.npy'%ext,train_target[0:50])
+        np.save('test_set/test_data_%s_sample.npy'%ext,test_data[0:50])
+        np.save('test_set/test_target_%s_sample.npy'%ext,test_target[0:50])
 
     #Iterate
     N_runs = 1

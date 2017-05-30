@@ -56,7 +56,7 @@ def load_data(path, data_type, img_width, img_height):
         
         #experimenting with bigger contrast
         #https://www.mathworks.com/help/vision/ref/contrastadjustment.html
-        img[img > 0.] = 1. - img[img > 0.]   #since maxpooling is used, we want the interesting stuff (craters) to be 1, not 0. But ignore null background pixels, keep them at 0.
+        #img[img > 0.] = 1. - img[img > 0.]   #since maxpooling is used, we want the interesting stuff (craters) to be 1, not 0. But ignore null background pixels, keep them at 0.
         minn, maxx = np.min(img[img>0]), np.max(img[img>0])
         low, hi = 0.1, 1    #low, hi rescaling values
         img[img>0] = low + (img[img>0] - minn)*(hi - low)/(maxx - minn) #linear re-scaling
@@ -209,7 +209,7 @@ def train_and_test_model(train_data,train_target,test_data,test_target,n_train_s
 ##############
 #Main Routine#
 ########################################################################
-def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_train_samples,save_models):
+def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_train_samples,save_models,invcolor):
     #Static arguments
     im_width = 300              #image width
     im_height = 300             #image height
@@ -217,7 +217,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     
     #Load data
     dir = '/scratch/k/kristen/malidib/moon/'
-    ext = 'rings'
+    ext = 'invrings'
     try:
         train_data=np.load('training_set/train_data_%s.npy'%ext)
         train_target=np.load('training_set/train_target_%s.npy'%ext)
@@ -243,10 +243,17 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         np.save('test_set/test_data_%s_sample.npy'%ext,test_data[0:50])
         np.save('test_set/test_target_%s_sample.npy'%ext,test_target[0:50])
 
+    #default is inverse colours
+    if invcolor == 0:
+        for i in range(len(train_data)):
+            train_data[i] = 1-train_data[i]
+        for i in range(len(test_data)):
+            test_data[i] = 1-test_data[i]
+
     #Iterate
     N_runs = 2
     #lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1); lmbda.append(0)
-    filter_length = [3,10]
+    filter_length = [10,15]
     #epochs = [15,20,25]
     for i in range(N_runs):
         FL = filter_length[i]
@@ -270,9 +277,10 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 20          #number of epochs. 1 epoch = forward/back pass thru all train data
-    n_train = 10080     #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    epochs = 30          #number of epochs. 1 epoch = forward/back pass thru all train data
+    n_train = 20000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
+    invcolor = 0
     
     #run models
-    run_cross_validation_create_models(lr,bs,lmbda,epochs,n_train,save_models)
+    run_cross_validation_create_models(lr,bs,lmbda,epochs,n_train,save_models,invcolor)

@@ -162,14 +162,15 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda,FL):
     
     #final output
     #final conv layer used to be 3x3, but now 1x1.
-    u = Convolution2D(1, 1, 1, activation='relu', W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
+    u = Convolution2D(1, 1, 1, activation='softmax', W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
     u = Reshape((im_width, im_height))(u)
     model = Model(input=img_input, output=u)
     
     #optimizer/compile
     #optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-    model.compile(loss='mse', optimizer=optimizer)
+    #model.compile(loss='mse', optimizer=optimizer)
+    model.compile(loss='binary_crossentropy', optimizer=optimizer)
     print model.summary()
     return model
 
@@ -242,14 +243,14 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         np.save('test_set/test_target_ringwidth_sample.npy',test_target[0:50])
 
     #Iterate
-    N_runs = 5
+    N_runs = 1
     #lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1); lmbda.append(0)
-    filter_length = [10,15,20]
-    epochs = [15,20,25]
+    filter_length = [10]
+    #epochs = [15,20,25]
     for i in range(N_runs):
         FL = filter_length[i]
-        l=0
-        nb_epoch = epochs[i]
+        #l=0
+        #nb_epoch = epochs[i]
         score = train_and_test_model(train_data,train_target,test_data,test_target,n_train_samples,learn_rate,batch_size,l,FL,nb_epoch,im_width,im_height,rs,save_models)
         print '###################################'
         print '##########END_OF_RUN_INFO##########'
@@ -268,7 +269,7 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 8          #number of epochs. 1 epoch = forward/back pass thru all train data
+    epochs = 2          #number of epochs. 1 epoch = forward/back pass thru all train data
     n_train = 10080     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
     

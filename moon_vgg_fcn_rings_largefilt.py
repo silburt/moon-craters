@@ -162,7 +162,7 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda,FL):
     
     #final output
     #final conv layer used to be 3x3, but now 1x1.
-    u = Convolution2D(1, 1, 1, activation='softmax', W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
+    u = Convolution2D(1, 1, 1, activation='sigmoid', W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
     u = Reshape((im_width, im_height))(u)
     model = Model(input=img_input, output=u)
     

@@ -280,7 +280,7 @@ if __name__ == '__main__':
     epochs = 30          #number of epochs. 1 epoch = forward/back pass thru all train data
     n_train = 20000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
-    invcolor = 0
+    invcolor = 1
     
     #run models
     run_cross_validation_create_models(lr,bs,lmbda,epochs,n_train,save_models,invcolor)

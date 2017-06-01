@@ -223,7 +223,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         test_data, test_target, test_id = read_and_normalize_data('ds4/Test_ds4_msk/', im_width, im_height, 2)
         np.save('ds4/Train_ds4_msk/train_data_%s.npy'%ext,train_data)
         np.save('ds4/Train_ds4_msk/train_target_%s.npy'%ext,train_target)
-        np.save('ds4/Dev_ds4_msk/valid_data_%s.npy'%ext,vaild_data)
+        np.save('ds4/Dev_ds4_msk/valid_data_%s.npy'%ext,valid_data)
         np.save('ds4/Dev_ds4_msk/valid_target_%s.npy'%ext,valid_target)
         np.save('ds4/Test_ds4_msk/test_data_%s.npy'%ext,test_data)
         np.save('ds4/Test_ds4_msk/test_target_%s.npy'%ext,test_target)
@@ -249,7 +249,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         FL = filter_length[i]
         l=0
         #nb_epoch = epochs[i]
-        score = train_and_test_model(train_data,train_target,test_data,test_target,n_train_samples,learn_rate,batch_size,l,FL,nb_epoch,im_width,im_height,rs,save_models)
+        score = train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,n_train_samples,learn_rate,batch_size,l,FL,nb_epoch,im_width,im_height,rs,save_models)
         print '###################################'
         print '##########END_OF_RUN_INFO##########'
         print('\nTest Score is %f \n'%score)

@@ -23,7 +23,7 @@ from sklearn.model_selection import train_test_split
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Dropout, Flatten, Reshape
 from keras.layers import AveragePooling2D, merge, Input, BatchNormalization
-from keras.layers.convolutional import Convolution2D, MaxPooling2D, UpSampling2D, AtrousConvolution2D
+from keras.layers.convolutional import Convolution2D, MaxPooling2D, UpSampling2D
 from keras.regularizers import l2
 from keras.models import load_model
 
@@ -218,9 +218,9 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         print "Successfully loaded files locally."
     except:
         print "Couldnt find locally saved .npy files, loading from %s."%dir
-        train_data, train_target, train_id = read_and_normalize_data('ds4/', im_width, im_height, 0)
-        vaild_data, vaild_target, vaild_id = read_and_normalize_data('ds4/', im_width, im_height, 1)
-        test_data, test_target, test_id = read_and_normalize_data('ds4/', im_width, im_height, 2)
+        train_data, train_target, train_id = read_and_normalize_data('ds4/Train_ds4_msk/', im_width, im_height, 0)
+        vaild_data, vaild_target, vaild_id = read_and_normalize_data('ds4/Dev_ds4_msk/', im_width, im_height, 1)
+        test_data, test_target, test_id = read_and_normalize_data('ds4/Test_ds4_msk/', im_width, im_height, 2)
         np.save('ds4/Train_ds4_msk/train_data_%s.npy'%ext,train_data)
         np.save('ds4/Train_ds4_msk/train_target_%s.npy'%ext,train_target)
         np.save('ds4/Dev_ds4_msk/valid_data_%s.npy'%ext,valid_data)

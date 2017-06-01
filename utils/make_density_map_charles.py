@@ -216,8 +216,8 @@ def make_mask(craters, img, binary=True, rings=False,
 
     for i in range(craters.shape[0]):
         if rings:
-            #kernel = ringmaker(r=radius[i], dr=ringwidth)
-            kernel = ringmaker(r=radius[i], dr=int(np.round(radius[i]/4.)))
+            kernel = ringmaker(r=radius[i], dr=ringwidth)
+            #kernel = ringmaker(r=radius[i], dr=int(np.round(radius[i]/4.)))
         else:
             kernel = circlemaker(r=radius[i])
         # "Dummy values" so we can use get_merge_indices

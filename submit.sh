@@ -11,8 +11,8 @@ source /home/k/kristen/kristen/keras_venv_P8.v2/bin/activate
 CUDA_VISIBLE_DEVICES=2 nohup python moon_vgg_fcn_circlerings.py > FCNforkskip_circlerings.txt &
 CUDA_VISIBLE_DEVICES=1 nohup python moon_vgg_fcn_rings.py > FCNforkskip_rings2.txt &
 CUDA_VISIBLE_DEVICES=1 nohup python moon_vgg_fcn_forkskip_s256.py > FCNforkskip_s256.txt &
-CUDA_VISIBLE_DEVICES=3 nohup python moon_vgg_fcn_rings_largefilt.py > largefilters_sigmoid_invcolor.txt &
-CUDA_VISIBLE_DEVICES=2 nohup python moon_vgg16_1.2.2.py > vgg16output.txt &
+CUDA_VISIBLE_DEVICES=2 nohup python moon_vgg_fcn_rings_largefilt.py > largefilters_sigmoid_invcolor.txt &
+CUDA_VISIBLE_DEVICES=2 nohup python moon_rings_ds4.py > ds4.txt &
 
 CUDA_VISIBLE_DEVICES=0 python moon_vgg16_1.2.2.py --run_fold 1 > outputfold1.txt &
 CUDA_VISIBLE_DEVICES=1 python moon_vgg16_1.2.2.py --run_fold 2 > outputfold2.txt &

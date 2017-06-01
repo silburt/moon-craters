@@ -31,8 +31,8 @@ K.set_image_dim_ordering('tf')
 ########################################################################
 def get_im_cv2(path, img_width, img_height):
     img = cv2.imread(path)
-    resized = cv2.resize(img, (img_width, img_height))#, cv2.INTER_LINEAR)
-    return resized
+    #resized = cv2.resize(img, (img_width, img_height))#, cv2.INTER_LINEAR)
+    return img
 
 def load_data(path, data_type, img_width, img_height):
     X = []
@@ -57,10 +57,12 @@ def get_csv_len(file_):                        #returns # craters in each image 
     df = pd.read_csv(file2_ , header=0)
     return [len(df.index)]
 
-img_width = 224              #image width
-img_height = 224             #image height
-kristen_dir = '/scratch/k/kristen/malidib/moon/'
-train_path, test_path = '%straining_set/'%kristen_dir, '%stest_set/'%kristen_dir
+img_width = 256              #image width
+img_height = 256             #image height
+#dir = '/scratch/k/kristen/malidib/moon/'
+dir = ''
+train_path, valid_path, test_path = '%sTrain_ds4_msk/'%dir, '%sDev_ds4_msk/'%dir, '%sTest_ds4_msk/'%dir
 train_data, train_target, id, max_train_craters = load_data(train_path, 'train', img_width, img_height)
+test_data, test_target, id, max_test_craters = load_data(valid_path, 'valid', img_width, img_height)
 test_data, test_target, id, max_test_craters = load_data(test_path, 'test', img_width, img_height)
 print "max train craters = %d, max test craters = %d"%(max_train_craters,max_test_craters)

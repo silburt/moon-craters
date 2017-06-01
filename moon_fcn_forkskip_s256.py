@@ -122,7 +122,7 @@ def custom_image_generator(data, target, batch_size=32):
 #and maybe: https://github.com/nicolov/segmentation_keras
 #and this!: https://gist.github.com/Neltherion/f070913fd6284c4a0b60abb86a0cd642
 #DC: https://arxiv.org/pdf/1511.07122.pdf
-def Unet_model(im_width,im_height,learn_rate,lmbda,FL):
+def unet_model(im_width,im_height,learn_rate,lmbda,FL):
     print('Making VGG16-style Fully Convolutional Network model...')
     n_filters = 32      #vgg16 uses 64
     #FL = 12            #Receptive Field

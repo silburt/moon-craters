@@ -34,7 +34,7 @@ import utils.make_density_map as mdm
 ###########
 #load data#
 ########################################################################
-def load_data(n_train_samples,im_width,im_height):
+def load_data(n_train_samples,im_width,im_height,inv_color_flag):
     train_data=np.load('training_set/lola_0_input.npy')[:n_train_samples].astype('float32')
     train_target=np.load('training_set/lola_0_targets.npy')[:n_train_samples].astype('float32')
     test_data=np.load('test_set/lola_1_input.npy')[:n_train_samples].astype('float32')
@@ -51,9 +51,23 @@ def load_data(n_train_samples,im_width,im_height):
     #norm data
     train_data /= 255
     test_data /= 255
-
+    
+    #increase contrast of data, inverse color if flag=1
+    low, hi = 0.1, 1                                                    #low, hi rescaling values
+    for img in train_data:
+        if inv_color_flag == 1:
+            img[img > 0.] = 1. - img[img > 0.]
+        minn, maxx = np.min(img[img>0]), np.max(img[img>0])
+        img[img>0] = low + (img[img>0] - minn)*(hi - low)/(maxx - minn) #linear re-scaling
+    
+    for img in test_data:
+        if inv_color_flag == 1:
+            img[img > 0.] = 1. - img[img > 0.]
+        minn, maxx = np.min(img[img>0]), np.max(img[img>0])
+        img[img>0] = low + (img[img>0] - minn)*(hi - low)/(maxx - minn) #linear re-scaling
+    
     #reshape data to 3D array
-    train_data = np.reshape(train_data, (n_train_samples,im_width,im_height,1))
+    train_data = np.reshape(train_data, (len(train_data),im_width,im_height,1))
     test_data = np.reshape(test_data, (len(test_data),im_width,im_height,1))
     
     #norm train targets
@@ -108,76 +122,54 @@ def custom_image_generator(data, target, batch_size=32):
 #and maybe: https://github.com/nicolov/segmentation_keras
 #and this!: https://gist.github.com/Neltherion/f070913fd6284c4a0b60abb86a0cd642
 #DC: https://arxiv.org/pdf/1511.07122.pdf
-def FCN_skip_model(im_width,im_height,learn_rate,lmbda):
+def Unet_model(im_width,im_height,learn_rate,lmbda,FL):
     print('Making VGG16-style Fully Convolutional Network model...')
-    n_filters = 32          #vgg16 uses 64
+    n_filters = 32      #vgg16 uses 64
+    #FL = 12            #Receptive Field
     img_input = Input(batch_shape=(None, im_width, im_height, 1))
-
+    
     #model a - small receptive field for small craters
-    FL_a = 3            #Receptive Field
-    a1 = Convolution2D(n_filters, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv1_a1', border_mode='same')(img_input)
-    a1 = Convolution2D(n_filters, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv1_a2', border_mode='same')(a1)
+    a1 = Convolution2D(n_filters, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv1_a1', border_mode='same')(img_input)
+    a1 = Convolution2D(n_filters, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv1_a2', border_mode='same')(a1)
     a1P = MaxPooling2D((2, 2), strides=(2, 2), name='pool1_a1')(a1)
-
-    a2 = Convolution2D(n_filters*2, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv2_a1', border_mode='same')(a1P)
-    a2 = Convolution2D(n_filters*2, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv2_a2', border_mode='same')(a2)
+    
+    a2 = Convolution2D(n_filters*2, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv2_a1', border_mode='same')(a1P)
+    a2 = Convolution2D(n_filters*2, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv2_a2', border_mode='same')(a2)
     a2P = MaxPooling2D((2, 2), strides=(2, 2), name='pool2_a1')(a2)
-
-    a3 = Convolution2D(n_filters*4, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv3_a1', border_mode='same')(a2P)
-    a3 = Convolution2D(n_filters*4, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv3_a2', border_mode='same')(a3)
+    
+    a3 = Convolution2D(n_filters*4, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv3_a1', border_mode='same')(a2P)
+    a3 = Convolution2D(n_filters*4, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv3_a2', border_mode='same')(a3)
     a3P = MaxPooling2D((2, 2), strides=(2, 2), name='pool3_a1')(a3)
-
-    a4 = Convolution2D(n_filters*4, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv4_a1', border_mode='same')(a3P)
-    a4 = Convolution2D(n_filters*4, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv4_a2', border_mode='same')(a4)
-
-    #model b - large receptive field for large craters via dilated conv
-    #RFL = receptive field length = (DF - 1)(FL - 1) + FL
-    DF = 4              #Dilation Factor - previous success = 4
-    FL_b = 10           #Filter Length of model b - previous success = 10
-    b1 = AtrousConvolution2D(n_filters, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='conv1_b1', border_mode='same')(img_input)
-    b1 = AtrousConvolution2D(n_filters, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='aconv1_b2', border_mode='same')(b1)
-    b1P = MaxPooling2D((2, 2), strides=(2, 2), name='pool1_b1')(b1)
-
-    b2 = AtrousConvolution2D(n_filters*2, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='aconv2_b1', border_mode='same')(b1P)
-    b2 = AtrousConvolution2D(n_filters*2, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='aconv2_b2', border_mode='same')(b2)
-    b2P = MaxPooling2D((2, 2), strides=(2, 2), name='pool2_b1')(b2)
-
-    b3 = AtrousConvolution2D(n_filters*4, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='aconv3_b1', border_mode='same')(b2P)
-    b3 = AtrousConvolution2D(n_filters*4, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='aconv3_b2', border_mode='same')(b3)
-    b3P = MaxPooling2D((2, 2), strides=(2, 2), name='pool3_b1')(b3)
-
-    b4 = AtrousConvolution2D(n_filters*4, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='aconv4_b1', border_mode='same')(b3P)
-    b4 = AtrousConvolution2D(n_filters*4, FL_b, FL_b, atrous_rate=(DF,DF), W_regularizer=l2(lmbda), activation='relu', name='aconv4_b2', border_mode='same')(b4)
-
-    #merge models 1 and 2
-    u = merge((a4, b4), mode='concat', name='merge4')
-    u = Convolution2D(n_filters*8, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge4_1', border_mode='same')(u)
-    u = Convolution2D(n_filters*8, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge4_2', border_mode='same')(u)
+    
+    u = Convolution2D(n_filters*4, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv4_a1', border_mode='same')(a3P)
+    u = Convolution2D(n_filters*4, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv4_a2', border_mode='same')(u)
+    
     u = UpSampling2D((2,2), name='up4->3')(u)
-
-    u = merge((a3, b3, u), mode='concat', name='merge3')
-    u = Convolution2D(n_filters*4, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge3_1', border_mode='same')(u)
-    u = Convolution2D(n_filters*4, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge3_2', border_mode='same')(u)
+    u = merge((a3, u), mode='concat', name='merge3')
+    u = Convolution2D(n_filters*4, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv_merge3_1', border_mode='same')(u)
+    u = Convolution2D(n_filters*4, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv_merge3_2', border_mode='same')(u)
+    
     u = UpSampling2D((2,2), name='up3->2')(u)
-
-    u = merge((a2, b2, u), mode='concat', name='merge2')
-    u = Convolution2D(n_filters*2, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge2_1', border_mode='same')(u)
-    u = Convolution2D(n_filters*2, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge2_2', border_mode='same')(u)
+    u = merge((a2, u), mode='concat', name='merge2')
+    u = Convolution2D(n_filters*2, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv_merge2_1', border_mode='same')(u)
+    u = Convolution2D(n_filters*2, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv_merge2_2', border_mode='same')(u)
+    
     u = UpSampling2D((2,2), name='up2->1')(u)
-
-    u = merge((a1, b1, u), mode='concat', name='merge1')
-    u = Convolution2D(n_filters, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge1_1', border_mode='same')(u)
-    u = Convolution2D(n_filters, FL_a, FL_a, activation='relu', W_regularizer=l2(lmbda), name='conv_merge1_2', border_mode='same')(u)
-
+    u = merge((a1, u), mode='concat', name='merge1')
+    u = Convolution2D(n_filters, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv_merge1_1', border_mode='same')(u)
+    u = Convolution2D(n_filters, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv_merge1_2', border_mode='same')(u)
+    
     #final output
-    u = Convolution2D(1, 3, 3, activation='relu', W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
+    #final conv layer used to be 3x3, but now 1x1.
+    u = Convolution2D(1, 1, 1, activation='sigmoid', W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
     u = Reshape((im_width, im_height))(u)
     model = Model(input=img_input, output=u)
     
     #optimizer/compile
     #optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-    model.compile(loss='mse', optimizer=optimizer)
+    #model.compile(loss='mse', optimizer=optimizer)
+    model.compile(loss='binary_crossentropy', optimizer=optimizer)
     print model.summary()
     return model
 
@@ -186,14 +178,14 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda):
 ########################################################################
 #Need to create this function so that memory is released every iteration (when function exits).
 #Otherwise the memory used accumulates and eventually the program crashes.
-def train_and_test_model(train_data,train_target,test_data,test_target,n_train_samples,learn_rate,batch_size,lmbda,nb_epoch,im_width,im_height,rs,save_model):
+def train_and_test_model(train_data,train_target,test_data,test_target,n_train_samples,learn_rate,batch_size,lmbda,FL,nb_epoch,im_width,im_height,rs,save_model,inv_color):
     
     #Main Routine - Build/Train/Test model
     X_train, X_valid, Y_train, Y_valid = train_test_split(train_data, train_target, test_size=0.20, random_state=rs)
     print('Split train: ', len(X_train), len(Y_train))
     print('Split valid: ', len(X_valid), len(Y_valid))
     
-    model = FCN_skip_model(im_width,im_height,learn_rate,lmbda)
+    model = unet_model(im_width,im_height,learn_rate,lmbda,FL)
     
     model.fit_generator(custom_image_generator(X_train,Y_train,batch_size=batch_size),
                         samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
@@ -203,7 +195,7 @@ def train_and_test_model(train_data,train_target,test_data,test_target,n_train_s
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
               
     if save_model == 1:
-        model.save('models/FCNforkskip_norm_s256.h5')
+        model.save('models/unet_s256_FL%d_invc%d.h5'%(FL,inv_color))
      
     test_pred = model.predict(test_data.astype('float32'), batch_size=batch_size, verbose=2)
     npix = test_target.shape[0]*test_target.shape[1]*test_target.shape[2]
@@ -218,26 +210,27 @@ def train_and_test_model(train_data,train_target,test_data,test_target,n_train_s
 ##############
 #Main Routine#
 ########################################################################
-def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_train_samples,save_models):
+def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_train_samples,save_models,inv_color):
     #Static arguments
     im_width = 256              #image width
     im_height = 256             #image height
     rs = 42                     #random_state for train/test split
 
     #Load data
-    train_data, train_target, test_data, test_target = load_data(n_train_samples,im_width,im_height)
+    train_data, train_target, test_data, test_target = load_data(n_train_samples,im_width,im_height,inv_color)
 
     #Iterate
-    N_runs = 1
+    N_runs = 3
     #lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1); lmbda.append(0)
-    lmbda = [0]
-    for i in range(len(lmbda)):
-        l = lmbda[i]
-        score = train_and_test_model(train_data,train_target,test_data,test_target,n_train_samples,learn_rate,batch_size,l,nb_epoch,im_width,im_height,rs,save_models)
+    filter_length = [3,10,15]
+    for i in range(N_runs):
+        FL = filter_length[i]
+        l = 0
+        score = train_and_test_model(train_data,train_target,test_data,test_target,n_train_samples,learn_rate,batch_size,l,FL,nb_epoch,im_width,im_height,rs,save_models,inv_color)
         print '###################################'
         print '##########END_OF_RUN_INFO##########'
         print('\nTest Score is %f \n'%score)
-        print 'learning_rate=%e, batch_size=%d, lambda=%e, n_epoch=%d, n_train_samples=%d, random_state=%d, im_width=%d, im_height=%d'%(learn_rate,batch_size,l,nb_epoch,n_train_samples,rs,im_width,im_height)
+        print 'learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train_samples=%d, inv_color=%d, random_state=%d, im_width=%d, im_height=%d'%(learn_rate,batch_size,FL,nb_epoch,n_train_samples,inv_color,rs,im_width,im_height)
         print '###################################'
         print '###################################'
         
@@ -251,11 +244,12 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 15          #number of epochs. 1 epoch = forward/back pass thru all train data
-    n_train = 20000      #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    epochs = 8          #number of epochs. 1 epoch = forward/back pass thru all train data
+    n_train = 10080      #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
+    inv_color = 1
 
     #run models
-    run_cross_validation_create_models(lr,bs,lmbda,epochs,n_train,save_models)
+    run_cross_validation_create_models(lr,bs,lmbda,epochs,n_train,save_models,inv_color)
 
 

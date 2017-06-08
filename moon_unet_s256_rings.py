@@ -36,7 +36,7 @@ import utils.make_density_map_charles as mdm
 #############################
 #load/read/process functions#
 ########################################################################
-def load_data(path, data_type, img_width, img_height):
+def load_data(path, data_type):
     X = []
     X_id = []
     y = []
@@ -48,8 +48,8 @@ def load_data(path, data_type, img_width, img_height):
         y.append(np.array(Image.open('%smask.tiff'%f.split('.png')[0])))
     return  X, y
 
-def read_and_normalize_data(path, img_width, img_height, data_type):
-    data, target = load_data(path, data_type, img_width, img_height)
+def read_and_normalize_data(path, data_type):
+    data, target = load_data(path, data_type)
     data = np.array(data).astype('float32')     #convert to numpy, convert to float
     target = np.array(target).astype('float32') #convert to numpy, convert to float
     print('%s shape:'%data_type, data.shape)
@@ -158,7 +158,7 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda,FL):
 ########################################################################
 #Need to create this function so that memory is released every iteration (when function exits).
 #Otherwise the memory used accumulates and eventually the program crashes.
-def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,n_train_samples,learn_rate,batch_size,lmbda,FL,nb_epoch,im_width,im_height,rs,save_model):
+def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,n_train_samples,learn_rate,batch_size,lmbda,FL,nb_epoch,im_width,im_height,save_model):
     
     model = FCN_skip_model(im_width,im_height,learn_rate,lmbda,FL)
     
@@ -183,7 +183,6 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     #Static arguments
     im_width = 256              #image width
     im_height = 256             #image height
-    rs = 42                     #random_state for train/test split
     
     #Load data
     dir = 'datasets/rings'
@@ -198,9 +197,9 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     except:
         print "Couldnt find locally saved .npy files, loading from %s."%dir
         train_path, valid_path, test_path = '%s/Train_rings/'%dir, '%s/Dev_rings/'%dir, '%s/Test_rings/'%dir
-        train_data, train_target = read_and_normalize_data(train_path, im_width, im_height, 'train')
-        valid_data, valid_target = read_and_normalize_data(valid_path, im_width, im_height, 'validation')
-        test_data, test_target = read_and_normalize_data(test_path, im_width, im_height, 'test')
+        train_data, train_target = read_and_normalize_data(train_path, 'train')
+        valid_data, valid_target = read_and_normalize_data(valid_path, 'validation')
+        test_data, test_target = read_and_normalize_data(test_path, 'test')
         np.save('%s/Train_rings/train_data.npy'%dir,train_data)
         np.save('%s/Train_rings/train_target.npy'%dir,train_target)
         np.save('%s/Dev_rings/valid_data.npy'%dir,valid_data)
@@ -225,11 +224,11 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     for i in range(N_runs):
         FL = filter_length[i]
         l=0
-        score = train_and_test_model(train_data,train_target,test_data,test_target,n_train_samples,learn_rate,batch_size,l,FL,nb_epoch,im_width,im_height,rs,save_models)
+        score = train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,n_train_samples,learn_rate,batch_size,l,FL,nb_epoch,im_width,im_height,save_models)
         print '###################################'
         print '##########END_OF_RUN_INFO##########'
         print('\nTest Score is %f \n'%score)
-        print 'learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train_samples=%d, random_state=%d, im_width=%d, im_height=%d, inv_color=%d, rescale=%d'%(learn_rate,batch_size,FL,nb_epoch,n_train_samples,rs,im_width,im_height,inv_color,rescale)
+        print 'learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train_samples=%d, im_width=%d, im_height=%d, inv_color=%d, rescale=%d'%(learn_rate,batch_size,FL,nb_epoch,n_train_samples,im_width,im_height,inv_color,rescale)
         print '###################################'
         print '###################################'
 

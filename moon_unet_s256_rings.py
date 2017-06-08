@@ -48,14 +48,14 @@ def load_data(path, data_type, img_width, img_height):
         y.append(np.array(Image.open('%smask.tiff'%f.split('.png')[0])))
     return  X, y
 
-def read_and_normalize_data(path, img_width, img_height, data_flag, inv_color, rescale):
+def read_and_normalize_data(path, img_width, img_height, data_flag):
     if data_flag == 0:
         data_type = 'train'
     elif data_flag == 1:
         data_type = 'valid'
     elif data_flag == 2:
         data_type = 'test'
-    data, target = load_data(path, data_type, img_width, img_height, inv_color, rescale)
+    data, target = load_data(path, data_type, img_width, img_height)
     data = np.array(data).astype('float32')     #convert to numpy, convert to float
     target = np.array(target).astype('float32') #convert to numpy, convert to float
     print('%s shape:'%data_type, data.shape)

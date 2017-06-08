@@ -189,10 +189,10 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     try:
         train_data=np.load('%s/Train_rings/train_data.npy'%dir)
         train_target=np.load('%s/Train_rings/train_target.npy'%dir)
-        valid_data=np.load('%s/Dev_rings/train_data.npy'%dir)
-        valid_target=np.load('%s/Dev_rings/train_target.npy'%dir)
-        test_data=np.load('%s/Test_rings/train_data.npy'%dir)
-        test_target=np.load('%s/Test_rings/train_target.npy'%dir)
+        valid_data=np.load('%s/Dev_rings/valid_data.npy'%dir)
+        valid_target=np.load('%s/Dev_rings/valid_target.npy'%dir)
+        test_data=np.load('%s/Test_rings/test_data.npy'%dir)
+        test_target=np.load('%s/Test_rings/test_target.npy'%dir)
         print "Successfully loaded files locally."
     except:
         print "Couldnt find locally saved .npy files, loading from %s."%dir

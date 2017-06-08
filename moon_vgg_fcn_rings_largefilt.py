@@ -1,3 +1,5 @@
+#This is your best model right now I think, basically the unet architechture.
+
 #I've tried convolutional Filter lengths of 6,8,10,12, and still cant seem to recognize large circles. Trying some really big ones - 15, 20, 25. If not those, then I'm not sure what else to do.
 
 #adding large contast too
@@ -219,29 +221,29 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     dir = '/scratch/k/kristen/malidib/moon/'
     ext = 'invrings'
     try:
-        train_data=np.load('training_set/train_data_%s.npy'%ext)
-        train_target=np.load('training_set/train_target_%s.npy'%ext)
-        test_data=np.load('test_set/test_data_%s.npy'%ext)
-        test_target=np.load('test_set/test_target_%s.npy'%ext)
+        train_data=np.load('datasets/training_set/train_data_%s.npy'%ext)
+        train_target=np.load('datasets/training_set/train_target_%s.npy'%ext)
+        test_data=np.load('datasets/test_set/test_data_%s.npy'%ext)
+        test_target=np.load('datasets/test_set/test_target_%s.npy'%ext)
         print "Successfully loaded files locally."
     except:
         print "Couldnt find locally saved .npy files, loading from %s."%dir
         train_path, test_path = '%straining_set/'%dir, '%stest_set/'%dir
         train_data, train_target, train_id = read_and_normalize_data(train_path, im_width, im_height, 0)
         test_data, test_target, test_id = read_and_normalize_data(test_path, im_width, im_height, 1)
-        np.save('training_set/train_data_%s.npy'%ext,train_data)
-        np.save('training_set/train_target_%s.npy'%ext,train_target)
-        np.save('test_set/test_data_%s.npy'%ext,test_data)
-        np.save('test_set/test_target_%s.npy'%ext,test_target)
+        np.save('datasets/training_set/train_data_%s.npy'%ext,train_data)
+        np.save('datasets/training_set/train_target_%s.npy'%ext,train_target)
+        np.save('datasets/test_set/test_data_%s.npy'%ext,test_data)
+        np.save('datasets/test_set/test_target_%s.npy'%ext,test_target)
     train_data = train_data[:n_train_samples]
     train_target = train_target[:n_train_samples]
 
     save_sample = 1
     if save_sample == 1:
-        np.save('training_set/train_data_%s_sample.npy'%ext,train_data[0:50])
-        np.save('training_set/train_target_%s_sample.npy'%ext,train_target[0:50])
-        np.save('test_set/test_data_%s_sample.npy'%ext,test_data[0:50])
-        np.save('test_set/test_target_%s_sample.npy'%ext,test_target[0:50])
+        np.save('datasets/training_set/train_data_%s_sample.npy'%ext,train_data[0:50])
+        np.save('datasets/training_set/train_target_%s_sample.npy'%ext,train_target[0:50])
+        np.save('datasets/test_set/test_data_%s_sample.npy'%ext,test_data[0:50])
+        np.save('datasets/test_set/test_target_%s_sample.npy'%ext,test_target[0:50])
 
     #default is inverse colours
     if invcolor == 0:

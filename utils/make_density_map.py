@@ -19,7 +19,7 @@ def gkern(l=5, sig=1.):
 
 
 # https://stackoverflow.com/questions/10031580/how-to-write-simple-geometric-shapes-into-numpy-arrays
-def circlemaker(r=10., rings=False):
+def circlemaker(r=10., rings=True):
     """
     Creates circle mask of radius r.
     """
@@ -137,7 +137,7 @@ def make_density_map(craters, imgshape, kernel=None, k_support = 8, k_sig=4., kn
 
     return dmap
 
-def make_mask(craters, img, binary=True, truncate=True, rings=False):
+def make_mask(craters, img, binary=True, rings=True, ringwidth=1, truncate=True):
     """Makes crater mask binary image.
         
         Parameters

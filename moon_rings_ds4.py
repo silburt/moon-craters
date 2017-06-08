@@ -209,24 +209,24 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     #Load data
     ext = 'rings'
     try:
-        train_data=np.load('ds4/Train_ds4_msk/train_data_%s.npy'%ext)
-        train_target=np.load('ds4/Train_ds4_msk/train_target_%s.npy'%ext)
-        valid_data=np.load('ds4/Dev_ds4_msk/valid_data_%s.npy'%ext)
-        valid_target=np.load('ds4/Dev_ds4_msk/valid_target_%s.npy'%ext)
-        test_data=np.load('ds4/Test_ds4_msk/test_data_%s.npy'%ext)
-        test_target=np.load('ds4/Test_ds4_msk/test_target_%s.npy'%ext)
+        train_data=np.load('datasets/ds4/Train_ds4_msk/train_data_%s.npy'%ext)
+        train_target=np.load('datasets/ds4/Train_ds4_msk/train_target_%s.npy'%ext)
+        valid_data=np.load('datasets/ds4/Dev_ds4_msk/valid_data_%s.npy'%ext)
+        valid_target=np.load('datasets/ds4/Dev_ds4_msk/valid_target_%s.npy'%ext)
+        test_data=np.load('datasets/ds4/Test_ds4_msk/test_data_%s.npy'%ext)
+        test_target=np.load('datasets/ds4/Test_ds4_msk/test_target_%s.npy'%ext)
         print "Successfully loaded files locally."
     except:
         print "Couldnt find locally saved .npy files, loading from %s."%dir
-        train_data, train_target, train_id = read_and_normalize_data('ds4/Train_ds4_msk/', im_width, im_height, 0)
-        valid_data, valid_target, valid_id = read_and_normalize_data('ds4/Dev_ds4_msk/', im_width, im_height, 1)
-        test_data, test_target, test_id = read_and_normalize_data('ds4/Test_ds4_msk/', im_width, im_height, 2)
-        np.save('ds4/Train_ds4_msk/train_data_%s.npy'%ext,train_data)
-        np.save('ds4/Train_ds4_msk/train_target_%s.npy'%ext,train_target)
-        np.save('ds4/Dev_ds4_msk/valid_data_%s.npy'%ext,valid_data)
-        np.save('ds4/Dev_ds4_msk/valid_target_%s.npy'%ext,valid_target)
-        np.save('ds4/Test_ds4_msk/test_data_%s.npy'%ext,test_data)
-        np.save('ds4/Test_ds4_msk/test_target_%s.npy'%ext,test_target)
+        train_data, train_target, train_id = read_and_normalize_data('datasets/ds4/Train_ds4_msk/', im_width, im_height, 0)
+        valid_data, valid_target, valid_id = read_and_normalize_data('datasets/ds4/Dev_ds4_msk/', im_width, im_height, 1)
+        test_data, test_target, test_id = read_and_normalize_data('datasets/ds4/Test_ds4_msk/', im_width, im_height, 2)
+        np.save('datasets/ds4/Train_ds4_msk/train_data_%s.npy'%ext,train_data)
+        np.save('datasets/ds4/Train_ds4_msk/train_target_%s.npy'%ext,train_target)
+        np.save('datasets/ds4/Dev_ds4_msk/valid_data_%s.npy'%ext,valid_data)
+        np.save('datasets/ds4/Dev_ds4_msk/valid_target_%s.npy'%ext,valid_target)
+        np.save('datasets/ds4/Test_ds4_msk/test_data_%s.npy'%ext,test_data)
+        np.save('datasets/ds4/Test_ds4_msk/test_target_%s.npy'%ext,test_target)
     train_data = train_data[:n_train_samples]
     train_target = train_target[:n_train_samples]
     valid_data = valid_data[:n_train_samples]

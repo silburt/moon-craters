@@ -174,7 +174,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,n_train_s
 
     Y_test_pred = model.predict(X_test.astype('float32'), batch_size=batch_size, verbose=2)
     npix = X_test.shape[0]*X_test.shape[1]*X_test.shape[2]
-    return np.sum((Y_test_pred - Y_test)**2)/npix    #calculate test score
+    return np.sum((Y_test_pred - Y_test)**2)/npix    #calculate test score - needs to be crossentropy
 
 ##############
 #Main Routine#
@@ -208,7 +208,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         np.save('%s/Test_rings/test_target.npy'%dir,test_target)
     train_data = train_data[:n_train_samples]
     valid_data = valid_data[:n_train_samples]
-    train_target = train_target[:n_train_samples]
+    test_target = test_target[:n_train_samples]
 
     if inv_color==1 or rescale==1:
         print "inv_color=%d, rescale=%d, processing data"%(inv_color, rescale)

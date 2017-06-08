@@ -10,22 +10,6 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error
 
-from keras.models import Sequential, Model
-from keras.layers.core import Dense, Dropout, Flatten
-from keras.layers import AveragePooling2D
-from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D
-from keras.models import load_model
-from keras.applications.resnet50 import ResNet50
-from keras.preprocessing.image import ImageDataGenerator
-from keras.regularizers import l2
-
-from keras.optimizers import SGD, Adam, RMSprop
-from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.utils import np_utils
-from keras import __version__ as keras_version
-from keras import backend as K
-K.set_image_dim_ordering('tf')
-
 #####################
 #load/read functions#
 ########################################################################
@@ -60,8 +44,8 @@ def get_csv_len(file_):                        #returns # craters in each image 
 img_width = 256              #image width
 img_height = 256             #image height
 #dir = '/scratch/k/kristen/malidib/moon/'
-dir = 'ds4/'
-train_path, valid_path, test_path = '%sTrain_ds4_msk/'%dir, '%sDev_ds4_msk/'%dir, '%sTest_ds4_msk/'%dir
+dir = 'datasets/rings'
+train_path, valid_path, test_path = '%s/Train_rings/'%dir, '%s/Dev_rings/'%dir, '%s/Test_rings/'%dir
 train_data, train_target, id, max_train_craters = load_data(train_path, 'train', img_width, img_height)
 test_data, test_target, id, max_test_craters = load_data(valid_path, 'valid', img_width, img_height)
 test_data, test_target, id, max_test_craters = load_data(test_path, 'test', img_width, img_height)

@@ -48,13 +48,7 @@ def load_data(path, data_type, img_width, img_height):
         y.append(np.array(Image.open('%smask.tiff'%f.split('.png')[0])))
     return  X, y
 
-def read_and_normalize_data(path, img_width, img_height, data_flag):
-    if data_flag == 0:
-        data_type = 'train'
-    elif data_flag == 1:
-        data_type = 'valid'
-    elif data_flag == 2:
-        data_type = 'test'
+def read_and_normalize_data(path, img_width, img_height, data_type):
     data, target = load_data(path, data_type, img_width, img_height)
     data = np.array(data).astype('float32')     #convert to numpy, convert to float
     target = np.array(target).astype('float32') #convert to numpy, convert to float
@@ -204,9 +198,9 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     except:
         print "Couldnt find locally saved .npy files, loading from %s."%dir
         train_path, valid_path, test_path = '%s/Train_rings/'%dir, '%s/Dev_rings/'%dir, '%s/Test_rings/'%dir
-        train_data, train_target = read_and_normalize_data(train_path, im_width, im_height, 0)
-        valid_data, valid_target = read_and_normalize_data(valid_path, im_width, im_height, 1)
-        test_data, test_target = read_and_normalize_data(test_path, im_width, im_height, 2)
+        train_data, train_target = read_and_normalize_data(train_path, im_width, im_height, 'train')
+        valid_data, valid_target = read_and_normalize_data(valid_path, im_width, im_height, 'validation')
+        test_data, test_target = read_and_normalize_data(test_path, im_width, im_height, 'test')
         np.save('%s/Train_rings/train_data.npy'%dir,train_data)
         np.save('%s/Train_rings/train_target.npy'%dir,train_target)
         np.save('%s/Dev_rings/valid_data.npy'%dir,valid_data)

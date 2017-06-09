@@ -129,7 +129,8 @@ def unet_model(im_width,im_height,learn_rate,lmbda,FL):
     u = Convolution2D(n_filters, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv_merge1_2', border_mode='same')(u)
     
     #final output
-    u = Convolution2D(1, 1, 1, activation='sigmoid', W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
+    final_activation = 'relu'       #sigmoid, relu
+    u = Convolution2D(1, 1, 1, activation=final_activation, W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
     u = Reshape((im_width, im_height))(u)
     model = Model(input=img_input, output=u)
     
@@ -157,7 +158,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,n_train_s
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
         
     if save_model == 1:
-        model.save('models/unet_s256_rings_FL%d.h5'%FL)
+        model.save('models/unet_s256_rings_FL%d_relu.h5'%FL)
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 

@@ -206,9 +206,9 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         np.save('%s/Dev_rings/valid_target.npy'%dir,valid_target)
         np.save('%s/Test_rings/test_data.npy'%dir,test_data)
         np.save('%s/Test_rings/test_target.npy'%dir,test_target)
-    train_data = train_data[:n_train_samples]
-    valid_data = valid_data[:n_train_samples]
-    test_target = test_target[:n_train_samples]
+    train_data, train_target = train_data[:n_train_samples], train_target[:n_train_samples]
+    valid_data, valid_target = valid_data[:n_train_samples], valid_target[:n_train_samples]
+    test_data, test_target = test_data[:n_train_samples], test_target[:n_train_samples]
 
     if inv_color==1 or rescale==1:
         print "inv_color=%d, rescale=%d, processing data"%(inv_color, rescale)

@@ -98,19 +98,15 @@ def custom_image_generator(data, target, batch_size=32):
             yield (d, t)
 
 #############################
-#FCN vgg model (keras 1.2.2)#
+#unet model (keras 1.2.2)#
 ########################################################################
-#Following https://github.com/aurora95/Keras-FCN/blob/master/models.py
-#and also loosely following: https://blog.keras.io/building-autoencoders-in-keras.html
-#and maybe: https://github.com/nicolov/segmentation_keras
-#and this!: https://gist.github.com/Neltherion/f070913fd6284c4a0b60abb86a0cd642
-#DC: https://arxiv.org/pdf/1511.07122.pdf
-def FCN_skip_model(im_width,im_height,learn_rate,lmbda,FL):
+#Following https://arxiv.org/pdf/1505.04597.pdf
+#and this for merging specifics: https://gist.github.com/Neltherion/f070913fd6284c4a0b60abb86a0cd642
+def unet_model(im_width,im_height,learn_rate,lmbda,FL):
     print('Making VGG16-style Fully Convolutional Network model...')
     n_filters = 32      #vgg16 uses 64
     img_input = Input(batch_shape=(None, im_width, im_height, 3))
     
-    #model a - small receptive field for small craters
     a1 = Convolution2D(n_filters, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv1_a1', border_mode='same')(img_input)
     a1 = Convolution2D(n_filters, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv1_a2', border_mode='same')(a1)
     a1P = MaxPooling2D((2, 2), strides=(2, 2), name='pool1_a1')(a1)
@@ -147,10 +143,10 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda,FL):
     model = Model(input=img_input, output=u)
     
     #optimizer/compile
-    #optimizer = SGD(lr=learn_rate, momentum=0.9, decay=0.0, nesterov=True)
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
     model.compile(loss='binary_crossentropy', optimizer=optimizer)
     print model.summary()
+
     return model
 
 ##################
@@ -160,7 +156,7 @@ def FCN_skip_model(im_width,im_height,learn_rate,lmbda,FL):
 #Otherwise the memory used accumulates and eventually the program crashes.
 def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,n_train_samples,learn_rate,batch_size,lmbda,FL,nb_epoch,im_width,im_height,save_model):
     
-    model = FCN_skip_model(im_width,im_height,learn_rate,lmbda,FL)
+    model = unet_model(im_width,im_height,learn_rate,lmbda,FL)
     
     model.fit_generator(custom_image_generator(X_train,Y_train,batch_size=batch_size),
                         samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
@@ -172,9 +168,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,n_train_s
     if save_model == 1:
         model.save('models/unet_s256_rings_FL%d.h5'%FL)
 
-    Y_test_pred = model.predict(X_test.astype('float32'), batch_size=batch_size, verbose=2)
-    npix = X_test.shape[0]*X_test.shape[1]*X_test.shape[2]
-    return np.sum((Y_test_pred - Y_test)**2)/npix    #calculate test score - needs to be crossentropy
+    return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 
 ##############
 #Main Routine#
@@ -217,8 +211,8 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         test_data = rescale_and_invcolor(test_data, inv_color, rescale)
 
     #Iterate
-    N_runs = 2
-    filter_length = [10,15]
+    N_runs = 1
+    filter_length = [10]
     #lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1); lmbda.append(0)
     #epochs = [15,20,25]
     for i in range(N_runs):

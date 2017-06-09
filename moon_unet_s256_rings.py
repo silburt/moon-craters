@@ -191,13 +191,15 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         np.save('%s/Dev_rings/valid_target.npy'%dir,valid_target)
         np.save('%s/Test_rings/test_data.npy'%dir,test_data)
         np.save('%s/Test_rings/test_target.npy'%dir,test_target)
-    train_data  = train_data[:n_train_samples,:,:,0].reshape(n_train_samples,im_width,im_height,1)  #keep 3D
+    #Select desired subset number of samples, take first slice (saves memory) but keep data 3D.
+    train_data  = train_data[:n_train_samples,:,:,0].reshape(n_train_samples,im_width,im_height,1)
     train_target = train_target[:n_train_samples]
     valid_data = valid_data[:n_train_samples,:,:,0].reshape(n_train_samples,im_width,im_height,1)
     valid_target = valid_target[:n_train_samples]
     test_data = test_data[:n_train_samples,:,:,0].reshape(n_train_samples,im_width,im_height,1)
     test_target = test_target[:n_train_samples]
 
+    #Invert image colors and rescale pixel values to increase contrast
     if inv_color==1 or rescale==1:
         print "inv_color=%d, rescale=%d, processing data"%(inv_color, rescale)
         train_data = rescale_and_invcolor(train_data, inv_color, rescale)
@@ -205,8 +207,8 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         test_data = rescale_and_invcolor(test_data, inv_color, rescale)
 
     #Iterate
-    N_runs = 1
-    filter_length = [10]
+    N_runs = 2
+    filter_length = [10,15]
     #lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1); lmbda.append(0)
     #epochs = [15,20,25]
     for i in range(N_runs):
@@ -230,8 +232,8 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 2          #number of epochs. 1 epoch = forward/back pass thru all train data
-    n_train = 10080     #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    epochs = 10          #number of epochs. 1 epoch = forward/back pass thru all train data
+    n_train = 20000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
     inv_color = 1       #use inverse color
     rescale = 1         #rescale images to increase contrast (still 0-1 normalized)

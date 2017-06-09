@@ -1,13 +1,5 @@
-#This is your best model right now I think, basically the unet architechture.
-
-#adding large contast too
-#making things simple and using no Dilated convolution and just large filters.
-#rings: This makes use of binary rings as the target.
-#Fork: From my pure skip connection model I'm noticing that the small craters are being captured nicely, but the large craters are not being recognized. So, I need a separate fork on the onset with a large receptive field to capture the large craters as well.
-#Skip: This model uses skip connections to merge the where with the what, and have scale aware analysis.
-#See "Residual connection on a convolution layer" in https://jtymes.github.io/keras_docs/1.2.2/getting-started/functional-api-guide/#multi-input-and-multi-output-models
-
-#This has the keras 1.2.2. architechture
+#This is the unet model architechture applied on binary rings. 
+#keras version 1.2.2.
 
 import cv2
 import os
@@ -91,10 +83,9 @@ def custom_image_generator(data, target, batch_size=32):
             v = np.random.randint(-npix,npix+1,batch_size)                  #vertical shift
             r = np.random.randint(0,4,batch_size)                           #90 degree rotations
             for j in range(batch_size):
-                d[j] = np.pad(d[j], ((npix,npix),(npix,npix),(0,0)), mode='constant')[npix+h[j]:L+h[j]+npix,npix+v[j]:W+v[j]+npix,:]
+                d[j] = np.pad(d[j], ((npix,npix),(npix,npix),(0,0)), mode='constant')[npix+h[j]:L+h[j]+npix,npix+v[j]:W+v[j]+npix,:] #RGB
                 t[j] = np.pad(t[j], (npix,), mode='constant')[npix+h[j]:L+h[j]+npix,npix+v[j]:W+v[j]+npix]
                 d[j], t[j] = np.rot90(d[j],r[j]), np.rot90(t[j],r[j])
-            
             yield (d, t)
 
 #############################
@@ -105,7 +96,7 @@ def custom_image_generator(data, target, batch_size=32):
 def unet_model(im_width,im_height,learn_rate,lmbda,FL):
     print('Making VGG16-style Fully Convolutional Network model...')
     n_filters = 32      #vgg16 uses 64
-    img_input = Input(batch_shape=(None, im_width, im_height, 3))
+    img_input = Input(batch_shape=(None, im_width, im_height, 1))
     
     a1 = Convolution2D(n_filters, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv1_a1', border_mode='same')(img_input)
     a1 = Convolution2D(n_filters, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv1_a2', border_mode='same')(a1)
@@ -200,9 +191,12 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         np.save('%s/Dev_rings/valid_target.npy'%dir,valid_target)
         np.save('%s/Test_rings/test_data.npy'%dir,test_data)
         np.save('%s/Test_rings/test_target.npy'%dir,test_target)
-    train_data, train_target = train_data[:n_train_samples], train_target[:n_train_samples]
-    valid_data, valid_target = valid_data[:n_train_samples], valid_target[:n_train_samples]
-    test_data, test_target = test_data[:n_train_samples], test_target[:n_train_samples]
+    train_data  = train_data[:n_train_samples,:,:,0].reshape(n_train_samples,im_width,im_height,1)  #keep 3D
+    train_target = train_target[:n_train_samples]
+    valid_data = valid_data[:n_train_samples,:,:,0].reshape(n_train_samples,im_width,im_height,1)
+    valid_target = valid_target[:n_train_samples]
+    test_data = test_data[:n_train_samples,:,:,0].reshape(n_train_samples,im_width,im_height,1)
+    test_target = test_target[:n_train_samples]
 
     if inv_color==1 or rescale==1:
         print "inv_color=%d, rescale=%d, processing data"%(inv_color, rescale)

@@ -168,7 +168,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,n_train_s
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
         
     if save_model == 1:
-        model.save('models/unet_s256_rings_FL%d_deep.h5'%FL)
+        model.save('models/unet_s256_rings_FL%d_deep_sigmoid.h5'%FL)
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 

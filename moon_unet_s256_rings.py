@@ -95,7 +95,7 @@ def custom_image_generator(data, target, batch_size=32):
 #and this for merging specifics: https://gist.github.com/Neltherion/f070913fd6284c4a0b60abb86a0cd642
 def unet_model(im_width,im_height,learn_rate,lmbda,FL):
     print('Making VGG16-style Fully Convolutional Network model...')
-    n_filters = 64      #vgg16 uses 64
+    n_filters = 40      #vgg16 uses 64
     img_input = Input(batch_shape=(None, im_width, im_height, 1))
     
     a1 = Convolution2D(n_filters, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv1_a1', border_mode='same')(img_input)
@@ -129,7 +129,7 @@ def unet_model(im_width,im_height,learn_rate,lmbda,FL):
     u = Convolution2D(n_filters, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv_merge1_2', border_mode='same')(u)
     
     #final output
-    final_activation = 'relu'       #sigmoid, relu
+    final_activation = 'hard_sigmoid'       #sigmoid, relu, hard_sigmoid
     u = Convolution2D(1, 1, 1, activation=final_activation, W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
     u = Reshape((im_width, im_height))(u)
     model = Model(input=img_input, output=u)
@@ -158,7 +158,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,n_train_s
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
         
     if save_model == 1:
-        model.save('models/unet_s256_rings_FL%d_relu.h5'%FL)
+        model.save('models/unet_s256_rings_FL%d_hardsigmoid.h5'%FL)
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 
@@ -208,8 +208,8 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         test_data = rescale_and_invcolor(test_data, inv_color, rescale)
 
     #Iterate
-    N_runs = 1
-    filter_length = [5]
+    N_runs = 2
+    filter_length = [10,5]
     #lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1); lmbda.append(0)
     #epochs = [15,20,25]
     for i in range(N_runs):

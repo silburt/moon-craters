@@ -95,7 +95,7 @@ def custom_image_generator(data, target, batch_size=32):
 #and this for merging specifics: https://gist.github.com/Neltherion/f070913fd6284c4a0b60abb86a0cd642
 def unet_model(im_width,im_height,learn_rate,lmbda,FL):
     print('Making VGG16-style Fully Convolutional Network model...')
-    n_filters = 32      #vgg16 uses 64
+    n_filters = 64      #vgg16 uses 64
     img_input = Input(batch_shape=(None, im_width, im_height, 1))
     
     a1 = Convolution2D(n_filters, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv1_a1', border_mode='same')(img_input)
@@ -208,8 +208,8 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         test_data = rescale_and_invcolor(test_data, inv_color, rescale)
 
     #Iterate
-    N_runs = 2
-    filter_length = [10,15]
+    N_runs = 1
+    filter_length = [5]
     #lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1); lmbda.append(0)
     #epochs = [15,20,25]
     for i in range(N_runs):

@@ -93,50 +93,50 @@ def custom_image_generator(data, target, batch_size=32):
 ########################################################################
 #Following https://arxiv.org/pdf/1505.04597.pdf
 #and this for merging specifics: https://gist.github.com/Neltherion/f070913fd6284c4a0b60abb86a0cd642
-def unet_model(im_width,im_height,learn_rate,lmbda,FL):
+def unet_model(im_width,im_height,learn_rate,lmbda,FL,init):
     print('Making VGG16-style Fully Convolutional Network model...')
     n_filters = 40      #vgg16 uses 64
     img_input = Input(batch_shape=(None, im_width, im_height, 1))
     
-    a1 = Convolution2D(n_filters, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv1_a1', border_mode='same')(img_input)
-    a1 = Convolution2D(n_filters, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv1_a2', border_mode='same')(a1)
+    a1 = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv1_a1', border_mode='same')(img_input)
+    a1 = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv1_a2', border_mode='same')(a1)
     a1P = MaxPooling2D((2, 2), strides=(2, 2), name='pool1_a1')(a1)
     
-    a2 = Convolution2D(n_filters*2, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv2_a1', border_mode='same')(a1P)
-    a2 = Convolution2D(n_filters*2, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv2_a2', border_mode='same')(a2)
+    a2 = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv2_a1', border_mode='same')(a1P)
+    a2 = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv2_a2', border_mode='same')(a2)
     a2P = MaxPooling2D((2, 2), strides=(2, 2), name='pool2_a1')(a2)
     
-    a3 = Convolution2D(n_filters*4, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv3_a1', border_mode='same')(a2P)
-    a3 = Convolution2D(n_filters*4, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv3_a2', border_mode='same')(a3)
+    a3 = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv3_a1', border_mode='same')(a2P)
+    a3 = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv3_a2', border_mode='same')(a3)
     a3P = MaxPooling2D((2, 2), strides=(2, 2), name='pool3_a1')(a3)
     
-    u = Convolution2D(n_filters*4, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv4_a1', border_mode='same')(a3P)
-    u = Convolution2D(n_filters*4, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv4_a2', border_mode='same')(u)
+    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv4_a1', border_mode='same')(a3P)
+    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv4_a2', border_mode='same')(u)
     
     u = UpSampling2D((2,2), name='up4->3')(u)
     u = merge((a3, u), mode='concat', name='merge3')
-    u = Convolution2D(n_filters*4, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv_merge3_1', border_mode='same')(u)
-    u = Convolution2D(n_filters*4, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv_merge3_2', border_mode='same')(u)
+    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv_merge3_1', border_mode='same')(u)
+    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv_merge3_2', border_mode='same')(u)
     
     u = UpSampling2D((2,2), name='up3->2')(u)
     u = merge((a2, u), mode='concat', name='merge2')
-    u = Convolution2D(n_filters*2, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv_merge2_1', border_mode='same')(u)
-    u = Convolution2D(n_filters*2, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv_merge2_2', border_mode='same')(u)
+    u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv_merge2_1', border_mode='same')(u)
+    u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv_merge2_2', border_mode='same')(u)
     
     u = UpSampling2D((2,2), name='up2->1')(u)
     u = merge((a1, u), mode='concat', name='merge1')
-    u = Convolution2D(n_filters, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv_merge1_1', border_mode='same')(u)
-    u = Convolution2D(n_filters, FL, FL, activation='relu', W_regularizer=l2(lmbda), name='conv_merge1_2', border_mode='same')(u)
+    u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv_merge1_1', border_mode='same')(u)
+    u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv_merge1_2', border_mode='same')(u)
     
     #final output
-    final_activation = 'hard_sigmoid'       #sigmoid, relu, hard_sigmoid
-    u = Convolution2D(1, 1, 1, activation=final_activation, W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
+    final_activation = 'sigmoid'       #sigmoid, relu, hard_sigmoid
+    u = Convolution2D(1, 1, 1, activation=final_activation, init=init, W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
     u = Reshape((im_width, im_height))(u)
     model = Model(input=img_input, output=u)
     
     #optimizer/compile
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-    model.compile(loss='binary_crossentropy', optimizer=optimizer)
+    model.compile(loss='binary_crossentropy', optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
     print model.summary()
 
     return model
@@ -146,9 +146,9 @@ def unet_model(im_width,im_height,learn_rate,lmbda,FL):
 ########################################################################
 #Need to create this function so that memory is released every iteration (when function exits).
 #Otherwise the memory used accumulates and eventually the program crashes.
-def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,n_train_samples,learn_rate,batch_size,lmbda,FL,nb_epoch,im_width,im_height,save_model):
+def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,n_train_samples,learn_rate,batch_size,lmbda,FL,nb_epoch,im_width,im_height,save_model,init):
     
-    model = unet_model(im_width,im_height,learn_rate,lmbda,FL)
+    model = unet_model(im_width,im_height,learn_rate,lmbda,FL,init)
     
     model.fit_generator(custom_image_generator(X_train,Y_train,batch_size=batch_size),
                         samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
@@ -158,7 +158,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,n_train_s
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
         
     if save_model == 1:
-        model.save('models/unet_s256_rings_FL%d_hardsigmoid.h5'%FL)
+        model.save('models/unet_s256_rings_FL%d_%s.h5'%FL,init)
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 
@@ -208,18 +208,18 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         test_data = rescale_and_invcolor(test_data, inv_color, rescale)
 
     #Iterate
-    N_runs = 2
-    filter_length = [10,5]
+    N_runs = 5
+    FL, l = 5, 0
+    init = ['glorot_normal', 'he_uniform', 'he_normal', 'orthogonal', 'identity']
     #lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1); lmbda.append(0)
     #epochs = [15,20,25]
     for i in range(N_runs):
-        FL = filter_length[i]
-        l=0
-        score = train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,n_train_samples,learn_rate,batch_size,l,FL,nb_epoch,im_width,im_height,save_models)
+        I = init[i]
+        score = train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,n_train_samples,learn_rate,batch_size,l,FL,nb_epoch,im_width,im_height,save_models,I)
         print '###################################'
         print '##########END_OF_RUN_INFO##########'
         print('\nTest Score is %f \n'%score)
-        print 'learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train_samples=%d, im_width=%d, im_height=%d, inv_color=%d, rescale=%d'%(learn_rate,batch_size,FL,nb_epoch,n_train_samples,im_width,im_height,inv_color,rescale)
+        print 'learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train_samples=%d, im_width=%d, im_height=%d, inv_color=%d, rescale=%d, init=%s'%(learn_rate,batch_size,FL,nb_epoch,n_train_samples,im_width,im_height,inv_color,rescale,I)
         print '###################################'
         print '###################################'
 
@@ -233,8 +233,8 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 10          #number of epochs. 1 epoch = forward/back pass thru all train data
-    n_train = 20000     #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    epochs = 5          #number of epochs. 1 epoch = forward/back pass thru all train data
+    n_train = 10080     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
     inv_color = 1       #use inverse color
     rescale = 1         #rescale images to increase contrast (still 0-1 normalized)

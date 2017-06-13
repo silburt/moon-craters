@@ -81,13 +81,13 @@ test_data = test_data[:,:,:,0].reshape(len(test_data),256,256,1)
 if inv_color==1 or rescale==1:
     test_data = rescale_and_invcolor(test_data, inv_color, rescale)
 
-filename = 'models/unet_s256_rings_copy_glorot_normal.h5'
+filename = 'models/unet_s256_rings_copy_he_uniform.h5'
 model = load_model(filename, custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef': dice_coef})
 
 print "loaded everything successfully, generating predictions"
 n,off=32,0
 target = model.predict(test_data[off:(n+off)].astype('float32'))
 
-name = os.path.basename(filename).split('h5')[0]
+name = os.path.basename(filename).split('.h5')[0]
 np.save('datasets/rings/Test_rings_sample/%s_pred.npy'%name,target)
 print "successfully generated predictions at datasets/rings/Test_rings_sample/%s_pred.npy"%name

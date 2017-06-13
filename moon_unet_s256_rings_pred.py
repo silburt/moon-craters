@@ -204,9 +204,9 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     test_target = test_target[:n_train_samples]
 
     #Iterate
-    N_runs = 3
+    N_runs = 1
     FL, l = 5, 0
-    init = ['glorot_normal', 'he_uniform', 'he_normal']
+    init = ['he_normal']
     #lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1); lmbda.append(0)
     #epochs = [15,20,25]
     for i in range(N_runs):
@@ -229,7 +229,7 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 5          #number of epochs. 1 epoch = forward/back pass thru all train data
+    epochs = 6          #number of epochs. 1 epoch = forward/back pass thru all train data
     n_train = 10080     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
     inv_color = 1       #use inverse color

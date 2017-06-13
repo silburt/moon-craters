@@ -95,41 +95,41 @@ def custom_image_generator(data, target, batch_size=32):
 #and this for merging specifics: https://gist.github.com/Neltherion/f070913fd6284c4a0b60abb86a0cd642
 def unet_model(im_width,im_height,learn_rate,lmbda,FL,init):
     print('Making VGG16-style Fully Convolutional Network model...')
-    n_filters = 40      #vgg16 uses 64
+    n_filters = 64      #vgg16 uses 64
     img_input = Input(batch_shape=(None, im_width, im_height, 1))
+
+    a1 = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(img_input)
+    a1 = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a1)
+    a1P = MaxPooling2D((2, 2), strides=(2, 2))(a1)
+
+    a2 = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a1P)
+    a2 = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a2)
+    a2P = MaxPooling2D((2, 2), strides=(2, 2))(a2)
+
+    a3 = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a2P)
+    a3 = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a3)
+    a3P = MaxPooling2D((2, 2), strides=(2, 2),)(a3)
+
+    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a3P)
+    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+
+    u = UpSampling2D((2,2))(u)
+    u = merge((a3, u), mode='concat', concat_axis=3)
+    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
     
-    a1 = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv1_a1', border_mode='same')(img_input)
-    a1 = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv1_a2', border_mode='same')(a1)
-    a1P = MaxPooling2D((2, 2), strides=(2, 2), name='pool1_a1')(a1)
-    
-    a2 = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv2_a1', border_mode='same')(a1P)
-    a2 = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv2_a2', border_mode='same')(a2)
-    a2P = MaxPooling2D((2, 2), strides=(2, 2), name='pool2_a1')(a2)
-    
-    a3 = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv3_a1', border_mode='same')(a2P)
-    a3 = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv3_a2', border_mode='same')(a3)
-    a3P = MaxPooling2D((2, 2), strides=(2, 2), name='pool3_a1')(a3)
-    
-    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv4_a1', border_mode='same')(a3P)
-    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv4_a2', border_mode='same')(u)
-    
-    u = UpSampling2D((2,2), name='up4->3')(u)
-    u = merge((a3, u), mode='concat', name='merge3')
-    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv_merge3_1', border_mode='same')(u)
-    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv_merge3_2', border_mode='same')(u)
-    
-    u = UpSampling2D((2,2), name='up3->2')(u)
-    u = merge((a2, u), mode='concat', name='merge2')
-    u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv_merge2_1', border_mode='same')(u)
-    u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv_merge2_2', border_mode='same')(u)
-    
-    u = UpSampling2D((2,2), name='up2->1')(u)
-    u = merge((a1, u), mode='concat', name='merge1')
-    u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv_merge1_1', border_mode='same')(u)
-    u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), name='conv_merge1_2', border_mode='same')(u)
+    u = UpSampling2D((2,2))(u)
+    u = merge((a2, u), mode='concat', concat_axis=3)
+    u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+
+    u = UpSampling2D((2,2))(u)
+    u = merge((a1, u), mode='concat', concat_axis=3)
+    u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
     
     #final output
-    final_activation = 'sigmoid'       #sigmoid, relu, hard_sigmoid
+    final_activation = 'hard_sigmoid'       #sigmoid, relu, hard_sigmoid
     u = Convolution2D(1, 1, 1, activation=final_activation, init=init, W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
     u = Reshape((im_width, im_height))(u)
     model = Model(input=img_input, output=u)
@@ -158,7 +158,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,n_train_s
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
         
     if save_model == 1:
-        model.save('models/unet_s256_rings_FL%d_%s.h5'%(FL,init))
+        model.save('models/unet_s256_rings_hardsig_FL%d_%s.h5'%(FL,init))
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 

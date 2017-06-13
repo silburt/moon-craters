@@ -4,6 +4,7 @@ import os
 import glob
 import numpy as np
 import pandas as pd
+import sys
 from PIL import Image
 from keras.models import load_model
 from keras import backend as K
@@ -81,8 +82,12 @@ test_data = test_data[:,:,:,0].reshape(len(test_data),256,256,1)
 if inv_color==1 or rescale==1:
     test_data = rescale_and_invcolor(test_data, inv_color, rescale)
 
-filename = 'models/unet_s256_rings_copy_he_uniform.h5'
-model = load_model(filename, custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef': dice_coef})
+filename = 'models/%s'%sys.argv[1]
+loss = sys.argv[2]
+if loss == "dice":
+    model = load_model(filename, custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef': dice_coef})
+else:
+    model = load_model(filename)
 
 print "loaded everything successfully, generating predictions"
 n,off=32,0

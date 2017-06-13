@@ -148,10 +148,12 @@ def unet_model(im_width,im_height,learn_rate,init):
     conv9 = Convolution2D(32, 3, 3, activation='relu', border_mode='same', init=init)(conv9)
     
     conv10 = Convolution2D(1, 1, 1, activation='sigmoid', init=init)(conv9)
-    model = Model(input=inputs, output=conv10)
+    reshape = Reshape((im_width, im_height))(conv10)
+    model = Model(input=inputs, output=reshape)
     
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-    model.compile(loss='binary_crossentropy', optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
+    model.compile(optimizer=Adam(lr=1e-5), loss=dice_coef_loss, metrics=[dice_coef])
+    #model.compile(loss='binary_crossentropy', optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
     print model.summary()
 
     return model

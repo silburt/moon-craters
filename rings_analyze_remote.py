@@ -4,6 +4,7 @@ import os
 import glob
 import numpy as np
 import pandas as pd
+from PIL import Image
 from keras.models import load_model
 from keras import backend as K
 

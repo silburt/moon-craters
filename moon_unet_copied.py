@@ -127,22 +127,22 @@ def unet_model(im_width,im_height,learn_rate,init):
     conv5 = Convolution2D(512, 3, 3, activation='relu', border_mode='same', init=init)(pool4)
     conv5 = Convolution2D(512, 3, 3, activation='relu', border_mode='same', init=init)(conv5)
 
-    up6 = Deconvolution2D(256, 2, 2, output_shape=(None, 32, 32, 256), subsample=(2, 2), border_mode='same', init=init)(conv5)
+    up6 = Deconvolution2D(256, 2, 2, output_shape=(32, 32, 32, 256), subsample=(2, 2), border_mode='same', init=init)(conv5)
     up6 = merge((up6, conv4), mode='concat', concat_axis=3)
     conv6 = Convolution2D(256, 3, 3, activation='relu', border_mode='same', init=init)(up6)
     conv6 = Convolution2D(256, 3, 3, activation='relu', border_mode='same', init=init)(conv6)
     
-    up7 = Deconvolution2D(128, 2, 2, output_shape=(None, 64, 64, 128), subsample=(2, 2), border_mode='same', init=init)(conv6)
+    up7 = Deconvolution2D(128, 2, 2, output_shape=(32, 64, 64, 128), subsample=(2, 2), border_mode='same', init=init)(conv6)
     up7 = merge((up7, conv3), mode='concat', concat_axis=3)
     conv7 = Convolution2D(128, 3, 3, activation='relu', border_mode='same', init=init)(up7)
     conv7 = Convolution2D(128, 3, 3, activation='relu', border_mode='same', init=init)(conv7)
     
-    up8 = Deconvolution2D(64, 2, 2, output_shape=(None, 128, 128, 64), subsample=(2, 2), border_mode='same', init=init)(conv7)
+    up8 = Deconvolution2D(64, 2, 2, output_shape=(32, 128, 128, 64), subsample=(2, 2), border_mode='same', init=init)(conv7)
     up8 = merge((up8, conv2), mode='concat', concat_axis=3)
     conv8 = Convolution2D(64, 3, 3, activation='relu', border_mode='same', init=init)(up8)
     conv8 = Convolution2D(64, 3, 3, activation='relu', border_mode='same', init=init)(conv8)
     
-    up9 = Deconvolution2D(32, 2, 2, output_shape=(None, 256, 256, 32), subsample=(2, 2), border_mode='same', init=init)(conv8)
+    up9 = Deconvolution2D(32, 2, 2, output_shape=(32, 256, 256, 32), subsample=(2, 2), border_mode='same', init=init)(conv8)
     up9 = merge((up9, conv1), mode='concat', concat_axis=3)
     conv9 = Convolution2D(32, 3, 3, activation='relu', border_mode='same', init=init)(up9)
     conv9 = Convolution2D(32, 3, 3, activation='relu', border_mode='same', init=init)(conv9)

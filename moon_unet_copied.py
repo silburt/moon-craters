@@ -102,7 +102,7 @@ def dice_coef_loss(y_true, y_pred):
     return -dice_coef(y_true, y_pred)
 
 # Following https://github.com/jocicmarko/ultrasound-nerve-segmentation/blob/master/train.py
-def unet_model(im_width,im_height,learn_rate,init):
+def unet_model(im_width,im_height,learn_rate,bs,init):
     print('Making unet model...')
     n_filters = 64      #vgg16 uses 64
     img_input = Input(batch_shape=(None, im_width, im_height, 1))
@@ -127,25 +127,25 @@ def unet_model(im_width,im_height,learn_rate,init):
     conv5 = Convolution2D(512, 3, 3, activation='relu', border_mode='same', init=init)(pool4)
     conv5 = Convolution2D(512, 3, 3, activation='relu', border_mode='same', init=init)(conv5)
 
-    up6 = Deconvolution2D(256, 2, 2, output_shape=(32, 32, 32, 256), subsample=(2, 2), border_mode='same', init=init)(conv5)
+    up6 = Deconvolution2D(256, 2, 2, output_shape=(bs, 32, 32, 256), subsample=(2, 2), border_mode='same', init=init)(conv5)
     #up6 = UpSampling2D((2,2))(conv5)
     up6 = merge((up6, conv4), mode='concat', concat_axis=3)
     conv6 = Convolution2D(256, 3, 3, activation='relu', border_mode='same', init=init)(up6)
     conv6 = Convolution2D(256, 3, 3, activation='relu', border_mode='same', init=init)(conv6)
     
-    up7 = Deconvolution2D(128, 2, 2, output_shape=(32, 64, 64, 128), subsample=(2, 2), border_mode='same', init=init)(conv6)
+    up7 = Deconvolution2D(128, 2, 2, output_shape=(bs, 64, 64, 128), subsample=(2, 2), border_mode='same', init=init)(conv6)
     #up7 = UpSampling2D((2,2))(conv6)
     up7 = merge((up7, conv3), mode='concat', concat_axis=3)
     conv7 = Convolution2D(128, 3, 3, activation='relu', border_mode='same', init=init)(up7)
     conv7 = Convolution2D(128, 3, 3, activation='relu', border_mode='same', init=init)(conv7)
     
-    up8 = Deconvolution2D(64, 2, 2, output_shape=(32, 128, 128, 64), subsample=(2, 2), border_mode='same', init=init)(conv7)
+    up8 = Deconvolution2D(64, 2, 2, output_shape=(bs, 128, 128, 64), subsample=(2, 2), border_mode='same', init=init)(conv7)
     #up8 = UpSampling2D((2,2))(conv7)
     up8 = merge((up8, conv2), mode='concat', concat_axis=3)
     conv8 = Convolution2D(64, 3, 3, activation='relu', border_mode='same', init=init)(up8)
     conv8 = Convolution2D(64, 3, 3, activation='relu', border_mode='same', init=init)(conv8)
     
-    up9 = Deconvolution2D(32, 2, 2, output_shape=(32, 256, 256, 32), subsample=(2, 2), border_mode='same', init=init)(conv8)
+    up9 = Deconvolution2D(32, 2, 2, output_shape=(bs, 256, 256, 32), subsample=(2, 2), border_mode='same', init=init)(conv8)
     #up9 = UpSampling2D((2,2))(conv8)
     up9 = merge((up9, conv1), mode='concat', concat_axis=3)
     conv9 = Convolution2D(32, 3, 3, activation='relu', border_mode='same', init=init)(up9)
@@ -169,7 +169,7 @@ def unet_model(im_width,im_height,learn_rate,init):
 #Otherwise the memory used accumulates and eventually the program crashes.
 def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,n_train_samples,learn_rate,batch_size,nb_epoch,im_width,im_height,save_model,init):
     
-    model = unet_model(im_width,im_height,learn_rate,init)
+    model = unet_model(im_width,im_height,learn_rate,batch_size,init)
     
     model.fit_generator(custom_image_generator(X_train,Y_train,batch_size=batch_size),
                         samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
@@ -237,7 +237,8 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,n_train_sa
         score = train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,n_train_samples,learn_rate,batch_size,nb_epoch,im_width,im_height,save_models,I)
         print '###################################'
         print '##########END_OF_RUN_INFO##########'
-        print('\nTest Score is %f \n'%score)
+        print '\nTest Score is'
+        print score
         print 'learning_rate=%e, batch_size=%d, n_epoch=%d, n_train_samples=%d, im_width=%d, im_height=%d, inv_color=%d, rescale=%d, init=%s'%(learn_rate,batch_size,nb_epoch,n_train_samples,im_width,im_height,inv_color,rescale,I)
         print '###################################'
         print '###################################'

@@ -12,7 +12,7 @@ from PIL import Image
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Dropout, Flatten, Reshape
 from keras.layers import AveragePooling2D, merge, Input
-from keras.layers.convolutional import Convolution2D, MaxPooling2D, UpSampling2D, Deconvolution2D
+from keras.layers.convolutional import Convolution2D, MaxPooling2D, UpSampling2D
 from keras.regularizers import l2
 from keras.models import load_model
 
@@ -151,7 +151,7 @@ def unet_model(im_width,im_height,learn_rate,init):
     model = Model(input=inputs, output=conv10)
     
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-    model.compile(loss=dice_coef_loss, optimizer=optimizer, metrics=[dice_coef])  #binary cross-entropy severely penalizes opposite predictions.
+    model.compile(loss='binary_crossentropy', optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
     print model.summary()
 
     return model

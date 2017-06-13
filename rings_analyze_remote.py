@@ -83,8 +83,10 @@ if inv_color==1 or rescale==1:
 filename = 'models/unet_s256_rings_copy_glorot_normal.h5'
 model = load_model(filename, custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef': dice_coef})
 
+print "loaded everything successfully, generating predictions"
 n,off=32,0
 target = model.predict(test_data[off:(n+off)].astype('float32'))
 
 name = os.path.basename(filename).split('h5')[0]
 np.save('datasets/rings/Test_rings_sample/%s_pred.npy'%name,target)
+print "successfully generated predictions at datasets/rings/Test_rings_sample/%s_pred.npy"%name

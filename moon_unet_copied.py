@@ -127,26 +127,26 @@ def unet_model(im_width,im_height,learn_rate,bs,init):
     conv5 = Convolution2D(512, 3, 3, activation='relu', border_mode='same', init=init)(pool4)
     conv5 = Convolution2D(512, 3, 3, activation='relu', border_mode='same', init=init)(conv5)
 
-    up6 = Deconvolution2D(256, 2, 2, output_shape=(bs, 32, 32, 256), subsample=(2, 2), border_mode='same', init=init)(conv5)
-    #up6 = UpSampling2D((2,2))(conv5)
+    #up6 = Deconvolution2D(256, 2, 2, output_shape=(bs, 32, 32, 256), subsample=(2, 2), border_mode='same', init=init)(conv5)
+    up6 = UpSampling2D((2,2))(conv5)
     up6 = merge((up6, conv4), mode='concat', concat_axis=3)
     conv6 = Convolution2D(256, 3, 3, activation='relu', border_mode='same', init=init)(up6)
     conv6 = Convolution2D(256, 3, 3, activation='relu', border_mode='same', init=init)(conv6)
     
-    up7 = Deconvolution2D(128, 2, 2, output_shape=(bs, 64, 64, 128), subsample=(2, 2), border_mode='same', init=init)(conv6)
-    #up7 = UpSampling2D((2,2))(conv6)
+    #up7 = Deconvolution2D(128, 2, 2, output_shape=(bs, 64, 64, 128), subsample=(2, 2), border_mode='same', init=init)(conv6)
+    up7 = UpSampling2D((2,2))(conv6)
     up7 = merge((up7, conv3), mode='concat', concat_axis=3)
     conv7 = Convolution2D(128, 3, 3, activation='relu', border_mode='same', init=init)(up7)
     conv7 = Convolution2D(128, 3, 3, activation='relu', border_mode='same', init=init)(conv7)
     
-    up8 = Deconvolution2D(64, 2, 2, output_shape=(bs, 128, 128, 64), subsample=(2, 2), border_mode='same', init=init)(conv7)
-    #up8 = UpSampling2D((2,2))(conv7)
+    #up8 = Deconvolution2D(64, 2, 2, output_shape=(bs, 128, 128, 64), subsample=(2, 2), border_mode='same', init=init)(conv7)
+    up8 = UpSampling2D((2,2))(conv7)
     up8 = merge((up8, conv2), mode='concat', concat_axis=3)
     conv8 = Convolution2D(64, 3, 3, activation='relu', border_mode='same', init=init)(up8)
     conv8 = Convolution2D(64, 3, 3, activation='relu', border_mode='same', init=init)(conv8)
     
-    up9 = Deconvolution2D(32, 2, 2, output_shape=(bs, 256, 256, 32), subsample=(2, 2), border_mode='same', init=init)(conv8)
-    #up9 = UpSampling2D((2,2))(conv8)
+    #up9 = Deconvolution2D(32, 2, 2, output_shape=(bs, 256, 256, 32), subsample=(2, 2), border_mode='same', init=init)(conv8)
+    up9 = UpSampling2D((2,2))(conv8)
     up9 = merge((up9, conv1), mode='concat', concat_axis=3)
     conv9 = Convolution2D(32, 3, 3, activation='relu', border_mode='same', init=init)(up9)
     conv9 = Convolution2D(32, 3, 3, activation='relu', border_mode='same', init=init)(conv9)
@@ -179,7 +179,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,n_train_s
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
         
     if save_model == 1:
-        model.save('models/unet_s256_rings_copy_%s.h5'%init)
+        model.save('models/unet_s256_rings_copy_upsample_%s.h5'%init)
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 
@@ -229,8 +229,8 @@ def run_cross_validation_create_models(learn_rate,batch_size,nb_epoch,n_train_sa
         test_data = rescale_and_invcolor(test_data, inv_color, rescale)
 
     #Iterate
-    N_runs = 5
-    init = ['glorot_normal', 'he_uniform', 'he_normal', 'orthogonal', 'identity']
+    N_runs = 3
+    init = ['glorot_normal', 'he_uniform', 'he_normal']
     #epochs = [15,20,25]
     for i in range(N_runs):
         I = init[i]

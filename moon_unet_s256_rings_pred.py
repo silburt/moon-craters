@@ -177,6 +177,9 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     train_data=np.load('%s/Train_rings/train_data.npy'%dir)
     valid_data=np.load('%s/Dev_rings/valid_data.npy'%dir)
     test_data=np.load('%s/Test_rings/test_data.npy'%dir)
+    train_data = train_data[:,:,:,0].reshape(len(train_data),im_width,im_height,1)
+    valid_data = valid_data[:,:,:,0].reshape(len(valid_data),im_width,im_height,1)
+    test_data = test_data[:,:,:,0].reshape(len(test_data),im_width,im_height,1)
     
     #Invert image colors and rescale pixel values to increase contrast
     if inv_color==1 or rescale==1:
@@ -196,11 +199,11 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         print "Successfully generated iterated masks"
 
     #Select desired subset number of samples, take first slice (saves memory) but keep data 3D.
-    train_data  = train_data[:n_train_samples,:,:,0].reshape(n_train_samples,im_width,im_height,1)
+    train_data  = train_data[:n_train_samples]
     train_target = train_target[:n_train_samples]
-    valid_data = valid_data[:n_train_samples,:,:,0].reshape(n_train_samples,im_width,im_height,1)
+    valid_data = valid_data[:n_train_samples]
     valid_target = valid_target[:n_train_samples]
-    test_data = test_data[:n_train_samples,:,:,0].reshape(n_train_samples,im_width,im_height,1)
+    test_data = test_data[:n_train_samples]
     test_target = test_target[:n_train_samples]
 
     #Iterate

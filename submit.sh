@@ -4,10 +4,14 @@ ssh silburt@login.scinet.utoronto.ca
 ssh p8t03
 cd $SCRATCH/moon-craters/
 
+#loading Keras
 module load gcc/6.2.1 
 module load cuda/8.0
-module load caffe/nv-0.14.5
 source /home/k/kristen/kristen/keras_venv_P8.v2/bin/activate 
+
+#If loading Caffe - do not load gcc - that will lead to an error during compilation.
+module load cuda/8.0
+module load caffe/nv-0.14.5
 
 CUDA_VISIBLE_DEVICES=2 nohup python moon_vgg_fcn_circlerings.py > FCNforkskip_circlerings.txt &
 CUDA_VISIBLE_DEVICES=1 nohup python moon_vgg_fcn_rings.py > FCNforkskip_rings2.txt &

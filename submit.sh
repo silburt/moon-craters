@@ -5,7 +5,8 @@ ssh p8t03
 cd $SCRATCH/moon-craters/
 
 module load gcc/6.2.1 
-module load cuda/8.0 
+module load cuda/8.0
+module load caffe/nv-0.14.5
 source /home/k/kristen/kristen/keras_venv_P8.v2/bin/activate 
 
 CUDA_VISIBLE_DEVICES=2 nohup python moon_vgg_fcn_circlerings.py > FCNforkskip_circlerings.txt &

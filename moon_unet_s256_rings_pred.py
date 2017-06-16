@@ -43,6 +43,9 @@ def make_predictions(modelfile, thresh, train_data, valid_data, test_data, dir):
     np.save('%s/Train_rings/train_target_pred.npy'%dir,train_target)
     np.save('%s/Dev_rings/valid_target_pred.npy'%dir,valid_target)
     np.save('%s/Test_rings/test_target_pred.npy'%dir,test_target)
+    np.save('%s/Train_rings/train_target_pred_sample.npy'%dir,train_target[:20])
+    np.save('%s/Dev_rings/valid_target_pred_sample.npy'%dir,valid_target[:20])
+    np.save('%s/Test_rings/test_target_pred_sample.npy'%dir,test_target[:20])
     return train_target, valid_target, test_target
 
 #experimenting with bigger contrast
@@ -187,7 +190,6 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         train_data = rescale_and_invcolor(train_data, inv_color, rescale)
         valid_data = rescale_and_invcolor(valid_data, inv_color, rescale)
         test_data = rescale_and_invcolor(test_data, inv_color, rescale)
-    
     try:
         train_target=np.load('%s/Train_rings/train_target_pred.npy'%dir)
         valid_target=np.load('%s/Dev_rings/valid_target_pred.npy'%dir)
@@ -207,11 +209,9 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     test_target = test_target[:n_train_samples]
 
     #Iterate
-    N_runs = 1
+    N_runs = 3
     FL, l = 5, 0
-    init = ['he_normal']
-    #lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1); lmbda.append(0)
-    #epochs = [15,20,25]
+    init = ['glorot_normal', 'he_uniform', 'he_normal']
     for i in range(N_runs):
         I = init[i]
         score = train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,n_train_samples,learn_rate,batch_size,l,FL,nb_epoch,im_width,im_height,save_models,I)
@@ -232,7 +232,7 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 6          #number of epochs. 1 epoch = forward/back pass thru all train data
+    epochs = 8          #number of epochs. 1 epoch = forward/back pass thru all train data
     n_train = 10080     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
     inv_color = 1       #use inverse color

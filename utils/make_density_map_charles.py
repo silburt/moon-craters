@@ -44,7 +44,7 @@ def circlemaker(r=10.):
 # http://docs.opencv.org/3.1.0/dc/da5/tutorial_py_drawing_functions.html
 # and (file that defines static void Circle(...))
 # https://github.com/opencv/opencv/blob/05b15943d6a42c99e5f921b7dbaa8323f3c042c6/modules/imgproc/src/drawing.cpp
-def ringmaker(r=10., dr=1):
+def ringmaker(r=10., dr=1, r_dec=0):
     """
     Creates ring of radius r and thickness dr.
 
@@ -64,7 +64,11 @@ def ringmaker(r=10., dr=1):
     mask = np.zeros([2*rhext + 1, 2*rhext + 1], np.uint8)
 
     # Generate ring
-    ring = cv2.circle(mask, (rhext,rhext), int(np.round(r)), 1, thickness=dr)
+    r -= r_dec     #make radii slightly smaller
+    if dr == -1:
+        ring = cv2.circle(mask, (rhext,rhext), int(np.round(r)), 1, thickness=max(int(r/5),2))
+    else:
+        ring = cv2.circle(mask, (rhext,rhext), int(np.round(r)), 1, thickness=dr)
 
     return mask
     #return ring.astype(float)
@@ -188,7 +192,7 @@ def make_density_map(craters, img, kernel=None, k_support = 8, k_sig=4., knn=10,
 
 
 def make_mask(craters, img, binary=True, rings=False, 
-                                ringwidth=1, truncate=True):
+                                ringwidth=1, r_dec=0, truncate=True):
     """Makes crater mask binary image (does not yet consider crater overlap).
 
     Parameters
@@ -216,7 +220,7 @@ def make_mask(craters, img, binary=True, rings=False,
 
     for i in range(craters.shape[0]):
         if rings:
-            kernel = ringmaker(r=radius[i], dr=ringwidth)
+            kernel = ringmaker(r=radius[i], dr=ringwidth, r_dec=r_dec)
         else:
             kernel = circlemaker(r=radius[i])
         # "Dummy values" so we can use get_merge_indices

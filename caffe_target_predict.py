@@ -1,10 +1,10 @@
 #***********************************
 #Instructions: This script is run on P8t03/04, and generates new targets based off the edge detection network by https://github.com/s9xie/hed
-# You must first load on p8t03/04:
+# You must first load on p8t03/04 (don't load gcc, will lead to compiling errors for some reason):
 # module load cuda/8.0
 # module load caffe/nv-0.14.5
 
-# This script should be located in hed/examples/hed/, along with hed_pretrained_bsds.caffemodel.
+# This script should be placed in hed/examples/hed/ on p8t03/04, along with hed_pretrained_bsds.caffemodel.
 # You might also (from the hed/ directory) have to 'make all', 'make pycaffe' according to these instructions: http://caffe.berkeleyvision.org/installation.html#compilation
 
 #***********************************

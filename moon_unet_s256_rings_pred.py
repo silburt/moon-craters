@@ -79,7 +79,7 @@ def custom_image_generator(data, target, batch_size=32):
                 d[j], t[j] = np.flipud(d[j]), np.flipud(t[j])               #up/down
             
             #random up/down & left/right pixel shifts, 90 degree rotations
-            npix = 15
+            npix = 20
             h = np.random.randint(-npix,npix+1,batch_size)                  #horizontal shift
             v = np.random.randint(-npix,npix+1,batch_size)                  #vertical shift
             r = np.random.randint(0,4,batch_size)                           #90 degree rotations
@@ -159,7 +159,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,n_train_s
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
         
     if save_model == 1:
-        model.save('models/unet_s256_rings_pred_FL%d_%s.h5'%(FL,init))
+        model.save('models/unet_s256_rings_predfull_FL%d_%s.h5'%(FL,init))
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 
@@ -232,8 +232,8 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 8          #number of epochs. 1 epoch = forward/back pass thru all train data
-    n_train = 10080     #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    epochs = 12         #number of epochs. 1 epoch = forward/back pass thru all train data
+    n_train = 30016     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
     inv_color = 1       #use inverse color
     rescale = 1         #rescale images to increase contrast (still 0-1 normalized)

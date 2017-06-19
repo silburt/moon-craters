@@ -212,7 +212,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     #Iterate
     N_runs = 9
     filter_length = [3,3,3,5,5,5,10,10,10]
-    n_filters = [112,112,112,64,64,64,32,32,32]  #arranging this so that total number of trainable parameters < 15M.
+    n_filters = [90,90,90,55,55,55,28,28,28]  #arranging this so that total number of trainable parameters < 10M.
     init = ['glorot_normal', 'he_uniform', 'he_normal','glorot_normal', 'he_uniform', 'he_normal','glorot_normal', 'he_uniform', 'he_normal']
     for i in range(N_runs):
         I = init[i]

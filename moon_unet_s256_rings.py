@@ -1,4 +1,7 @@
-#This is the unet model architechture applied on binary rings. 
+#This model is trained using the original LU78287GT.csv values as the ground truth,
+#and then predictions from this model are used as the new ground truth for moon_unet_s256_rings_pred.py
+
+#This is the unet model architechture applied on binary rings.
 #keras version 1.2.2.
 
 import cv2
@@ -11,8 +14,8 @@ from PIL import Image
 
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Dropout, Flatten, Reshape
-from keras.layers import AveragePooling2D, merge, Input, BatchNormalization
-from keras.layers.convolutional import Convolution2D, MaxPooling2D, UpSampling2D, AtrousConvolution2D
+from keras.layers import AveragePooling2D, merge, Input
+from keras.layers.convolutional import Convolution2D, MaxPooling2D, UpSampling2D
 from keras.regularizers import l2
 from keras.models import load_model
 
@@ -93,9 +96,8 @@ def custom_image_generator(data, target, batch_size=32):
 ########################################################################
 #Following https://arxiv.org/pdf/1505.04597.pdf
 #and this for merging specifics: https://gist.github.com/Neltherion/f070913fd6284c4a0b60abb86a0cd642
-def unet_model(im_width,im_height,learn_rate,lmbda,FL,init):
+def unet_model(im_width,im_height,learn_rate,lmbda,FL,init,n_filters):
     print('Making VGG16-style Fully Convolutional Network model...')
-    n_filters = 64      #vgg16 uses 64
     img_input = Input(batch_shape=(None, im_width, im_height, 1))
 
     a1 = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(img_input)
@@ -117,7 +119,7 @@ def unet_model(im_width,im_height,learn_rate,lmbda,FL,init):
     u = merge((a3, u), mode='concat', concat_axis=3)
     u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
     u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
-    
+
     u = UpSampling2D((2,2))(u)
     u = merge((a2, u), mode='concat', concat_axis=3)
     u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
@@ -127,9 +129,9 @@ def unet_model(im_width,im_height,learn_rate,lmbda,FL,init):
     u = merge((a1, u), mode='concat', concat_axis=3)
     u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
     u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
-    
+
     #final output
-    final_activation = 'hard_sigmoid'       #sigmoid, relu, hard_sigmoid
+    final_activation = 'sigmoid'       #sigmoid, relu
     u = Convolution2D(1, 1, 1, activation=final_activation, init=init, W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
     u = Reshape((im_width, im_height))(u)
     model = Model(input=img_input, output=u)
@@ -146,9 +148,9 @@ def unet_model(im_width,im_height,learn_rate,lmbda,FL,init):
 ########################################################################
 #Need to create this function so that memory is released every iteration (when function exits).
 #Otherwise the memory used accumulates and eventually the program crashes.
-def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,n_train_samples,learn_rate,batch_size,lmbda,FL,nb_epoch,im_width,im_height,save_model,init):
+def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,n_train_samples,learn_rate,batch_size,lmbda,FL,nb_epoch,im_width,im_height,save_model,init,n_filters):
     
-    model = unet_model(im_width,im_height,learn_rate,lmbda,FL,init)
+    model = unet_model(im_width,im_height,learn_rate,lmbda,FL,init,n_filters)
     
     model.fit_generator(custom_image_generator(X_train,Y_train,batch_size=batch_size),
                         samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
@@ -158,7 +160,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,n_train_s
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
         
     if save_model == 1:
-        model.save('models/unet_s256_rings_hardsig_FL%d_%s.h5'%(FL,init))
+        model.save('models/unet_s256_rings_FL%d_%s.h5'%(FL,init))
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 
@@ -208,18 +210,19 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         test_data = rescale_and_invcolor(test_data, inv_color, rescale)
 
     #Iterate
-    N_runs = 5
-    FL, l = 5, 0
-    init = ['glorot_normal', 'he_uniform', 'he_normal', 'orthogonal', 'identity']
-    #lmbda = random.sample(np.logspace(-3,1,5*N_runs), N_runs-1); lmbda.append(0)
-    #epochs = [15,20,25]
+    N_runs = 9
+    filter_length = [3,3,3,5,5,5,10,10,10]
+    n_filters = [128,128,128,80,80,80,40,40,40]  #arranging this so that total number of trainable parameters < 20M.
+    init = ['glorot_normal', 'he_uniform', 'he_normal','glorot_normal', 'he_uniform', 'he_normal','glorot_normal', 'he_uniform', 'he_normal']
     for i in range(N_runs):
         I = init[i]
-        score = train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,n_train_samples,learn_rate,batch_size,l,FL,nb_epoch,im_width,im_height,save_models,I)
+        NF = n_filters[i]
+        FL = filter_length[i]
+        score = train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,n_train_samples,learn_rate,batch_size,lmbda,FL,nb_epoch,im_width,im_height,save_models,I,NF)
         print '###################################'
         print '##########END_OF_RUN_INFO##########'
         print('\nTest Score is %f \n'%score)
-        print 'learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train_samples=%d, im_width=%d, im_height=%d, inv_color=%d, rescale=%d, init=%s'%(learn_rate,batch_size,FL,nb_epoch,n_train_samples,im_width,im_height,inv_color,rescale,I)
+        print 'learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train_samples=%d, im_width=%d, im_height=%d, inv_color=%d, rescale=%d, init=%s, n_filters=%d'%(learn_rate,batch_size,FL,nb_epoch,n_train_samples,im_width,im_height,inv_color,rescale,I,NF)
         print '###################################'
         print '###################################'
 
@@ -233,8 +236,8 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 5          #number of epochs. 1 epoch = forward/back pass thru all train data
-    n_train = 10080     #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    epochs = 15         #number of epochs. 1 epoch = forward/back pass thru all train data
+    n_train = 30016     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
     inv_color = 1       #use inverse color
     rescale = 1         #rescale images to increase contrast (still 0-1 normalized)

@@ -60,7 +60,7 @@ models = ['unet_s256_rings_FL5_he_uniform.h5','unet_s256_rings_FL5_glorot_normal
 n,off=20,0
 print "begin generating predictions"
 for m in models:
-    model = load_model(m)
+    model = load_model('models/%s'%m)
     target = model.predict(test_data[off:(n+off)].astype('float32'))
     name = os.path.basename(filename).split('.h5')[0]
     

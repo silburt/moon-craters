@@ -62,7 +62,7 @@ print "begin generating predictions"
 for m in models:
     model = load_model('models/%s'%m)
     target = model.predict(test_data[off:(n+off)].astype('float32'))
-    name = os.path.basename(filename).split('.h5')[0]
+    name = m.split('.h5')[0]
     
     #dimensions go data, ground_truth targets, predicted targets
     arr = np.concatenate((test_data[off:(n+off)],test_target[off:(n+off)].reshape(n,dim,dim,1),target.reshape(n,dim,dim,1)),axis=3)

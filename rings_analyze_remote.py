@@ -65,6 +65,6 @@ for m in models:
     name = m.split('.h5')[0]
     
     #dimensions go data, ground_truth targets, predicted targets
-    arr = np.concatenate((test_data[off:(n+off)],test_target[off:(n+off)].reshape(n,dim,dim,1),target.reshape(n,dim,dim,1)),axis=3)
-    np.save('models/%s_pred.npy'%name,target)
+    result = np.concatenate((test_data[off:(n+off)],test_target[off:(n+off)].reshape(n,dim,dim,1),target.reshape(n,dim,dim,1)),axis=3)
+    np.save('models/%s_pred.npy'%name,result)
     print "successfully generated predictions at models/%s_pred.npy for model %s"%(name,m)

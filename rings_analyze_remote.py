@@ -45,7 +45,7 @@ def rescale_and_invcolor(data, inv_color, rescale):
 
 #load data
 dim, inv_color, rescale = 256, 1, 1
-test_data, test_target = read_and_normalize_data('datasets/rings/Test_rings_sample/', dim, dim, 1)
+test_data, test_target = read_and_normalize_data('datasets/rings/Test_rings_sample/', dim, dim, 'test')
 
 #reshape
 test_data = test_data[:,:,:,0].reshape(len(test_data),dim,dim,1)
@@ -60,7 +60,7 @@ models = ['unet_s256_rings_FL5_he_uniform.h5','unet_s256_rings_FL5_glorot_normal
 n,off=20,0
 print "begin generating predictions"
 for m in models:
-    model = load_model(filename)
+    model = load_model(m)
     target = model.predict(test_data[off:(n+off)].astype('float32'))
     name = os.path.basename(filename).split('.h5')[0]
     

@@ -9,47 +9,30 @@ from PIL import Image
 from keras.models import load_model
 from keras import backend as K
 
-def get_im_cv2(path, img_width, img_height):
-    img = cv2.imread(path)
-    return img
-
-def load_data(path, data_type, img_width, img_height):
-    X, X_id, y = [], [], []
-    minpix = 2                                  #minimum number of pixels for crater to count
+def load_data(path, data_type):
+    X = []
+    X_id = []
+    y = []
     files = glob.glob('%s*.png'%path)
-    minpix, maxpix = 2, 100                          #minimum pixels required for a crater to register in an image
     print "number of %s files are: %d"%(data_type,len(files))
     for f in files:
-        flbase = os.path.basename(f)
-        img = get_im_cv2(f,img_width,img_height) / 255.
+        img = cv2.imread(f, cv2.IMREAD_GRAYSCALE)/255.      #(im_width,im_height)
         X.append(img)
         y.append(np.array(Image.open('%smask.tiff'%f.split('.png')[0])))
-    return  X, y, X_id
+    return  X, y
 
-def read_and_normalize_data(path, img_width, img_height, data_flag):
-    if data_flag == 0:
-        data_type = 'train'
-    elif data_flag == 1:
-        data_type = 'test'
-    data, target, id = load_data(path, data_type, img_width, img_height)
-    data = np.array(data).astype('float32')     #convert to numpy, convert to float
-    target = np.array(target).astype('float32')
+def read_and_normalize_data(path, im_width, im_height, data_type):
+    data, target = load_data(path, data_type)
+    data = np.array(data).astype('float32')             #convert to numpy, convert to float
+    data = data.reshape(len(data),im_width,im_height,1) #add dummy third dimension, required for keras
+    target = np.array(target).astype('float32')         #convert to numpy, convert to float
     print('%s shape:'%data_type, data.shape)
-    return data, target, id
+    return data, target
 
-#save target no border for Hough circles
-def save_image(data, cm, fn):
-    sizes = np.shape(data)
-    height = float(sizes[0])
-    width = float(sizes[1])
-    fig = plt.figure()
-    fig.set_size_inches(width/height, 1, forward=False)
-    ax = plt.Axes(fig, [0., 0., 1., 1.])
-    ax.set_axis_off()
-    fig.add_axes(ax)
-    ax.imshow(data, cmap=cm)
-    plt.savefig(fn, dpi = height)
-
+#experimenting with bigger contrast
+#https://www.mathworks.com/help/vision/ref/contrastadjustment.html
+#Since maxpooling is used, we want the interesting stuff (craters) to be 1, not 0.
+#But ignore null background pixels, keep them at 0.
 def rescale_and_invcolor(data, inv_color, rescale):
     for img in data:
         if inv_color == 1:
@@ -60,39 +43,27 @@ def rescale_and_invcolor(data, inv_color, rescale):
             img[img>0] = low + (img[img>0] - minn)*(hi - low)/(maxx - minn) #linear re-scaling
     return data
 
-#dice coefficient
-def dice_coef(y_true, y_pred):
-    smooth = 1.
-    y_true_f = K.flatten(y_true)
-    y_pred_f = K.flatten(y_pred)
-    intersection = K.sum(y_true_f * y_pred_f)
-    return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
-
-def dice_coef_loss(y_true, y_pred):
-    return -dice_coef(y_true, y_pred)
-
 #load data
 dim, inv_color, rescale = 256, 1, 1
 test_data, test_target, test_id = read_and_normalize_data('datasets/rings/Test_rings_sample/', dim, dim, 1)
 
 #reshape
-test_data = test_data[:,:,:,0].reshape(len(test_data),256,256,1)
+test_data = test_data[:,:,:,0].reshape(len(test_data),dim,dim,1)
 
 #invcolor and rescale
 if inv_color==1 or rescale==1:
     test_data = rescale_and_invcolor(test_data, inv_color, rescale)
 
-filename = 'models/%s'%sys.argv[1]
-loss = sys.argv[2]
-if loss == "dice":
-    model = load_model(filename, custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef': dice_coef})
-else:
+#list of models you want predictions on
+models = ['unet_s256_rings_FL5_he_uniform.h5','unet_s256_rings_FL5_glorot_normal.h5','unet_s256_rings_FL3_he_normal.h5','unet_s256_rings_FL3_he_uniform.h5','unet_s256_rings_FL3_glorot_normal.h5']
+
+n,off=20,0
+for m in models:
     model = load_model(filename)
-
-print "loaded everything successfully, generating predictions"
-n,off=32,0
-target = model.predict(test_data[off:(n+off)].astype('float32'))
-
-name = os.path.basename(filename).split('.h5')[0]
-np.save('datasets/rings/Test_rings_sample/%s_pred.npy'%name,target)
-print "successfully generated predictions at datasets/rings/Test_rings_sample/%s_pred.npy"%name
+    target = model.predict(test_data[off:(n+off)].astype('float32'))
+    name = os.path.basename(filename).split('.h5')[0]
+    
+    #dimensions go data, ground_truth targets, predicted targets
+    arr = np.concatenate((test_data[off:(n+off)],test_target[off:(n+off)].reshape(n,dim,dim,1),target.reshape(n,dim,dim,1)),axis=3)
+    np.save('models/%s_pred.npy'%name,target)
+    print "successfully generated predictions at models/%s_pred.npy for model %s"%(name,m)

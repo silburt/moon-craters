@@ -130,7 +130,7 @@ def unet_model(im_width,im_height,learn_rate,lmbda,FL,init):
     u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
     
     #final output
-    final_activation = 'hard_sigmoid'       #sigmoid, relu, hard_sigmoid
+    final_activation = 'sigmoid'       #sigmoid, relu
     u = Convolution2D(1, 1, 1, activation=final_activation, init=init, W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
     u = Reshape((im_width, im_height))(u)
     model = Model(input=img_input, output=u)
@@ -180,9 +180,9 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     train_data=np.load('%s/Train_rings/train_data.npy'%dir)
     valid_data=np.load('%s/Dev_rings/valid_data.npy'%dir)
     test_data=np.load('%s/Test_rings/test_data.npy'%dir)
-    train_data = train_data[:,:,:,0].reshape(len(train_data),im_width,im_height,1)
-    valid_data = valid_data[:,:,:,0].reshape(len(valid_data),im_width,im_height,1)
-    test_data = test_data[:,:,:,0].reshape(len(test_data),im_width,im_height,1)
+    #train_data = train_data[:,:,:,0].reshape(len(train_data),im_width,im_height,1)
+    #valid_data = valid_data[:,:,:,0].reshape(len(valid_data),im_width,im_height,1)
+    #test_data = test_data[:,:,:,0].reshape(len(test_data),im_width,im_height,1)
     
     #Invert image colors and rescale pixel values to increase contrast
     if inv_color==1 or rescale==1:
@@ -190,6 +190,8 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         train_data = rescale_and_invcolor(train_data, inv_color, rescale)
         valid_data = rescale_and_invcolor(valid_data, inv_color, rescale)
         test_data = rescale_and_invcolor(test_data, inv_color, rescale)
+
+    #load targets
     try:
         train_target=np.load('%s/Train_rings/train_target_pred.npy'%dir)
         valid_target=np.load('%s/Dev_rings/valid_target_pred.npy'%dir)
@@ -201,12 +203,9 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         print "Successfully generated iterated masks"
 
     #Select desired subset number of samples, take first slice (saves memory) but keep data 3D.
-    train_data  = train_data[:n_train_samples]
-    train_target = train_target[:n_train_samples]
-    valid_data = valid_data[:n_train_samples]
-    valid_target = valid_target[:n_train_samples]
-    test_data = test_data[:n_train_samples]
-    test_target = test_target[:n_train_samples]
+    train_data, train_target  = train_data[:n_train_samples], train_target[:n_train_samples]
+    valid_data, valid_target = valid_data[:n_train_samples], valid_target[:n_train_samples]
+    test_data, test_target = test_data[:n_train_samples], test_target[:n_train_samples]
 
     #Iterate
     N_runs = 3

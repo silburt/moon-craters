@@ -38,15 +38,16 @@ def load_data(path, data_type):
     files = glob.glob('%s*.png'%path)
     print "number of %s files are: %d"%(data_type,len(files))
     for f in files:
-        img = cv2.imread(f)/255.
+        img = cv2.imread(f, cv2.IMREAD_GRAYSCALE)/255.      #(im_width,im_height)
         X.append(img)
         y.append(np.array(Image.open('%smask.tiff'%f.split('.png')[0])))
     return  X, y
 
-def read_and_normalize_data(path, data_type):
+def read_and_normalize_data(path, im_width, im_height, data_type):
     data, target = load_data(path, data_type)
-    data = np.array(data).astype('float32')     #convert to numpy, convert to float
-    target = np.array(target).astype('float32') #convert to numpy, convert to float
+    data = np.array(data).astype('float32')             #convert to numpy, convert to float
+    data = data.reshape(len(data),im_width,im_height,1) #add dummy third dimension, required for keras
+    target = np.array(target).astype('float32')         #convert to numpy, convert to float
     print('%s shape:'%data_type, data.shape)
     return data, target
 
@@ -185,22 +186,27 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     except:
         print "Couldnt find locally saved .npy files, loading from %s."%dir
         train_path, valid_path, test_path = '%s/Train_rings/'%dir, '%s/Dev_rings/'%dir, '%s/Test_rings/'%dir
-        train_data, train_target = read_and_normalize_data(train_path, 'train')
-        valid_data, valid_target = read_and_normalize_data(valid_path, 'validation')
-        test_data, test_target = read_and_normalize_data(test_path, 'test')
+        train_data, train_target = read_and_normalize_data(train_path, im_width, im_height, 'train')
+        valid_data, valid_target = read_and_normalize_data(valid_path, im_width, im_height, 'validation')
+        test_data, test_target = read_and_normalize_data(test_path, im_width, im_height, 'test')
         np.save('%s/Train_rings/train_data.npy'%dir,train_data)
         np.save('%s/Train_rings/train_target.npy'%dir,train_target)
         np.save('%s/Dev_rings/valid_data.npy'%dir,valid_data)
         np.save('%s/Dev_rings/valid_target.npy'%dir,valid_target)
         np.save('%s/Test_rings/test_data.npy'%dir,test_data)
         np.save('%s/Test_rings/test_target.npy'%dir,test_target)
+    #take desired subset of data
+    train_data, train_target = train_data[:n_train_samples], train_target[:n_train_samples]
+    valid_data, valid_target = valid_data[:n_train_samples], valid_target[:n_train_samples]
+    test_data, test_target = test_data[:n_train_samples], test_target[:n_train_samples]
+
     #Select desired subset number of samples, take first slice (saves memory) but keep data 3D.
-    train_data  = train_data[:n_train_samples,:,:,0].reshape(n_train_samples,im_width,im_height,1)
-    train_target = train_target[:n_train_samples]
-    valid_data = valid_data[:n_train_samples,:,:,0].reshape(n_train_samples,im_width,im_height,1)
-    valid_target = valid_target[:n_train_samples]
-    test_data = test_data[:n_train_samples,:,:,0].reshape(n_train_samples,im_width,im_height,1)
-    test_target = test_target[:n_train_samples]
+#    train_data  = train_data[:n_train_samples,:,:,0].reshape(n_train_samples,im_width,im_height,1)
+#    train_target = train_target[:n_train_samples]
+#    valid_data = valid_data[:n_train_samples,:,:,0].reshape(n_train_samples,im_width,im_height,1)
+#    valid_target = valid_target[:n_train_samples]
+#    test_data = test_data[:n_train_samples,:,:,0].reshape(n_train_samples,im_width,im_height,1)
+#    test_target = test_target[:n_train_samples]
 
     #Invert image colors and rescale pixel values to increase contrast
     if inv_color==1 or rescale==1:

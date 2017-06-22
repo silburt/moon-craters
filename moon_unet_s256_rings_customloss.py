@@ -161,6 +161,7 @@ def prepare_custom_loss(path, dim):
     # hyperparameters - should not change
     minrad, maxrad = 2, 75    #min/max radius (in pixels) required to include crater in target
     cutrad = 0.5              #0-1 range, if x+cutrad*r > img_width, remove, i.e. exclude craters ~half gone from image
+    min_craters = 5           #minimum craters in the image required for processing (make it worth your while)
     
     # load data
     try:
@@ -185,7 +186,8 @@ def prepare_custom_loss(path, dim):
             csv = csv[(csv['y']+cutrad*csv['Diameter (pix)']/2 <= dim)]
             csv = csv[(csv['x']-cutrad*csv['Diameter (pix)']/2 > 0)]
             csv = csv[(csv['y']-cutrad*csv['Diameter (pix)']/2 > 0)]
-            if len(csv) == 0:
+            if len(csv) < min_craters:
+                print "only %d craters in image, skipping"%len(csv)
                 continue
             
             # make target and csv array, ensure template matching algorithm is working - need Charles' ring routine

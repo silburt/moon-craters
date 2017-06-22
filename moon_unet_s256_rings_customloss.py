@@ -185,6 +185,8 @@ def prepare_custom_loss(path, dim):
             csv = csv[(csv['y']+cutrad*csv['Diameter (pix)']/2 <= dim)]
             csv = csv[(csv['x']-cutrad*csv['Diameter (pix)']/2 > 0)]
             csv = csv[(csv['y']-cutrad*csv['Diameter (pix)']/2 > 0)]
+            if len(csv) == 0:
+                continue
             
             # make target and csv array, ensure template matching algorithm is working - need Charles' ring routine
             target = mdm.make_mask(csv, img, binary=True, rings=True, ringwidth=2, truncate=True)
@@ -197,9 +199,9 @@ def prepare_custom_loss(path, dim):
                 N_perfect_matches += 1
         imgs = np.array(imgs).astype('float32').reshape(len(imgs),dim,dim,1)
         targets = np.array(targets).astype('float32')
-        print "out of %d files there are %d perfect matches"%(len(csvs_),N_perfect_matches)
         np.save("%scustom_loss_images.npy"%path,imgs)
         np.save("%scustom_loss_csvs.npy"%path,csvs)
+        print "out of %d files there are %d perfect matches"%(len(csvs_),N_perfect_matches)
     return imgs, csvs, N_perfect_matches
 
 ##########################

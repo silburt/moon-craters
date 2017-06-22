@@ -274,11 +274,11 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_imgs
                         
         # calcualte custom loss
         loss = []
+        print "custom loss for epoch %d is (N_csv-N_match, N_templ-N_match, N_templ-N_csv):"%nb
         for i in range(len(loss_imgs)):
             loss_target = model.predict(loss_imgs[i].astype('float32'))
             N_match, N_csv, N_templ = template_match_target_to_csv(loss_target, loss_csvs[i])
             loss.append((N_csv-N_match, N_templ-N_match, N_templ-N_csv))
-        print "custom loss for epoch %d is (N_csv-N_match, N_templ-N_match, N_templ-N_csv):"%i
         print loss
     
     if save_model == 1:

@@ -144,6 +144,7 @@ def template_match_target_to_csv(target, csv_coords, minrad=2, maxrad=75):
 
     # compare template-matched results to "ground truth" csv input data
     N_match = 0
+    csv_duplicate_flag = 0
     N_csv, N_templ = len(csv_coords), len(templ_coords)
     for tc in templ_coords:
         diff = (csv_coords - tc)**2
@@ -153,12 +154,13 @@ def template_match_target_to_csv(target, csv_coords, minrad=2, maxrad=75):
         if N > 1:
             print "multiple matches found in csv file for template matched crater ", tc, " :"
             print csv_coords[np.where(index==False)]
+            csv_duplicate_flag = 1
         N_match += N
         csv_coords = csv_coords[index]
         if len(csv_coords) == 0:
             #print "all matches found"
             break
-    return N_match, N_csv, N_templ
+    return N_match, N_csv, N_templ, csv_duplicate_flag
 
 
 def prepare_custom_loss(path, dim):
@@ -196,8 +198,8 @@ def prepare_custom_loss(path, dim):
             # make target and csv array, ensure template matching algorithm is working - need Charles' ring routine
             target = mdm.make_mask(csv, img, binary=True, rings=True, ringwidth=2, truncate=True)
             csv_coords = np.asarray((csv['x'],csv['y'],csv['Diameter (pix)']/2)).T
-            N_match, N_csv, N_templ = template_match_target_to_csv(target, csv_coords, minrad, maxrad)
-            if N_match == N_csv:
+            N_match, N_csv, N_templ, csv_duplicate_flag = template_match_target_to_csv(target, csv_coords, minrad, maxrad)
+            if N_match == N_csv and csv_duplicate_flag == 0:
                 imgs.append(img)
                 targets.append(target)
                 csvs.append(csv_coords)
@@ -287,7 +289,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
             match_csv = float(N_match)/float(N_csv)     #recall
             templ_csv = float(N_templ)/float(N_csv)     #craters detected/craters in csv
             match_csv_arr.append(match_csv); templ_csv_arr.append(templ_csv)
-            print match_csv, templ_csv
+            #print match_csv, templ_csv
         print "mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(match_csv_arr), np.std(match_csv_arr))
         print "mean and std of N_template/N_csv = %f, %f"%(np.mean(templ_csv_arr), np.std(templ_csv_arr))
     

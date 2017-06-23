@@ -6,7 +6,7 @@
 #b) trained using the original LU78287GT.csv values as the ground truth,
 #c) uses the Unet model architechture applied on binary rings.
 
-#keras version 1.2.2.
+#This model uses keras version 1.2.2.
 ############################################
 
 import cv2
@@ -160,36 +160,30 @@ def template_match_target_to_csv(target, csv_coords, minrad=2, maxrad=75):
             break
     return N_match, N_csv, N_templ
 
+
 def prepare_custom_loss(path, dim):
-    #hyperparameters - likely do not need to change
+    # hyperparameters - should not change
     minrad, maxrad = 2, 75    #min/max radius (in pixels) required to include crater in target
     cutrad = 0.5              #0-1 range, if x+cutrad*r > img_width, remove, i.e. exclude craters ~half gone from image
-    min_craters = 5           #minimum craters in the image (make it worth your while)
+    min_craters = 5           #minimum craters in the image required for processing (make it worth your while)
     
-    #load data
+    # load data
     try:
         imgs = np.load("%s/custom_loss_images.npy"%path)
         csvs = np.load("%s/custom_loss_csvs.npy"%path)
+        N_perfect_matches = len(imgs)
         print "Successfully loaded files locally for custom_loss."
     except:
         print "Couldn't load files for custom_loss, making now"
-        #routine
         imgs, targets, csvs = [], [], []
-        csvs_ = glob.glob('%s*.csv'%path)
+        csvs_ = glob.glob('%s/*.csv'%path)
         N_perfect_matches = 0
         for c in csvs_:
             print "processing file %s"%c
             csv = pd.read_csv(c)
             img = cv2.imread('%s.png'%c.split('.csv')[0], cv2.IMREAD_GRAYSCALE)/255.
-            #invert color and rescale if needed
-            if inv_color == 1:
-                img[img > 0.] = 1. - img[img > 0.]
-            if rescale == 1:
-                minn, maxx = np.min(img[img>0]), np.max(img[img>0])
-                low, hi = 0.1, 1                                                #low, hi rescaling values
-                img[img>0] = low + (img[img>0] - minn)*(hi - low)/(maxx - minn) #linear re-scaling
             
-            #prune csv list for small/large/half craters
+            # prune csv list for small/large/half craters
             csv = csv[(csv['Diameter (pix)'] < 2*maxrad) & (csv['Diameter (pix)'] > 2*minrad)]
             csv = csv[(csv['x']+cutrad*csv['Diameter (pix)']/2 <= dim)]
             csv = csv[(csv['y']+cutrad*csv['Diameter (pix)']/2 <= dim)]
@@ -199,7 +193,7 @@ def prepare_custom_loss(path, dim):
                 print "only %d craters in image, skipping"%len(csv)
                 continue
             
-            #make target and csv array, ensure template matching algorithm is working
+            # make target and csv array, ensure template matching algorithm is working - need Charles' ring routine
             target = mdm.make_mask(csv, img, binary=True, rings=True, ringwidth=2, truncate=True)
             csv_coords = np.asarray((csv['x'],csv['y'],csv['Diameter (pix)']/2)).T
             N_match, N_csv, N_templ = template_match_target_to_csv(target, csv_coords, minrad, maxrad)

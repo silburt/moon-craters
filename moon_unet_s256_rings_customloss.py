@@ -157,7 +157,7 @@ def template_match_target_to_csv(target, csv_coords, minrad=2, maxrad=75):
     return N_match, N_csv, N_templ
 
 
-def prepare_custom_loss(path, dim):
+def prepare_custom_loss(path, dim, inv_color=1, rescale=1):
     # hyperparameters - should not change
     minrad, maxrad = 2, 75    #min/max radius (in pixels) required to include crater in target
     cutrad = 0.5              #0-1 range, if x+cutrad*r > img_width, remove, i.e. exclude craters ~half gone from image
@@ -177,8 +177,15 @@ def prepare_custom_loss(path, dim):
         N_perfect_matches = 0
         for c in csvs_:
             print "processing file %s"%c
-            img = cv2.imread('%s.png'%c.split('.csv')[0], cv2.IMREAD_GRAYSCALE)/255.
             csv = pd.read_csv(c)
+            img = cv2.imread('%s.png'%c.split('.csv')[0], cv2.IMREAD_GRAYSCALE)/255.
+            #invert color and rescale if needed
+            if inv_color == 1:
+                img[img > 0.] = 1. - img[img > 0.]
+            if rescale == 1:
+                minn, maxx = np.min(img[img>0]), np.max(img[img>0])
+                low, hi = 0.1, 1                                                #low, hi rescaling values
+                img[img>0] = low + (img[img>0] - minn)*(hi - low)/(maxx - minn) #linear re-scaling
             
             # prune csv list for small/large/half craters
             csv = csv[(csv['Diameter (pix)'] < 2*maxrad) & (csv['Diameter (pix)'] > 2*minrad)]

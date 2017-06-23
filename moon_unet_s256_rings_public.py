@@ -32,8 +32,8 @@ from keras import __version__ as keras_version
 from keras import backend as K
 K.set_image_dim_ordering('tf')
 
-##########################
-#rescale and invert color#
+#######################################
+#rescale and invert color (if desired)#
 ########################################################################
 def rescale_and_invcolor(data, inv_color, rescale):
     #rescaling and inverting images
@@ -205,7 +205,7 @@ def unet_model(dim,learn_rate,lmbda,FL,init,n_filters):
 ########################################################################
 #Need to create this function so that memory is released every iteration (when function exits).
 #Otherwise the memory used accumulates and eventually the program crashes.
-def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data,loss_csvs,dim,learn_rate,nb_epoch,batch_size,save_models,lmbda,FL,init,n_filters):
+def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data,loss_csvs,dim,learn_rate,nb_epoch,batch_size,save_model,lmbda,FL,init,n_filters):
     model = unet_model(dim,learn_rate,lmbda,FL,init,n_filters)
     
     n_samples = len(X_train)

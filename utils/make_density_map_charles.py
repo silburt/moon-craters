@@ -244,8 +244,5 @@ def make_mask(craters, img, binary=True, rings=False,
             dmap[img[:,:,0] == 0] = 0
         else:
             dmap[img == 0] = 0
-    
-    #add centroids to image
-    #dmap[cy,cx] = 2
 
     return dmap

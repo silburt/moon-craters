@@ -53,15 +53,15 @@ def read_and_normalize_data(path, im_width, im_height, data_type):
 
 #experimenting with bigger contrast
 #https://www.mathworks.com/help/vision/ref/contrastadjustment.html
-#Since maxpooling is used, we want the interesting stuff (craters) to be 1, not 0.
+#Since maxpooling is used, we might want the interesting stuff (craters) to be 1, not 0.
 #But ignore null background pixels, keep them at 0.
 def rescale_and_invcolor(data, inv_color, rescale):
+    low, hi = 0.1, 1          #low, hi rescaling values
     for img in data:
         if inv_color == 1:
             img[img > 0.] = 1. - img[img > 0.]
         if rescale == 1:
             minn, maxx = np.min(img[img>0]), np.max(img[img>0])
-            low, hi = 0.1, 1                                                #low, hi rescaling values
             img[img>0] = low + (img[img>0] - minn)*(hi - low)/(maxx - minn) #linear re-scaling
     return data
 
@@ -92,7 +92,7 @@ def custom_image_generator(data, target, batch_size=32):
                 d[j], t[j] = np.rot90(d[j],r[j]), np.rot90(t[j],r[j])
             yield (d, t)
 
-#############################
+##########################
 #unet model (keras 1.2.2)#
 ########################################################################
 #Following https://arxiv.org/pdf/1505.04597.pdf
@@ -132,7 +132,7 @@ def unet_model(im_width,im_height,learn_rate,lmbda,FL,init,n_filters):
     u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
 
     #final output
-    final_activation = 'sigmoid'       #sigmoid, relu
+    final_activation = 'sigmoid'       #options: sigmoid, relu, etc.
     u = Convolution2D(1, 1, 1, activation=final_activation, init=init, W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
     u = Reshape((im_width, im_height))(u)
     model = Model(input=img_input, output=u)
@@ -149,16 +149,18 @@ def unet_model(im_width,im_height,learn_rate,lmbda,FL,init,n_filters):
 ########################################################################
 #Need to create this function so that memory is released every iteration (when function exits).
 #Otherwise the memory used accumulates and eventually the program crashes.
-def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,n_train_samples,learn_rate,batch_size,lmbda,FL,nb_epoch,im_width,im_height,save_model,init,n_filters):
+def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,learn_rate,batch_size,lmbda,FL,nb_epoch,im_width,im_height,save_model,init,n_filters):
     
     model = unet_model(im_width,im_height,learn_rate,lmbda,FL,init,n_filters)
     
-    model.fit_generator(custom_image_generator(X_train,Y_train,batch_size=batch_size),
-                        samples_per_epoch=n_train_samples,nb_epoch=nb_epoch,verbose=1,
-                        #validation_data=(X_valid, Y_valid), #no generator for validation data
-                        validation_data=custom_image_generator(X_valid,Y_valid,batch_size=batch_size),
-                        nb_val_samples=len(X_valid),
-                        callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
+    n_samples = len(X_train)
+    for nb in range(nb_epoch):
+        model.fit_generator(custom_image_generator(X_train,Y_train,batch_size=batch_size),
+                            samples_per_epoch=n_samples,nb_epoch=1,verbose=1,
+                            #validation_data=(X_valid, Y_valid), #no generator for validation data
+                            validation_data=custom_image_generator(X_valid,Y_valid,batch_size=batch_size),
+                            nb_val_samples=n_samples,
+                            callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
         
     if save_model == 1:
         model.save('models/unet_s256_rings_FL%d_%s.h5'%(FL,init))
@@ -168,13 +170,12 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,n_train_s
 ##############
 #Main Routine#
 ########################################################################
-def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_train_samples,save_models,inv_color,rescale):
+def run_cross_validation_create_models(dir,learn_rate,batch_size,lmbda,nb_epoch,n_train_samples,save_models,inv_color,rescale):
     #Static arguments
     im_width = 256              #image width
     im_height = 256             #image height
     
     #Load data
-    dir = 'datasets/rings'
     try:
         train_data=np.load('%s/Train_rings/train_data.npy'%dir)
         train_target=np.load('%s/Train_rings/train_target.npy'%dir)
@@ -200,14 +201,6 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     valid_data, valid_target = valid_data[:n_train_samples], valid_target[:n_train_samples]
     test_data, test_target = test_data[:n_train_samples], test_target[:n_train_samples]
 
-    #Select desired subset number of samples, take first slice (saves memory) but keep data 3D.
-#    train_data  = train_data[:n_train_samples,:,:,0].reshape(n_train_samples,im_width,im_height,1)
-#    train_target = train_target[:n_train_samples]
-#    valid_data = valid_data[:n_train_samples,:,:,0].reshape(n_train_samples,im_width,im_height,1)
-#    valid_target = valid_target[:n_train_samples]
-#    test_data = test_data[:n_train_samples,:,:,0].reshape(n_train_samples,im_width,im_height,1)
-#    test_target = test_target[:n_train_samples]
-
     #Invert image colors and rescale pixel values to increase contrast
     if inv_color==1 or rescale==1:
         print "inv_color=%d, rescale=%d, processing data"%(inv_color, rescale)
@@ -215,38 +208,43 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         valid_data = rescale_and_invcolor(valid_data, inv_color, rescale)
         test_data = rescale_and_invcolor(test_data, inv_color, rescale)
 
+    ########## Parameters to Iterate Over ##########
+    N_runs = 2
+    filter_length = [3,3]
+    n_filters = [64,64]     #arranging this so that total number of model parameters <~ 10M, beyond which Keras tends to crash with OOM
+    lmbda = [0,0]
+    init = ['glorot_normal', 'he_uniform']
+
     #Iterate
-    N_runs = 9
-    filter_length = [3,3,3,5,5,5,10,10,10]
-    n_filters = [64,64,64,64,64,64,32,32,32]  #arranging this so that total number of model parameters <~ 10M.
-    init = ['glorot_normal', 'he_uniform', 'he_normal','glorot_normal', 'he_uniform', 'he_normal','glorot_normal', 'he_uniform', 'he_normal']
     for i in range(N_runs):
-        I = init[i]
         NF = n_filters[i]
         FL = filter_length[i]
-        score = train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,n_train_samples,learn_rate,batch_size,lmbda,FL,nb_epoch,im_width,im_height,save_models,I,NF)
+        l = lmbda[i]
+        I = init[i]
+        score = train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,learn_rate,batch_size,l,FL,nb_epoch,im_width,im_height,save_models,I,NF)
         print '###################################'
         print '##########END_OF_RUN_INFO##########'
         print('\nTest Score is %f \n'%score)
-        print 'learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train_samples=%d, im_width=%d, im_height=%d, inv_color=%d, rescale=%d, init=%s, n_filters=%d'%(learn_rate,batch_size,FL,nb_epoch,n_train_samples,im_width,im_height,inv_color,rescale,I,NF)
+        print 'learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train_samples=%d, im_width=%d, im_height=%d, inv_color=%d, rescale=%d, init=%s, n_filters=%d, lambda=%f'%(learn_rate,batch_size,FL,nb_epoch,n_train_samples,im_width,im_height,inv_color,rescale,I,NF,l)
         print '###################################'
         print '###################################'
 
-################
-#Arguments, Run#
+#####################
+#Main Arguments, Run#
 ########################################################################
 if __name__ == '__main__':
     print('Keras version: {}'.format(keras_version))
     
     #args
-    lr = 0.0001         #learning rate
-    bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
-    lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 15         #number of epochs. 1 epoch = forward/back pass thru all train data
-    n_train = 30016     #number of training samples, needs to be a multiple of batch size. Big memory hog.
-    save_models = 1     #save models
-    inv_color = 1       #use inverse color
-    rescale = 1         #rescale images to increase contrast (still 0-1 normalized)
+    dir = 'datasets/rings'  #location of Train_rings/, Test_rings/, Dev_rings/ folders. Don't include final '/' in path
+    lr = 0.0001             #learning rate
+    bs = 32                 #batch size: smaller values = less memory but less accurate gradient estimate
+    lmbda = 0               #L2 regularization strength (lambda)
+    epochs = 15             #number of epochs. 1 epoch = forward/back pass thru all train data
+    n_train = 30016         #number of training samples, *needs to be a multiple of batch size*.
+    save_models = 1         #save models
+    inv_color = 1           #use inverse color
+    rescale = 1             #rescale images to increase contrast (still 0-1 normalized)
     
     #run models
-    run_cross_validation_create_models(lr,bs,lmbda,epochs,n_train,save_models,inv_color,rescale)
+    run_cross_validation_create_models(dir,lr,bs,lmbda,epochs,n_train,save_models,inv_color,rescale)

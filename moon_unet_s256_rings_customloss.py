@@ -28,7 +28,7 @@ from keras import __version__ as keras_version
 from keras import backend as K
 K.set_image_dim_ordering('tf')
 
-import utils.make_density_map_charles as mdm
+#import utils.make_density_map_charles as mdm
 
 #############################
 #load/read/process functions#
@@ -53,7 +53,7 @@ def read_and_normalize_data(path, dim, data_type):
     print('%s shape:'%data_type, data.shape)
     return data, target
 
-#experimenting with bigger contrast
+#rescaling and inverting images
 #https://www.mathworks.com/help/vision/ref/contrastadjustment.html
 #Since maxpooling is used, we want the interesting stuff (craters) to be 1, not 0.
 #But ignore null background pixels, keep them at 0.
@@ -94,8 +94,8 @@ def custom_image_generator(data, target, batch_size=32):
                 d[j], t[j] = np.rot90(d[j],r[j]), np.rot90(t[j],r[j])
             yield (d, t)
 
-#############
-#custom loss#
+#######################
+#custom loss functions#
 ########################################################################
 def template_match_target_to_csv(target, csv_coords, minrad=2, maxrad=75):
     # hyperparameters, probably don't need to change
@@ -154,7 +154,8 @@ def template_match_target_to_csv(target, csv_coords, minrad=2, maxrad=75):
         if len(csv_coords) == 0:
             #print "all matches found"
             break
-    return N_match, N_csv, N_templ
+        
+        return N_match, N_csv, N_templ
 
 
 def prepare_custom_loss(path, dim):
@@ -165,8 +166,8 @@ def prepare_custom_loss(path, dim):
     
     # load data
     try:
-        imgs = np.load("%scustom_loss_images.npy"%path)
-        csvs = np.load("%scustom_loss_csvs.npy"%path)
+        imgs = np.load("%s/custom_loss_images.npy"%path)
+        csvs = np.load("%s/custom_loss_csvs.npy"%path)
         N_perfect_matches = len(imgs)
         print "Successfully loaded files locally for custom_loss."
     except:
@@ -201,8 +202,8 @@ def prepare_custom_loss(path, dim):
                 N_perfect_matches += 1
         imgs = np.array(imgs).astype('float32').reshape(len(imgs),dim,dim,1)
         targets = np.array(targets).astype('float32')
-        np.save("%scustom_loss_images.npy"%path,imgs)
-        np.save("%scustom_loss_csvs.npy"%path,csvs)
+        np.save("%s/custom_loss_images.npy"%path,imgs)
+        np.save("%s/custom_loss_csvs.npy"%path,csvs)
         print "out of %d files there are %d perfect matches"%(len(csvs_),N_perfect_matches)
     return imgs, csvs, N_perfect_matches
 
@@ -263,8 +264,7 @@ def unet_model(dim,learn_rate,lmbda,FL,init,n_filters):
 ########################################################################
 #Need to create this function so that memory is released every iteration (when function exits).
 #Otherwise the memory used accumulates and eventually the program crashes.
-def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data,loss_csvs,learn_rate,batch_size,lmbda,FL,nb_epoch,dim,save_model,init,n_filters):
-    
+def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data,loss_csvs,dim,learn_rate,nb_epoch,batch_size,save_models,lmbda,FL,init,n_filters):
     model = unet_model(dim,learn_rate,lmbda,FL,init,n_filters)
     
     n_samples = len(X_train)
@@ -277,13 +277,17 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
                         
         # calcualte custom loss
-        loss = []
-        print "custom loss for epoch %d is (N_csv-N_match, N_templ-N_match, N_templ-N_csv):"%nb
+        print "custom loss for epoch %d is (N_match/N_csv (recall), N_template/N_csv):"%nb
+        match_csv_arr, templ_csv_arr = [], []
         loss_target = model.predict(loss_data.astype('float32'))
         for i in range(len(loss_data)):
             N_match, N_csv, N_templ = template_match_target_to_csv(loss_target[i], loss_csvs[i])
-            loss.append((N_csv-N_match, N_templ-N_match, N_templ-N_csv))
-        print loss
+            match_csv = float(N_match)/float(N_csv)     #recall
+            templ_csv = float(N_templ)/float(N_csv)     #craters detected/craters in csv
+            match_csv_arr.append(match_csv); templ_csv_arr.append(templ_csv)
+            print match_csv, templ_csv
+        print "mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(match_csv_arr), np.std(match_csv_arr))
+        print "mean and std of N_template/N_csv = %f, %f"%(np.mean(templ_csv_arr), np.std(templ_csv_arr))
     
     if save_model == 1:
         model.save('models/unet_s256_rings_FL%d_%s_customloss.h5'%(FL,init))
@@ -293,12 +297,11 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
 ##############
 #Main Routine#
 ########################################################################
-def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_train_samples,save_models,inv_color,rescale):
+def run_cross_validation_create_models(dir,learn_rate,batch_size,nb_epoch,n_train_samples,save_models,inv_color,rescale):
     #Static arguments
-    dim = 256              #image width/height, assuming square images
+    dim = 256              #image width/height, assuming square images. Shouldn't change
     
     #Load data
-    dir = 'datasets/rings'
     try:
         train_data=np.load('%s/Train_rings/train_data.npy'%dir)
         train_target=np.load('%s/Train_rings/train_target.npy'%dir)
@@ -325,7 +328,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     test_data, test_target = test_data[:n_train_samples], test_target[:n_train_samples]
 
     #prepare custom loss
-    custom_loss_path = '%sTest_rings_for_custom_loss/'%dir
+    custom_loss_path = '%s/Dev_rings_for_loss/'%dir
     loss_data, loss_csvs, N_loss = prepare_custom_loss(custom_loss_path, dim)
 
     #Invert image colors and rescale pixel values to increase contrast
@@ -336,16 +339,20 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         test_data = rescale_and_invcolor(test_data, inv_color, rescale)
         loss_data = rescale_and_invcolor(loss_data, inv_color, rescale)
 
+    ########## Parameters to Iterate Over ##########
+    N_runs = 2
+    filter_length = [3,3]   #See unet model. Filter length used.
+    n_filters = [64,64]     #See unet model. Arranging this so that total number of model parameters <~ 10M, otherwise OOM problems
+    lmbda = [0,0]           #See unet model. L2 Weight regularization strength (lambda).
+    init = ['he_normal', 'he_uniform']  #See unet model. Initialization of weights.
+
     #Iterate
-    N_runs = 1
-    filter_length = [3]
-    n_filters = [64]  #arranging this so that total number of model parameters <~ 10M.
-    init = ['he_normal']
     for i in range(N_runs):
         I = init[i]
         NF = n_filters[i]
         FL = filter_length[i]
-        score = train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,loss_data,loss_csvs,learn_rate,batch_size,lmbda,FL,nb_epoch,dim,save_models,I,NF)
+        L = lmbda[i]
+        score = train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,loss_data,loss_csvs,dim,learn_rate,nb_epoch,batch_size,save_models,L,FL,I,NF)
         print '###################################'
         print '##########END_OF_RUN_INFO##########'
         print('\nTest Score is %f \n'%score)
@@ -360,14 +367,14 @@ if __name__ == '__main__':
     print('Keras version: {}'.format(keras_version))
     
     #args
-    lr = 0.0001         #learning rate
-    bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
-    lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 10         #number of epochs. 1 epoch = forward/back pass thru all train data
-    n_train = 10016     #number of training samples, needs to be a multiple of batch size. Big memory hog.
-    save_models = 1     #save models
-    inv_color = 1       #use inverse color
-    rescale = 1         #rescale images to increase contrast (still 0-1 normalized)
+    dir = 'datasets/rings'  #location of Train_rings/, Test_rings/, Dev_rings/, Dev_rings_for_loss/ folders. Don't include final '/' in path
+    lr = 0.0001             #learning rate
+    bs = 32                 #batch size: smaller values = less memory but less accurate gradient estimate
+    epochs = 5              #number of epochs. 1 epoch = forward/back pass through all train data
+    n_train = 3008          #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    save_models = 1         #save models
+    inv_color = 1           #use inverse color
+    rescale = 1             #rescale images to increase contrast (still 0-1 normalized)
     
     #run models
-    run_cross_validation_create_models(lr,bs,lmbda,epochs,n_train,save_models,inv_color,rescale)
+    run_cross_validation_create_models(dir,lr,bs,epochs,n_train,save_models,inv_color,rescale)

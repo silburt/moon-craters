@@ -32,7 +32,7 @@ from keras import __version__ as keras_version
 from keras import backend as K
 K.set_image_dim_ordering('tf')
 
-#import utils.make_density_map_charles as mdm
+import utils.make_density_map_charles as mdm
 
 #############################
 #load/read/process functions#

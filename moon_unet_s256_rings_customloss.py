@@ -285,7 +285,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
         match_csv_arr, templ_csv_arr = [], []
         loss_target = model.predict(loss_data.astype('float32'))
         for i in range(len(loss_data)):
-            N_match, N_csv, N_templ = template_match_target_to_csv(loss_target[i], loss_csvs[i])
+            N_match, N_csv, N_templ, csv_duplicate_flag = template_match_target_to_csv(loss_target[i], loss_csvs[i])
             match_csv = float(N_match)/float(N_csv)     #recall
             templ_csv = float(N_templ)/float(N_csv)     #craters detected/craters in csv
             match_csv_arr.append(match_csv); templ_csv_arr.append(templ_csv)
@@ -309,8 +309,8 @@ def run_cross_validation_create_models(dir,learn_rate,batch_size,nb_epoch,n_trai
     try:
         train_data=np.load('%s/Train_rings/train_data.npy'%dir)
         train_target=np.load('%s/Train_rings/train_target.npy'%dir)
-        valid_data=np.load('%s/Dev_rings/valid_data.npy'%dir)
-        valid_target=np.load('%s/Dev_rings/valid_target.npy'%dir)
+        valid_data=np.load('%s/Dev_rings/dev_data.npy'%dir)
+        valid_target=np.load('%s/Dev_rings/dev_target.npy'%dir)
         test_data=np.load('%s/Test_rings/test_data.npy'%dir)
         test_target=np.load('%s/Test_rings/test_target.npy'%dir)
         print "Successfully loaded files locally."
@@ -322,8 +322,8 @@ def run_cross_validation_create_models(dir,learn_rate,batch_size,nb_epoch,n_trai
         test_data, test_target = read_and_normalize_data(test_path, dim, 'test')
         np.save('%s/Train_rings/train_data.npy'%dir,train_data)
         np.save('%s/Train_rings/train_target.npy'%dir,train_target)
-        np.save('%s/Dev_rings/valid_data.npy'%dir,valid_data)
-        np.save('%s/Dev_rings/valid_target.npy'%dir,valid_target)
+        np.save('%s/Dev_rings/dev_data.npy'%dir,valid_data)
+        np.save('%s/Dev_rings/dev_target.npy'%dir,valid_target)
         np.save('%s/Test_rings/test_data.npy'%dir,test_data)
         np.save('%s/Test_rings/test_target.npy'%dir,test_target)
     #take desired subset of data
@@ -371,7 +371,7 @@ if __name__ == '__main__':
     print('Keras version: {}'.format(keras_version))
     
     #args
-    dir = 'datasets/rings'  #location of Train_rings/, Test_rings/, Dev_rings/, Dev_rings_for_loss/ folders. Don't include final '/' in path
+    dir = 'datasets/rings'  #location of Train_rings/, Dev_rings/, Test_rings/, Dev_rings_for_loss/ folders. Don't include final '/' in path
     lr = 0.0001             #learning rate
     bs = 32                 #batch size: smaller values = less memory but less accurate gradient estimate
     epochs = 5              #number of epochs. 1 epoch = forward/back pass through all train data

@@ -179,8 +179,8 @@ def run_cross_validation_create_models(dir,learn_rate,batch_size,lmbda,nb_epoch,
     try:
         train_data=np.load('%s/Train_rings/train_data.npy'%dir)
         train_target=np.load('%s/Train_rings/train_target.npy'%dir)
-        valid_data=np.load('%s/Dev_rings/valid_data.npy'%dir)
-        valid_target=np.load('%s/Dev_rings/valid_target.npy'%dir)
+        valid_data=np.load('%s/Dev_rings/dev_data.npy'%dir)
+        valid_target=np.load('%s/Dev_rings/dev_target.npy'%dir)
         test_data=np.load('%s/Test_rings/test_data.npy'%dir)
         test_target=np.load('%s/Test_rings/test_target.npy'%dir)
         print "Successfully loaded files locally."
@@ -192,8 +192,8 @@ def run_cross_validation_create_models(dir,learn_rate,batch_size,lmbda,nb_epoch,
         test_data, test_target = read_and_normalize_data(test_path, im_width, im_height, 'test')
         np.save('%s/Train_rings/train_data.npy'%dir,train_data)
         np.save('%s/Train_rings/train_target.npy'%dir,train_target)
-        np.save('%s/Dev_rings/valid_data.npy'%dir,valid_data)
-        np.save('%s/Dev_rings/valid_target.npy'%dir,valid_target)
+        np.save('%s/Dev_rings/dev_data.npy'%dir,valid_data)
+        np.save('%s/Dev_rings/dev_target.npy'%dir,valid_target)
         np.save('%s/Test_rings/test_data.npy'%dir,test_data)
         np.save('%s/Test_rings/test_target.npy'%dir,test_target)
     #take desired subset of data

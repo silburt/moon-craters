@@ -178,7 +178,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     
     #Load data
     train_data=np.load('%s/Train_rings/train_data.npy'%dir)
-    valid_data=np.load('%s/Dev_rings/valid_data.npy'%dir)
+    valid_data=np.load('%s/Dev_rings/dev_data.npy'%dir)
     test_data=np.load('%s/Test_rings/test_data.npy'%dir)
     #train_data = train_data[:,:,:,0].reshape(len(train_data),im_width,im_height,1)
     #valid_data = valid_data[:,:,:,0].reshape(len(valid_data),im_width,im_height,1)

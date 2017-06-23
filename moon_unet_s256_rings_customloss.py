@@ -281,7 +281,8 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
                         
         # calcualte custom loss
-        print "custom loss for epoch %d is (N_match/N_csv (recall), N_template/N_csv):"%nb
+        print ""
+        print "custom loss for epoch %d:"%nb
         match_csv_arr, templ_csv_arr = [], []
         loss_target = model.predict(loss_data.astype('float32'))
         for i in range(len(loss_data)):
@@ -292,6 +293,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
             #print match_csv, templ_csv
         print "mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(match_csv_arr), np.std(match_csv_arr))
         print "mean and std of N_template/N_csv = %f, %f"%(np.mean(templ_csv_arr), np.std(templ_csv_arr))
+        print ""
     
     if save_model == 1:
         model.save('models/unet_s256_rings_FL%d_%s_customloss.h5'%(FL,init))

@@ -18,7 +18,7 @@ CUDA_VISIBLE_DEVICES=1 nohup python moon_vgg_fcn_rings.py > FCNforkskip_rings2.t
 CUDA_VISIBLE_DEVICES=1 nohup python moon_vgg_fcn_forkskip_s256.py > FCNforkskip_s256.txt &
 CUDA_VISIBLE_DEVICES=2 nohup python moon_vgg_fcn_rings_largefilt.py > largefilters_sigmoid_invcolor.txt &
 CUDA_VISIBLE_DEVICES=1 nohup python moon_unet_s256_rings_pred.py > unet_s256_rings_predfull.txt &
-CUDA_VISIBLE_DEVICES=1 nohup python moon_unet_s256_rings.py > unet_s256_rings_FLinitgridsearch.txt &
+CUDA_VISIBLE_DEVICES=1 nohup python moon_unet_s256_rings_public.py > unet_s256_rings_public.txt &
 CUDA_VISIBLE_DEVICES=2 nohup python moon_unet_s256_rings_customloss.py > unet_s256_rings_cl.txt &
 CUDA_VISIBLE_DEVICES=0 nohup python moon_unet_copied.py > unet_copied_deconvcrossent.txt &
 

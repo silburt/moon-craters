@@ -17,7 +17,6 @@ import pandas as pd
 import random
 from PIL import Image
 from skimage.feature import match_template
-from scipy.spatial import cKDTree as kd
 
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Dropout, Flatten, Reshape
@@ -33,29 +32,9 @@ from keras import __version__ as keras_version
 from keras import backend as K
 K.set_image_dim_ordering('tf')
 
-#############################
-#load/read/process functions#
+##########################
+#rescale and invert color#
 ########################################################################
-def load_data(path, data_type):
-    X = []
-    X_id = []
-    y = []
-    files = glob.glob('%s*.png'%path)
-    print "number of %s files are: %d"%(data_type,len(files))
-    for f in files:
-        img = cv2.imread(f, cv2.IMREAD_GRAYSCALE)/255.
-        X.append(img)
-        y.append(np.array(Image.open('%smask.tiff'%f.split('.png')[0])))
-    return  X, y
-
-def read_and_normalize_data(path, dim, data_type):
-    data, target = load_data(path, data_type)
-    data = np.array(data).astype('float32')             #convert to numpy, convert to float
-    data = data.reshape(len(data),dim, dim, 1)          #add dummy third dimension, required for keras
-    target = np.array(target).astype('float32')         #convert to numpy, convert to float
-    print('%s shape:'%data_type, data.shape)
-    return data, target
-
 def rescale_and_invcolor(data, inv_color, rescale):
     #rescaling and inverting images
     #https://www.mathworks.com/help/vision/ref/contrastadjustment.html
@@ -239,7 +218,8 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
                         callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
                         
         # calcualte custom loss
-        print "custom loss for epoch %d is (N_match/N_csv (recall), N_template/N_csv):"%nb
+        print ""
+        print "custom loss for epoch %d:"%nb
         match_csv_arr, templ_csv_arr = [], []
         loss_target = model.predict(loss_data.astype('float32'))
         for i in range(len(loss_data)):
@@ -250,6 +230,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
             #print match_csv, templ_csv
         print "mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(match_csv_arr), np.std(match_csv_arr))
         print "mean and std of N_template/N_csv = %f, %f"%(np.mean(templ_csv_arr), np.std(templ_csv_arr))
+        print ""
     
     if save_model == 1:
         model.save('models/unet_s256_rings_FL%d_%s_customloss.h5'%(FL,init))
@@ -264,30 +245,13 @@ def run_cross_validation_create_models(dir,learn_rate,batch_size,nb_epoch,n_trai
     dim = 256              #image width/height, assuming square images. Shouldn't change
     
     #Load data
-    try:
-        train_data=np.load('%s/Train_rings/train_data.npy'%dir)
-        train_target=np.load('%s/Train_rings/train_target.npy'%dir)
-        valid_data=np.load('%s/Dev_rings/dev_data.npy'%dir)
-        valid_target=np.load('%s/Dev_rings/dev_target.npy'%dir)
-        test_data=np.load('%s/Test_rings/test_data.npy'%dir)
-        test_target=np.load('%s/Test_rings/test_target.npy'%dir)
-        print "Successfully loaded files locally."
-    except:
-        print "Couldnt find locally saved .npy files, loading from %s."%dir
-        train_path, valid_path, test_path = '%s/Train_rings/'%dir, '%s/Dev_rings/'%dir, '%s/Test_rings/'%dir
-        train_data, train_target = read_and_normalize_data(train_path, dim, 'train')
-        valid_data, valid_target = read_and_normalize_data(valid_path, dim, 'validation')
-        test_data, test_target = read_and_normalize_data(test_path, dim, 'test')
-        np.save('%s/Train_rings/train_data.npy'%dir,train_data)
-        np.save('%s/Train_rings/train_target.npy'%dir,train_target)
-        np.save('%s/Dev_rings/dev_data.npy'%dir,valid_data)
-        np.save('%s/Dev_rings/dev_target.npy'%dir,valid_target)
-        np.save('%s/Test_rings/test_data.npy'%dir,test_data)
-        np.save('%s/Test_rings/test_target.npy'%dir,test_target)
-    #take desired subset of data
-    train_data, train_target = train_data[:n_train_samples], train_target[:n_train_samples]
-    valid_data, valid_target = valid_data[:n_train_samples], valid_target[:n_train_samples]
-    test_data, test_target = test_data[:n_train_samples], test_target[:n_train_samples]
+    train_data=np.load('%s/Train_rings/train_data.npy'%dir)[:n_train_samples]
+    train_target=np.load('%s/Train_rings/train_target.npy'%dir)[:n_train_samples]
+    valid_data=np.load('%s/Dev_rings/dev_data.npy'%dir)[:n_train_samples]
+    valid_target=np.load('%s/Dev_rings/dev_target.npy'%dir)[:n_train_samples]
+    test_data=np.load('%s/Test_rings/test_data.npy'%dir)[:n_train_samples]
+    test_target=np.load('%s/Test_rings/test_target.npy'%dir)[:n_train_samples]
+    print "Successfully loaded files locally."
 
     #prepare custom loss
     custom_loss_path = '%s/Dev_rings_for_loss'%dir

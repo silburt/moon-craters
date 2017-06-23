@@ -157,7 +157,7 @@ def template_match_target_to_csv(target, csv_coords, minrad=2, maxrad=75):
     return N_match, N_csv, N_templ
 
 
-def prepare_custom_loss(path, dim, inv_color=1, rescale=1):
+def prepare_custom_loss(path, dim):
     # hyperparameters - should not change
     minrad, maxrad = 2, 75    #min/max radius (in pixels) required to include crater in target
     cutrad = 0.5              #0-1 range, if x+cutrad*r > img_width, remove, i.e. exclude craters ~half gone from image
@@ -179,13 +179,6 @@ def prepare_custom_loss(path, dim, inv_color=1, rescale=1):
             print "processing file %s"%c
             csv = pd.read_csv(c)
             img = cv2.imread('%s.png'%c.split('.csv')[0], cv2.IMREAD_GRAYSCALE)/255.
-            #invert color and rescale if needed
-            if inv_color == 1:
-                img[img > 0.] = 1. - img[img > 0.]
-            if rescale == 1:
-                minn, maxx = np.min(img[img>0]), np.max(img[img>0])
-                low, hi = 0.1, 1                                                #low, hi rescaling values
-                img[img>0] = low + (img[img>0] - minn)*(hi - low)/(maxx - minn) #linear re-scaling
             
             # prune csv list for small/large/half craters
             csv = csv[(csv['Diameter (pix)'] < 2*maxrad) & (csv['Diameter (pix)'] > 2*minrad)]
@@ -270,7 +263,7 @@ def unet_model(dim,learn_rate,lmbda,FL,init,n_filters):
 ########################################################################
 #Need to create this function so that memory is released every iteration (when function exits).
 #Otherwise the memory used accumulates and eventually the program crashes.
-def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_imgs,loss_csvs,learn_rate,batch_size,lmbda,FL,nb_epoch,dim,save_model,init,n_filters):
+def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data,loss_csvs,learn_rate,batch_size,lmbda,FL,nb_epoch,dim,save_model,init,n_filters):
     
     model = unet_model(dim,learn_rate,lmbda,FL,init,n_filters)
     
@@ -286,8 +279,8 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_imgs
         # calcualte custom loss
         loss = []
         print "custom loss for epoch %d is (N_csv-N_match, N_templ-N_match, N_templ-N_csv):"%nb
-        loss_target = model.predict(loss_imgs.astype('float32'))
-        for i in range(len(loss_imgs)):
+        loss_target = model.predict(loss_data.astype('float32'))
+        for i in range(len(loss_data)):
             N_match, N_csv, N_templ = template_match_target_to_csv(loss_target[i], loss_csvs[i])
             loss.append((N_csv-N_match, N_templ-N_match, N_templ-N_csv))
         print loss
@@ -331,16 +324,17 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     valid_data, valid_target = valid_data[:n_train_samples], valid_target[:n_train_samples]
     test_data, test_target = test_data[:n_train_samples], test_target[:n_train_samples]
 
+    #prepare custom loss
+    custom_loss_path = '%sTest_rings_for_custom_loss/'%dir
+    loss_data, loss_csvs, N_loss = prepare_custom_loss(custom_loss_path, dim)
+
     #Invert image colors and rescale pixel values to increase contrast
     if inv_color==1 or rescale==1:
         print "inv_color=%d, rescale=%d, processing data"%(inv_color, rescale)
         train_data = rescale_and_invcolor(train_data, inv_color, rescale)
         valid_data = rescale_and_invcolor(valid_data, inv_color, rescale)
         test_data = rescale_and_invcolor(test_data, inv_color, rescale)
-
-    #prepare custom loss
-    custom_loss_path = '%sTest_rings_for_custom_loss/'%dir
-    loss_imgs, loss_csvs, N_loss = prepare_custom_loss(custom_loss_path, dim)
+        loss_data = rescale_and_invcolor(loss_data, inv_color, rescale)
 
     #Iterate
     N_runs = 1
@@ -351,7 +345,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
         I = init[i]
         NF = n_filters[i]
         FL = filter_length[i]
-        score = train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,loss_imgs,loss_csvs,learn_rate,batch_size,lmbda,FL,nb_epoch,dim,save_models,I,NF)
+        score = train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,loss_data,loss_csvs,learn_rate,batch_size,lmbda,FL,nb_epoch,dim,save_models,I,NF)
         print '###################################'
         print '##########END_OF_RUN_INFO##########'
         print('\nTest Score is %f \n'%score)

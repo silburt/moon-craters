@@ -279,9 +279,9 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_imgs
         # calcualte custom loss
         loss = []
         print "custom loss for epoch %d is (N_csv-N_match, N_templ-N_match, N_templ-N_csv):"%nb
+        loss_target = model.predict(loss_imgs.astype('float32'))
         for i in range(len(loss_imgs)):
-            loss_target = model.predict(loss_imgs[i].astype('float32'))
-            N_match, N_csv, N_templ = template_match_target_to_csv(loss_target, loss_csvs[i])
+            N_match, N_csv, N_templ = template_match_target_to_csv(loss_target[i], loss_csvs[i])
             loss.append((N_csv-N_match, N_templ-N_match, N_templ-N_csv))
         print loss
     
@@ -362,8 +362,8 @@ if __name__ == '__main__':
     lr = 0.0001         #learning rate
     bs = 32             #batch size: smaller values = less memory but less accurate gradient estimate
     lmbda = 0           #L2 regularization strength (lambda)
-    epochs = 3          #number of epochs. 1 epoch = forward/back pass thru all train data
-    n_train = 3008      #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    epochs = 10         #number of epochs. 1 epoch = forward/back pass thru all train data
+    n_train = 10016     #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1     #save models
     inv_color = 1       #use inverse color
     rescale = 1         #rescale images to increase contrast (still 0-1 normalized)

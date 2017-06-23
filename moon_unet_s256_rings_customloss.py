@@ -1,9 +1,13 @@
-#This uses a custom loss (separately, i.e. *not* differentiable and guiding backpropagation) to assess how well our algorithm is doing, by connecting the predicted circles to the "ground truth" circles
-#This model is trained using the original LU78287GT.csv values as the ground truth,
-#and then predictions from this model are used as the new ground truth for moon_unet_s256_rings_pred.py
+######################
+#MOON_UNET_S256_RINGS#
+############################################
+#This model:
+#a) uses a custom loss (separately, i.e. *not* differentiable and guiding backpropagation) to assess how well our algorithm is doing, by connecting the predicted circles to the "ground truth" circles
+#b) trained using the original LU78287GT.csv values as the ground truth,
+#c) uses the Unet model architechture applied on binary rings.
 
-#This is the unet model architechture applied on binary rings.
 #keras version 1.2.2.
+############################################
 
 import cv2
 import os
@@ -53,11 +57,11 @@ def read_and_normalize_data(path, dim, data_type):
     print('%s shape:'%data_type, data.shape)
     return data, target
 
-#rescaling and inverting images
-#https://www.mathworks.com/help/vision/ref/contrastadjustment.html
-#Since maxpooling is used, we want the interesting stuff (craters) to be 1, not 0.
-#But ignore null background pixels, keep them at 0.
 def rescale_and_invcolor(data, inv_color, rescale):
+    #rescaling and inverting images
+    #https://www.mathworks.com/help/vision/ref/contrastadjustment.html
+    #Since maxpooling is used, we want the interesting stuff (craters) to be 1, not 0.
+    #But ignore null background pixels, keep them at 0.
     for img in data:
         if inv_color == 1:
             img[img > 0.] = 1. - img[img > 0.]
@@ -98,7 +102,7 @@ def custom_image_generator(data, target, batch_size=32):
 #custom loss functions#
 ########################################################################
 def template_match_target_to_csv(target, csv_coords, minrad=2, maxrad=75):
-    # hyperparameters, probably don't need to change
+    # hyperparameters - probably don't need to change
     ring_thickness = 2       #thickness of rings for the templates. 2 seems to work well.
     template_thresh = 0.5    #0-1 range, if template matching probability > template_thresh, count as detection
     target_thresh = 0.1      #0-1 range, pixel values > target_thresh -> 1, pixel values < target_thresh -> 0
@@ -172,9 +176,8 @@ def prepare_custom_loss(path, dim):
         print "Successfully loaded files locally for custom_loss."
     except:
         print "Couldn't load files for custom_loss, making now"
-        path = 'datasets/rings/Test_rings_for_custom_loss/'
         imgs, targets, csvs = [], [], []
-        csvs_ = glob.glob('%s*.csv'%path)
+        csvs_ = glob.glob('%s/*.csv'%path)
         N_perfect_matches = 0
         for c in csvs_:
             print "processing file %s"%c
@@ -328,7 +331,7 @@ def run_cross_validation_create_models(dir,learn_rate,batch_size,nb_epoch,n_trai
     test_data, test_target = test_data[:n_train_samples], test_target[:n_train_samples]
 
     #prepare custom loss
-    custom_loss_path = '%s/Dev_rings_for_loss/'%dir
+    custom_loss_path = '%s/Dev_rings_for_loss'%dir
     loss_data, loss_csvs, N_loss = prepare_custom_loss(custom_loss_path, dim)
 
     #Invert image colors and rescale pixel values to increase contrast

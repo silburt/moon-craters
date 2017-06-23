@@ -55,7 +55,8 @@ if inv_color==1 or rescale==1:
     test_data = rescale_and_invcolor(test_data, inv_color, rescale)
 
 #list of models you want predictions on
-models = ['unet_s256_rings_FL5_he_uniform.h5','unet_s256_rings_FL5_glorot_normal.h5','unet_s256_rings_FL3_he_normal.h5','unet_s256_rings_FL3_he_uniform.h5','unet_s256_rings_FL3_glorot_normal.h5']
+#models = ['unet_s256_rings_FL5_he_uniform.h5','unet_s256_rings_FL5_glorot_normal.h5','unet_s256_rings_FL3_he_normal.h5','unet_s256_rings_FL3_he_uniform.h5','unet_s256_rings_FL3_glorot_normal.h5']
+models = ['unet_s256_rings_FL3_he_normal_customloss.h5']
 
 n,off=20,0
 print "begin generating predictions"

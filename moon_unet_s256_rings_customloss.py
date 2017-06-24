@@ -295,7 +295,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
         print "mean and std of N_template/N_csv = %f, %f"%(np.mean(templ_csv_arr), np.std(templ_csv_arr))
         print ""
     
-    if save_model == 1:
+    if save_models == 1:
         model.save('models/unet_s256_rings_FL%d_%s_customloss.h5'%(FL,init))
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))

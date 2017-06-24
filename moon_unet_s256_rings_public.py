@@ -16,7 +16,6 @@ import numpy as np
 import pandas as pd
 import random
 from PIL import Image
-from skimage.feature import match_template
 
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Dropout, Flatten, Reshape

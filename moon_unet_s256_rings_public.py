@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 import random
 from PIL import Image
+from skimage.feature import match_template
 
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Dropout, Flatten, Reshape
@@ -232,7 +233,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
         print ""
     
     if save_models == 1:
-        model.save('models/unet_s256_rings_FL%d_%s_customloss.h5'%(FL,init))
+        model.save('models/unet_s256_rings_FL%d_%s_public.h5'%(FL,init))
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 

@@ -24,7 +24,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 import pandas as pd
-from PIL import Image, ImageChops, ImageOps
+from PIL import Image, ImageOps
 import cartopy.crs as ccrs
 import cartopy.img_transform as cimg
 import matplotlib.pyplot as plt
@@ -166,6 +166,32 @@ def ReadCombinedCraterCSV(filealan="./alanalldata.csv", filelu="./LU78287GT.csv"
 
     craters.sort_values(by='Lat', inplace=True)
     craters.reset_index(inplace=True, drop=True)
+
+    return craters
+
+
+def ReadMercuryCraterCSV(filename="./MercLargeCraters.csv", sortlat=True):
+    """Reads crater file CSV from Fassett et al.
+    (http://www.planetary.brown.edu/html_pages/mercury_craters.htm)
+
+    Parameters
+    ----------
+    filename : str
+        csv file of craters
+
+    Returns
+    -------
+    craters : pandas.DataFrame
+        Craters data frame.
+    """
+
+    craters_names = ["Long", "Lat", "Diameter (km)"]
+    craters_types = [float, float, float]
+    craters = pd.read_csv(open(filename, 'r'), sep=',', header=0,
+        names=craters_names, dtype=dict(zip(craters_names, craters_types)))
+
+    if sortlat:
+        craters.sort_values(by='Lat', inplace=True)
 
     return craters
 

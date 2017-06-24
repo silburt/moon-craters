@@ -129,6 +129,26 @@ def TrimImageWhitespace(img, outimg):
     im.save(outimg, format="png")
 
 
+def CentreLongitude(img, outimg):
+    """Retiles an image that goes from longitude 0 to 360
+    into one that goes from -180 to 180.
+
+    Parameters
+    ----------
+    img : str
+        Name of file.
+    outimg : str
+        Filename of output.
+    """
+    im = Image.open(img)
+    imo = Image.new(im.mode, im.size, im.getpixel((0,0)))
+    # Image midpoint; floor is in case width is odd
+    midpt = imo.size[0] // 2
+    imo.paste(im, [midpt, 0])
+    imo.paste(im, [-imo.size[0] + midpt, 0])
+    imo.save(outimg, format="png")
+
+
 ######################################################
 
 

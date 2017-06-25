@@ -226,7 +226,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
         print ""
 
     if save_models == 1:
-        model.save('models/unet_s256_rings_FL%d_%s_customloss.h5'%(FL,init))
+        model.save('models/unet_s256_rings_FL%d.h5'%FL)
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 
@@ -277,10 +277,10 @@ def run_cross_validation_create_models(dir,learn_rate,batch_size,nb_epoch,n_trai
 
     ########## Parameters to Iterate Over ##########
     N_runs = 2
-    filter_length = [3,3]   #See unet model. Filter length used.
+    filter_length = [5,3]   #See unet model. Filter length used.
     n_filters = [64,64]     #See unet model. Arranging this so that total number of model parameters <~ 10M, otherwise OOM problems
     lmbda = [0,0]           #See unet model. L2 Weight regularization strength (lambda).
-    init = ['he_normal', 'he_uniform']  #See unet model. Initialization of weights.
+    init = ['he_normal', 'he_normal']  #See unet model. Initialization of weights.
 
     #Iterate
     for i in range(N_runs):
@@ -306,8 +306,8 @@ if __name__ == '__main__':
     dir = 'datasets/rings'  #location of Train_rings/, Dev_rings/, Test_rings/, Dev_rings_for_loss/ folders. Don't include final '/' in path
     lr = 0.0001             #learning rate
     bs = 32                 #batch size: smaller values = less memory but less accurate gradient estimate
-    epochs = 5              #number of epochs. 1 epoch = forward/back pass through all train data
-    n_train = 3008          #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    epochs = 10             #number of epochs. 1 epoch = forward/back pass through all train data
+    n_train = 30016         #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1         #save models
     inv_color = 1           #use inverse color
     rescale = 1             #rescale images to increase contrast (still 0-1 normalized)

@@ -135,7 +135,7 @@ def unet_model(im_width,im_height,learn_rate,lmbda,FL,init):
 ########################################################################
 #Need to create this function so that memory is released every iteration (when function exits).
 #Otherwise the memory used accumulates and eventually the program crashes.
-def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data,loss_csvs,n_train_samples,learn_rate,batch_size,lmbda,FL,nb_epoch,im_width,im_height,save_model,init):
+def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data,loss_csvs,n_samples,learn_rate,batch_size,lmbda,FL,nb_epoch,im_width,im_height,save_model,init):
     
     model = unet_model(im_width,im_height,learn_rate,lmbda,FL,init)
     

@@ -276,10 +276,10 @@ def run_cross_validation_create_models(dir,learn_rate,batch_size,nb_epoch,n_trai
         loss_data = rescale_and_invcolor(loss_data, inv_color, rescale)
 
     ########## Parameters to Iterate Over ##########
-    N_runs = 4
-    filter_length = [5,5,5,5]   #See unet model. Filter length used.
-    n_filters = [64,64,64,64]     #See unet model. Arranging this so that total number of model parameters <~ 10M, otherwise OOM problems
-    lmbda = [1e-2,1,10,100]           #See unet model. L2 Weight regularization strength (lambda).
+    N_runs = 6
+    filter_length = [3,3,3,3,3,3]   #See unet model. Filter length used.
+    n_filters = [64,64,64,64,64,64]     #See unet model. Arranging this so that total number of model parameters <~ 10M, otherwise OOM problems
+    lmbda = [1e-7,5e-7,1e-6,5e-6,1e-5,5e-5]           #See unet model. L2 Weight regularization strength (lambda).
     I = 'he_normal'      #See unet model. Initialization of weights.
 
     #Iterate
@@ -306,7 +306,7 @@ if __name__ == '__main__':
     dir = 'datasets/rings'  #location of Train_rings/, Dev_rings/, Test_rings/, Dev_rings_for_loss/ folders. Don't include final '/' in path
     lr = 0.0001             #learning rate
     bs = 32                 #batch size: smaller values = less memory but less accurate gradient estimate
-    epochs = 5              #number of epochs. 1 epoch = forward/back pass through all train data
+    epochs = 4              #number of epochs. 1 epoch = forward/back pass through all train data
     n_train = 20000         #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1         #save models
     inv_color = 1           #use inverse color

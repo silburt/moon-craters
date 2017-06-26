@@ -219,9 +219,9 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     test_data, test_target = test_data[:n_train_samples], test_target[:n_train_samples]
 
     #Iterate
-    N_runs = 3
-    FL, l = 5, 0
-    init = ['glorot_normal', 'he_uniform', 'he_normal']
+    N_runs = 1
+    FL, l = 3, 0
+    init = ['he_normal']
     for i in range(N_runs):
         I = init[i]
         score = train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,loss_data,loss_csvs,n_train_samples,learn_rate,batch_size,l,FL,nb_epoch,im_width,im_height,save_models,I)

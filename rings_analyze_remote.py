@@ -1,71 +1,60 @@
 import glob
-import cv2
-import os
-import glob
 import numpy as np
-import pandas as pd
-import sys
-from PIL import Image
+
 from keras.models import load_model
 from keras import backend as K
+from utils.rescale_invcolor import rescale_and_invcolor
 
-def load_data(path, data_type):
-    X = []
-    X_id = []
-    y = []
-    files = glob.glob('%s*.png'%path)
-    print "number of %s files are: %d"%(data_type,len(files))
-    for f in files:
-        img = cv2.imread(f, cv2.IMREAD_GRAYSCALE)/255.      #(im_width,im_height)
-        X.append(img)
-        y.append(np.array(Image.open('%smask.tiff'%f.split('.png')[0])))
-    return  X, y
-
-def read_and_normalize_data(path, im_width, im_height, data_type):
-    data, target = load_data(path, data_type)
-    data = np.array(data).astype('float32')             #convert to numpy, convert to float
-    data = data.reshape(len(data),im_width,im_height,1) #add dummy third dimension, required for keras
-    target = np.array(target).astype('float32')         #convert to numpy, convert to float
-    print('%s shape:'%data_type, data.shape)
-    return data, target
-
-#experimenting with bigger contrast
-#https://www.mathworks.com/help/vision/ref/contrastadjustment.html
-#Since maxpooling is used, we want the interesting stuff (craters) to be 1, not 0.
-#But ignore null background pixels, keep them at 0.
-def rescale_and_invcolor(data, inv_color, rescale):
-    for img in data:
-        if inv_color == 1:
-            img[img > 0.] = 1. - img[img > 0.]
-        if rescale == 1:
-            minn, maxx = np.min(img[img>0]), np.max(img[img>0])
-            low, hi = 0.1, 1                                                #low, hi rescaling values
-            img[img>0] = low + (img[img>0] - minn)*(hi - low)/(maxx - minn) #linear re-scaling
-    return data
-
-#load data
-dim, inv_color, rescale = 256, 1, 1
-test_data, test_target = read_and_normalize_data('datasets/rings/Test_rings_sample/', dim, dim, 'test')
-
-#reshape
-test_data = test_data[:,:,:,0].reshape(len(test_data),dim,dim,1)
-
-#invcolor and rescale
-if inv_color==1 or rescale==1:
+##############
+#Main Routine#
+########################################################################
+def predict_targets(dir,inv_color,rescale,n_pred_samples,offset,models):
+    #static arguments
+    dim = 256               #image dimensions, assuming square images. Should not change
+    
+    #load data
+    if n_pred_samples < 50:
+        try:
+            test_data = np.load('%s/Test_rings/test_data_50im.npy'%dir)[:n_pred_samples]
+            test_target = np.load('%s/Test_rings/test_target_50im.npy'%dir)[:n_pred_samples]
+            print "Loaded 50 image subset successfully."
+        except:
+            print "Couldn't find 50 image subset numpy arrays. Loading full data. Saving subset of 50 images for future use."
+            test_data = np.load('%s/Test_rings/test_data.npy'%dir)[:n_pred_samples]
+            test_target = np.load('%s/Test_rings/test_target.npy'%dir)[:n_pred_samples]
+            np.save('%s/Test_rings/test_data_50im.npy'%dir,test_data[0:50])
+            np.save('%s/Test_rings/test_target_50im.npy'%dir,test_target[0:50])
+    else:
+        test_data = np.load('%s/Test_rings/test_data.npy'%dir)[:n_pred_samples]
+        test_target = np.load('%s/Test_rings/test_target.npy'%dir)[:n_pred_samples]
     test_data = rescale_and_invcolor(test_data, inv_color, rescale)
 
-#list of models you want predictions on
-#models = ['unet_s256_rings_FL5_he_uniform.h5','unet_s256_rings_FL5_glorot_normal.h5','unet_s256_rings_FL3_he_normal.h5','unet_s256_rings_FL3_he_uniform.h5','unet_s256_rings_FL3_glorot_normal.h5']
-models = ['unet_s256_rings_FL3_he_normal_customloss.h5']
+    print "Generating predictions."
+    for m in models:
+        model = load_model('%s'%m)
+        target_pred = model.predict(test_data[offset:(n_pred_samples+offset)].astype('float32'))
+        
+        #dimensions go data, ground_truth targets, predicted targets
+        result = np.concatenate((test_data[offset:(n_pred_samples+offset)],
+                                 test_target[offset:(n_pred_samples+offset)].reshape(n_pred_samples,dim,dim,1),
+                                 target_pred.reshape(n_pred_samples,dim,dim,1)),axis=3)
+                                 
+        name = m.split('.h5')[0]
+        np.save('%s_pred.npy'%name,result)
+        print "Successfully generated predictions at %s_pred.npy for model %s."%(name,m)
 
-n,off=20,0
-print "begin generating predictions"
-for m in models:
-    model = load_model('models/%s'%m)
-    target = model.predict(test_data[off:(n+off)].astype('float32'))
-    name = m.split('.h5')[0]
+################
+#Arguments, Run#
+########################################################################
+if __name__ == '__main__':
+    #arguments
+    dir = 'dataset'         #location of where test data is. Likely doesn't need to change
+    inv_color = 1           #use inverse color (**must be same setting as what was used for the model(s)**)
+    rescale = 1             #rescale images to increase contrast (**must be same setting as what was used for the model(s)**)
+    n_pred_samples = 20     #number of test images to predict on
+    offset = 0              #index offset to start predictions at in test array
+    models = ['models/unet_s256_rings_FL3.h5','models/unet_s256_rings_FL5.h5']
     
-    #dimensions go data, ground_truth targets, predicted targets
-    result = np.concatenate((test_data[off:(n+off)],test_target[off:(n+off)].reshape(n,dim,dim,1),target.reshape(n,dim,dim,1)),axis=3)
-    np.save('models/%s_pred.npy'%name,result)
-    print "successfully generated predictions at models/%s_pred.npy for model %s"%(name,m)
+    predict_targets(dir,inv_color,rescale,n_pred_samples,offset,models)
+    
+

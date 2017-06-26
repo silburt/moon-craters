@@ -48,7 +48,7 @@ def predict_targets(dir,inv_color,rescale,n_pred_samples,offset,models):
 ########################################################################
 if __name__ == '__main__':
     #arguments
-    dir = 'dataset/rings'   #location of where test data is. Likely doesn't need to change
+    dir = 'datasets/rings'   #location of where test data is. Likely doesn't need to change
     inv_color = 1           #use inverse color (**must be same setting as what was used for the model(s)**)
     rescale = 1             #rescale images to increase contrast (**must be same setting as what was used for the model(s)**)
     n_pred_samples = 20     #number of test images to predict on

@@ -250,7 +250,7 @@ def run_cross_validation_create_models(dir,learn_rate,batch_size,nb_epoch,n_trai
         print "Couldnt find locally saved .npy files, loading from %s."%dir
         train_path, valid_path, test_path = '%s/Train_rings/'%dir, '%s/Dev_rings/'%dir, '%s/Test_rings/'%dir
         train_data, train_target = read_and_normalize_data(train_path, dim, 'train')
-        valid_data, valid_target = read_and_normalize_data(valid_path, dim, 'validation')
+        valid_data, valid_target = read_and_normalize_data(valid_path, dim, 'dev')
         test_data, test_target = read_and_normalize_data(test_path, dim, 'test')
         np.save('%s/Train_rings/train_data.npy'%dir,train_data)
         np.save('%s/Train_rings/train_target.npy'%dir,train_target)
@@ -276,15 +276,15 @@ def run_cross_validation_create_models(dir,learn_rate,batch_size,nb_epoch,n_trai
         loss_data = rescale_and_invcolor(loss_data, inv_color, rescale)
 
     ########## Parameters to Iterate Over ##########
-    N_runs = 2
-    filter_length = [5,3]   #See unet model. Filter length used.
-    n_filters = [64,64]     #See unet model. Arranging this so that total number of model parameters <~ 10M, otherwise OOM problems
-    lmbda = [0,0]           #See unet model. L2 Weight regularization strength (lambda).
-    init = ['he_normal', 'he_normal']  #See unet model. Initialization of weights.
+    N_runs = 4
+    filter_length = [5,5,5,5]   #See unet model. Filter length used.
+    n_filters = [64,64,64,64]     #See unet model. Arranging this so that total number of model parameters <~ 10M, otherwise OOM problems
+    lmbda = [1e-2,1,10,100]           #See unet model. L2 Weight regularization strength (lambda).
+    I = 'he_normal'      #See unet model. Initialization of weights.
 
     #Iterate
     for i in range(N_runs):
-        I = init[i]
+        #I = init[i]
         NF = n_filters[i]
         FL = filter_length[i]
         L = lmbda[i]
@@ -306,8 +306,8 @@ if __name__ == '__main__':
     dir = 'datasets/rings'  #location of Train_rings/, Dev_rings/, Test_rings/, Dev_rings_for_loss/ folders. Don't include final '/' in path
     lr = 0.0001             #learning rate
     bs = 32                 #batch size: smaller values = less memory but less accurate gradient estimate
-    epochs = 10             #number of epochs. 1 epoch = forward/back pass through all train data
-    n_train = 30016         #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    epochs = 5              #number of epochs. 1 epoch = forward/back pass through all train data
+    n_train = 20000         #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1         #save models
     inv_color = 1           #use inverse color
     rescale = 1             #rescale images to increase contrast (still 0-1 normalized)

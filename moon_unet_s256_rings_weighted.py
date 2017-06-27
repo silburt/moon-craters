@@ -191,7 +191,7 @@ def unet_model(dim,learn_rate,lmbda,FL,init,n_filters):
     #final output
     final_activation = 'sigmoid'       #sigmoid, relu
     u = Convolution2D(2, 1, 1, activation=final_activation, init=init, W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
-    u = Reshape((dim*dim,2))(u)
+    #u = Reshape((dim*dim,2))(u)
     model = Model(input=img_input, output=u)
     
     #optimizer/compile

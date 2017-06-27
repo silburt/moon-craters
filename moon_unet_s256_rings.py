@@ -137,12 +137,6 @@ def prepare_custom_loss(path, dim):
         print "out of %d files there are %d perfect matches"%(len(csvs_),N_perfect_matches)
     return imgs, csvs, N_perfect_matches
 
-#for weighted binary cross-entropy
-def get_class_weights(target):
-    total = target.shape[0]*target.shape[1]*target.shape[2]
-    ones = float(len(np.where(target == 1)[0]))
-    return {0:ones/total, 1:(total - ones)/total}
-
 ##########################
 #unet model (keras 1.2.2)#
 ########################################################################
@@ -210,7 +204,6 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
                             #validation_data=(X_valid, Y_valid), #no generator for validation data
                             validation_data=custom_image_generator(X_valid,Y_valid,batch_size=batch_size),
                             nb_val_samples=n_samples,
-                            class_weight=get_class_weights(Y_train),
                             callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
                             
         # calcualte custom loss

@@ -140,9 +140,10 @@ def prepare_custom_loss(path, dim):
 #for weighted binary cross-entropy
 def get_class_weights(target):
     ones = float(len(np.where(target == 1)[0]))
-    total = target.shape[0]*target.shape[1]*target.shape[2]
+    total = target.shape[0]*target.shape[1]*target.shape[1]
+    print "shape = %d"%target.shape[1]
     
-    weights = np.zeros((target.shape[0],target.shape[1]*target.shape[2]))
+    weights = np.zeros((target.shape[0],target.shape[1]*target.shape[1]))
     weights[:,0] = ones*1./total
     weights[:,1] = (total-ones)*1./total
     return weights

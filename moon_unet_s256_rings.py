@@ -138,7 +138,7 @@ def prepare_custom_loss(path, dim):
     return imgs, csvs, N_perfect_matches
 
 #for weighted binary cross-entropy
-def class_weights(target):
+def get_class_weights(target):
     total = target.shape[0]*target.shape[1]*target.shape[2]
     ones = float(len(np.where(target == 1)[0]))
     return {0:ones/total, 1:(total - ones)/total}

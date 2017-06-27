@@ -65,6 +65,8 @@ def read_and_normalize_data(path, dim, data_type):
 #Following https://github.com/fchollet/keras/issues/2708
 def custom_image_generator(data, target, batch_size=32):
     L, W = data[0].shape[0], data[0].shape[1]
+    target = target.reshape(len(target),L,W)
+    
     while True:
         for i in range(0, len(data), batch_size):
             d, t = data[i:i+batch_size].copy(), target[i:i+batch_size].copy() #most efficient for memory?
@@ -84,7 +86,7 @@ def custom_image_generator(data, target, batch_size=32):
                 d[j] = np.pad(d[j], ((npix,npix),(npix,npix),(0,0)), mode='constant')[npix+h[j]:L+h[j]+npix,npix+v[j]:W+v[j]+npix,:] #RGB
                 t[j] = np.pad(t[j], (npix,), mode='constant')[npix+h[j]:L+h[j]+npix,npix+v[j]:W+v[j]+npix]
                 d[j], t[j] = np.rot90(d[j],r[j]), np.rot90(t[j],r[j])
-            yield (d, t)
+            yield (d, t.reshape(batch_size, L*W))
 
 #######################
 #custom loss functions#

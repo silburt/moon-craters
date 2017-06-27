@@ -137,13 +137,12 @@ def prepare_custom_loss(path, dim):
         print "out of %d files there are %d perfect matches"%(len(csvs_),N_perfect_matches)
     return imgs, csvs, N_perfect_matches
 
-#for weighted binary cross-entropy
+#for weighted binary cross-entropy - already reshaped
 def get_class_weights(target):
     ones = float(len(np.where(target == 1)[0]))
-    total = target.shape[0]*target.shape[1]*target.shape[1]
-    print "shape = %d"%target.shape[1]
+    total = target.shape[0]*target.shape[1]
     
-    weights = np.zeros((target.shape[0],target.shape[1]*target.shape[1]))
+    weights = np.zeros((target.shape[0],target.shape[1]))
     weights[:,0] = ones*1./total
     weights[:,1] = (total-ones)*1./total
     return weights
@@ -209,11 +208,9 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
     model = unet_model(dim,learn_rate,lmbda,FL,init,n_filters)
     
     dim = Y_train.shape[1]
-    
     Y_train = Y_train.reshape(len(Y_train),dim*dim)
     Y_valid = Y_valid.reshape(len(Y_valid),dim*dim)
     Y_test = Y_test.reshape(len(Y_test),dim*dim)
-    
     
     n_samples = len(X_train)
     for nb in range(nb_epoch):

@@ -13,7 +13,7 @@ source /home/k/kristen/kristen/keras_venv_P8.v2/bin/activate
 module load cuda/8.0
 module load caffe/nv-0.14.5
 
-CUDA_VISIBLE_DEVICES=2 nohup python moon_unet_s256_rings_weighted.py > unet_s256_rings_weighted.txt &
+CUDA_VISIBLE_DEVICES=2 nohup python moon_unet_s256_rings_pred_weighted.py > unet_s256_rings_pred_weighted.txt &
 CUDA_VISIBLE_DEVICES=1 nohup python moon_unet_s256_rings_pred.py > unet_s256_rings_predfull.txt &
 CUDA_VISIBLE_DEVICES=1 nohup python moon_unet_s256_rings_public.py > unet_s256_rings_public.txt &
 CUDA_VISIBLE_DEVICES=2 nohup python moon_unet_s256_rings_customloss.py > unet_s256_rings_cl.txt &

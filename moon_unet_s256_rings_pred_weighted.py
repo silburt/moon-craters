@@ -86,18 +86,31 @@ def custom_image_generator(data, target, batch_size=32):
 #https://github.com/fchollet/keras/blob/master/keras/backend/tensorflow_backend.py
 #https://www.tensorflow.org/api_docs/python/tf/nn/sigmoid_cross_entropy_with_logits
 import tensorflow as tf
+#def weighted_binary_XE(y_true, y_pred):
+#    y_true, y_pred = np.asarray()
+#    y_true = tf.reshape(y_true, [-1])   #[-1] flattens tensor
+#    y_pred = tf.reshape(y_pred, [-1])
+#    y_true_0, y_pred_0 = y_true[y_true == 0], y_pred[y_true == 0]
+#    y_true_1, y_pred_1 = y_true[y_true == 1], y_pred[y_true == 1]
+#    s0 = K.mean(K.binary_crossentropy(y_pred_0, y_true_0))
+#    s1 = K.mean(K.binary_crossentropy(y_pred_1, y_true_1))
+#    Npix = int(y_true_0.get_shape() + y_true_1.get_shape())
+#    return s0*int(y_true_1.get_shape())*1.0/Npix + s1*int(y_true_0.get_shape())*1.0/Npix
+
+#https://github.com/fchollet/keras/blob/master/keras/losses.py
+#https://github.com/fchollet/keras/blob/master/keras/backend/tensorflow_backend.py
+#https://www.tensorflow.org/api_docs/python/tf/nn/sigmoid_cross_entropy_with_logits
 def weighted_binary_XE(y_true, y_pred):
-    y_true = tf.reshape(y_true, [-1])   #[-1] flattens tensor
-    y_pred = tf.reshape(y_pred, [-1])
+    y_pred = tf.clip_by_value(y_pred, 10e-8, 1.-10e-8)
+    with tf.Session() as sess:
+        y_true, y_pred = y_true.eval(session=sess), y_pred.eval(session=sess)
+    y_pred[y_pred < 0] *= -1
     y_true_0, y_pred_0 = y_true[y_true == 0], y_pred[y_true == 0]
     y_true_1, y_pred_1 = y_true[y_true == 1], y_pred[y_true == 1]
-    s0 = K.mean(K.binary_crossentropy(y_pred_0, y_true_0))
-    s1 = K.mean(K.binary_crossentropy(y_pred_1, y_true_1))
-    print "SHAPEEEEEEE"
-    print y_true_0.get_shape()
-    print y_true_1.get_shape()
-    Npix = int(y_true_0.get_shape()) + int(y_true_1.get_shape())
-    return s0*int(y_true_1.get_shape())*1.0/Npix + s1*int(y_true_0.get_shape())*1.0/Npix
+    s0 = np.mean(y_pred_0 - y_pred_0*y_true_0 + np.log(1. + np.exp(-y_pred_0)))
+    s1 = np.mean(y_pred_1 - y_pred_1*y_true_1 + np.log(1. + np.exp(-y_pred_1)))
+    Npix = y_true_0.shape[0] + y_true_1.shape[0]
+    return s0*y_true_1.shape[0]*1.0/Npix + s1*y_true_0.shape[0]*1.0/Npix
 
 #############################
 #unet model (keras 1.2.2)#

@@ -93,8 +93,8 @@ def weighted_binary_XE(y_true, y_pred):
     y_true_1, y_pred_1 = y_true[y_true == 1], y_pred[y_true == 1]
     s0 = K.mean(K.binary_crossentropy(y_pred_0, y_true_0))
     s1 = K.mean(K.binary_crossentropy(y_pred_1, y_true_1))
-    Npix = int(y_true_0.get_shape()[0] + y_true_1.get_shape()[0])
-    return s0*int(y_true_1.get_shape()[0])*1.0/Npix + s1*int(y_true_0.get_shape()[0])*1.0/Npix
+    Npix = int(y_true_0.get_shape() + y_true_1.get_shape())
+    return s0*int(y_true_1.get_shape())*1.0/Npix + s1*int(y_true_0.get_shape())*1.0/Npix
 
 #############################
 #unet model (keras 1.2.2)#

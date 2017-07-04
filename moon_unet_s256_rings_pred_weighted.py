@@ -82,15 +82,19 @@ def custom_image_generator(data, target, batch_size=32):
 #weighted binary cross entropy#
 ########################################################################
 #https://github.com/fchollet/keras/issues/369
+#https://stackoverflow.com/questions/44454158/tensorflow-implementing-a-class-wise-weighted-cross-entropy-loss
+#https://github.com/fchollet/keras/blob/master/keras/backend/tensorflow_backend.py
+#https://www.tensorflow.org/api_docs/python/tf/nn/sigmoid_cross_entropy_with_logits
+import tensorflow as tf
 def weighted_binary_XE(y_true, y_pred):
-    N_pix = len(y_true)*256*256
-    y_true = np.reshape(y_true, Npix)
-    y_pred = np.reshape(y_pred, Npix)
+    y_true = tf.reshape(y_true, [-1])   #[-1] flattens tensor
+    y_pred = tf.reshape(y_pred, [-1])
     y_true_0, y_pred_0 = y_true[y_true == 0], y_pred[y_true == 0]
     y_true_1, y_pred_1 = y_true[y_true == 1], y_pred[y_true == 1]
     s0 = K.mean(K.binary_crossentropy(y_pred_0, y_true_0), axis=-1)
     s1 = K.mean(K.binary_crossentropy(y_pred_1, y_true_1), axis=-1)
-    return s0*len(i1)*1.0/Npix + s1*len(i0)*1.0/Npix
+    Npix = tf.get_shape(y_true_1)[0] + tf.get_shape(y_true_1)[1]
+    return s0*tf.get_shape(y_true_1)[0]*1.0/Npix + s1*tf.get_shape(y_true_0)[0]*1.0/Npix
 
 #############################
 #unet model (keras 1.2.2)#

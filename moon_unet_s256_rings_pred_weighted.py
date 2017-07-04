@@ -83,17 +83,13 @@ def custom_image_generator(data, target, batch_size=32):
 ########################################################################
 #https://github.com/fchollet/keras/issues/369
 def weighted_binary_XE(y_true, y_pred):
-    y_true = np.reshape(y_true, y_true.shape[0]*y_true.shape[1]*y_true.shape[2])
-    y_pred = np.reshape(y_pred, y_true.shape[0]*y_true.shape[1]*y_true.shape[2])
+    N_pix = len(y_true)*256*256
+    y_true = np.reshape(y_true, Npix)
+    y_pred = np.reshape(y_pred, Npix)
     y_true_0, y_pred_0 = y_true[y_true == 0], y_pred[y_true == 0]
     y_true_1, y_pred_1 = y_true[y_true == 1], y_pred[y_true == 1]
     s0 = K.mean(K.binary_crossentropy(y_pred_0, y_true_0), axis=-1)
     s1 = K.mean(K.binary_crossentropy(y_pred_1, y_true_1), axis=-1)
-    try:
-        Npix = y_true.shape[0]*y_true.shape[1]*y_true.shape[2]
-    except:
-        print "bad dim, len=%d"%len(y_true)
-        Npix = len(y_true)*256*256
     return s0*len(i1)*1.0/Npix + s1*len(i0)*1.0/Npix
 
 #############################

@@ -91,8 +91,8 @@ def weighted_binary_XE(y_true, y_pred):
     y_pred = tf.reshape(y_pred, [-1])
     y_true_0, y_pred_0 = y_true[y_true == 0], y_pred[y_true == 0]
     y_true_1, y_pred_1 = y_true[y_true == 1], y_pred[y_true == 1]
-    s0 = K.mean(K.binary_crossentropy(y_pred_0, y_true_0), axis=-1)
-    s1 = K.mean(K.binary_crossentropy(y_pred_1, y_true_1), axis=-1)
+    s0 = K.mean(K.binary_crossentropy(y_pred_0, y_true_0))
+    s1 = K.mean(K.binary_crossentropy(y_pred_1, y_true_1))
     Npix = int(y_true_0.get_shape()[0] + y_true_1.get_shape()[0])
     return s0*int(y_true_1.get_shape()[0])*1.0/Npix + s1*int(y_true_0.get_shape()[0])*1.0/Npix
 
@@ -102,7 +102,7 @@ def weighted_binary_XE(y_true, y_pred):
 #Following https://arxiv.org/pdf/1505.04597.pdf
 #and this for merging specifics: https://gist.github.com/Neltherion/f070913fd6284c4a0b60abb86a0cd642
 def unet_model(im_width,im_height,learn_rate,lmbda,FL,init):
-    print('Making VGG16-style Fully Convolutional Network model...')
+    print('Making UNET...')
     n_filters = 64      #vgg16 uses 64
     img_input = Input(batch_shape=(None, im_width, im_height, 1))
 

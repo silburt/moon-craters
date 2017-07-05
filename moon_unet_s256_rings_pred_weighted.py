@@ -81,12 +81,13 @@ def custom_image_generator(data, target, batch_size=32):
 ###############################
 #weighted binary cross entropy#
 ########################################################################
+import tensorflow as tf
 def weighted_binary_XE(y_true, y_pred):
-    total_ones = K.reduce_sum(y_true)   #sum total number of 1s in y_true
+    total_ones = tf.reduce_sum(y_true)   #sum total number of 1s in y_true
     total_elements = reduce(lambda x, y: x*y, y_true.get_shape().as_list()) # no. elements in y_true
     result = K.binary_crossentropy(y_pred, y_true)
-    weights = K.multiply(y_true, (total_elements-total_ones)*1.0/total_elements)
-    return K.mean(K.add(K.multiply(result,weights),result),axis=-1) #mean( (1+weights)*result )
+    weights = tf.multiply(y_true, (total_elements-total_ones)*1.0/total_elements)
+    return K.mean(tf.add(tf.multiply(result,weights),result),axis=-1) #mean( (1+weights)*result )
 
 #https://github.com/fchollet/keras/issues/369
 #https://stackoverflow.com/questions/44454158/tensorflow-implementing-a-class-wise-weighted-cross-entropy-loss

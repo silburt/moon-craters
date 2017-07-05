@@ -81,17 +81,23 @@ def custom_image_generator(data, target, batch_size=32):
 ###############################
 #weighted binary cross entropy#
 ########################################################################
+def weighted_binary_XE(y_true, y_pred):
+    total_ones = K.reduce_sum(y_true)   #sum total number of 1s in y_true
+    total_elements = reduce(lambda x, y: x*y, y_true.get_shape().as_list()) # no. elements in y_true
+    result = K.binary_crossentropy(y_pred, y_true)
+    weights = K.multiply(y_true, (total_elements-total_ones)*1.0/total_elements)
+    return K.mean(K.add(K.multiply(result,weights),result),axis=-1) #mean( (1+weights)*result )
+
 #https://github.com/fchollet/keras/issues/369
 #https://stackoverflow.com/questions/44454158/tensorflow-implementing-a-class-wise-weighted-cross-entropy-loss
 #https://github.com/fchollet/keras/blob/master/keras/backend/tensorflow_backend.py
 #https://www.tensorflow.org/api_docs/python/tf/nn/sigmoid_cross_entropy_with_logits
-import tensorflow as tf
 #def weighted_binary_XE(y_true, y_pred):
-#    y_true, y_pred = np.asarray()
 #    y_true = tf.reshape(y_true, [-1])   #[-1] flattens tensor
 #    y_pred = tf.reshape(y_pred, [-1])
-#    y_true_0, y_pred_0 = y_true[y_true == 0], y_pred[y_true == 0]
-#    y_true_1, y_pred_1 = y_true[y_true == 1], y_pred[y_true == 1]
+#    cond_0, cond_1 = tf.equal(y_true,tf.zeros_like(y_true)), tf.equal(y_true,tf.ones_like(y_true))
+#    y_true_0, y_pred_0 = tf.where(cond_0, y_true), tf.where(cond_0, y_pred)
+#    y_true_1, y_pred_1 = tf.where(cond_1, y_true), tf.where(cond_1, y_pred)
 #    s0 = K.mean(K.binary_crossentropy(y_pred_0, y_true_0))
 #    s1 = K.mean(K.binary_crossentropy(y_pred_1, y_true_1))
 #    Npix = int(y_true_0.get_shape() + y_true_1.get_shape())
@@ -100,17 +106,23 @@ import tensorflow as tf
 #https://github.com/fchollet/keras/blob/master/keras/losses.py
 #https://github.com/fchollet/keras/blob/master/keras/backend/tensorflow_backend.py
 #https://www.tensorflow.org/api_docs/python/tf/nn/sigmoid_cross_entropy_with_logits
-def weighted_binary_XE(y_true, y_pred):
-    y_pred = tf.clip_by_value(y_pred, 10e-8, 1.-10e-8)
-    with tf.Session() as sess:
-        y_true, y_pred = y_true.eval(session=sess), y_pred.eval(session=sess)
-    y_pred[y_pred < 0] *= -1
-    y_true_0, y_pred_0 = y_true[y_true == 0], y_pred[y_true == 0]
-    y_true_1, y_pred_1 = y_true[y_true == 1], y_pred[y_true == 1]
-    s0 = np.mean(y_pred_0 - y_pred_0*y_true_0 + np.log(1. + np.exp(-y_pred_0)))
-    s1 = np.mean(y_pred_1 - y_pred_1*y_true_1 + np.log(1. + np.exp(-y_pred_1)))
-    Npix = y_true_0.shape[0] + y_true_1.shape[0]
-    return s0*y_true_1.shape[0]*1.0/Npix + s1*y_true_0.shape[0]*1.0/Npix
+#https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/python/ops/nn_impl.py
+#def weighted_binary_XE(y_true, y_pred):
+#    epsilon = _to_tensor(_EPSILON, output.dtype.base_dtype)
+#    output = tf.clip_by_value(output, epsilon, 1 - epsilon)
+#    output = tf.log(output / (1 - output))
+#    
+#    y_pred = tf.clip_by_value(y_pred, 10e-8, 1.-10e-8)
+#    y_pred = tf.log(y_pred / (1 - y_pred))
+#    with tf.Session() as sess:
+#        y_true, y_pred = y_true.eval(session=sess), y_pred.eval(session=sess)
+#    y_pred[y_pred < 0] *= -1
+#    y_true_0, y_pred_0 = y_true[y_true == 0], y_pred[y_true == 0]
+#    y_true_1, y_pred_1 = y_true[y_true == 1], y_pred[y_true == 1]
+#    s0 = np.mean(y_pred_0 - y_pred_0*y_true_0 + np.log(1. + np.exp(-y_pred_0)))
+#    s1 = np.mean(y_pred_1 - y_pred_1*y_true_1 + np.log(1. + np.exp(-y_pred_1)))
+#    Npix = y_true_0.shape[0] + y_true_1.shape[0]
+#    return s0*y_true_1.shape[0]*1.0/Npix + s1*y_true_0.shape[0]*1.0/Npix
 
 #############################
 #unet model (keras 1.2.2)#

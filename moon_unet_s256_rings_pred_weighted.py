@@ -82,18 +82,35 @@ def custom_image_generator(data, target, batch_size=32):
 #weighted binary cross entropy#
 ########################################################################
 import tensorflow as tf
+#https://github.com/fchollet/keras/blob/master/keras/losses.py
+#https://github.com/fchollet/keras/blob/master/keras/backend/tensorflow_backend.py
+#https://www.tensorflow.org/api_docs/python/tf/nn/sigmoid_cross_entropy_with_logits
+#https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/python/ops/nn_impl.py
 def weighted_binary_XE(y_true, y_pred):
-    total_ones = tf.reduce_sum(y_true)   #sum total number of 1s in y_true
+    #sum total number of 1s and 0s in y_true
+    total_ones = tf.reduce_sum(y_true)
+    total_zeros = tf.reduce_sum(tf.to_int32(tf.equal(y_true, tf.zeros_like(y_true))))
     #total_elements = reduce(lambda x, y: x*y, y_true.get_shape().as_list()) # no. elements in y_true
-    total_elements = 256*256*32
+    #total_elements = 256*256*32 #dim*dim*batch_size - needs to change to be flexible
+    #weights = y_true * (total_elements-total_ones)*1.0/total_elements
     result = K.binary_crossentropy(y_pred, y_true)
-    weights = y_true * (total_elements-total_ones)*1.0/total_elements
+    weights = y_true * total_zeros*1.0/(total_zeros + total_ones)
     return K.mean(result*weights + result, axis=-1) 
+
+def jaccard_coef(y_true, y_pred):
+    intersection = K.sum(y_true * y_pred, axis=[0, 1, 2])
+    sum_ = K.sum(y_true + y_pred, axis=[0, 1, 2])
+    jac = (intersection + smooth) / (sum_ - intersection + smooth)
+    return K.mean(jac)
+
+def jacc_loss(y_true, y_pred):
+    return -jaccard_coef(y_true, y_pred)
+
+def mixed_loss(y_true, y_pred):
+    return K.binary_crossentropy(y_pred,y_true)+jacc_loss(y_true,y_pred)
 
 #https://github.com/fchollet/keras/issues/369
 #https://stackoverflow.com/questions/44454158/tensorflow-implementing-a-class-wise-weighted-cross-entropy-loss
-#https://github.com/fchollet/keras/blob/master/keras/backend/tensorflow_backend.py
-#https://www.tensorflow.org/api_docs/python/tf/nn/sigmoid_cross_entropy_with_logits
 #def weighted_binary_XE(y_true, y_pred):
 #    y_true = tf.reshape(y_true, [-1])   #[-1] flattens tensor
 #    y_pred = tf.reshape(y_pred, [-1])
@@ -105,10 +122,6 @@ def weighted_binary_XE(y_true, y_pred):
 #    Npix = int(y_true_0.get_shape() + y_true_1.get_shape())
 #    return s0*int(y_true_1.get_shape())*1.0/Npix + s1*int(y_true_0.get_shape())*1.0/Npix
 
-#https://github.com/fchollet/keras/blob/master/keras/losses.py
-#https://github.com/fchollet/keras/blob/master/keras/backend/tensorflow_backend.py
-#https://www.tensorflow.org/api_docs/python/tf/nn/sigmoid_cross_entropy_with_logits
-#https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/python/ops/nn_impl.py
 #def weighted_binary_XE(y_true, y_pred):
 #    epsilon = _to_tensor(_EPSILON, output.dtype.base_dtype)
 #    output = tf.clip_by_value(output, epsilon, 1 - epsilon)

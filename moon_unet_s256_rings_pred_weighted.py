@@ -84,7 +84,8 @@ def custom_image_generator(data, target, batch_size=32):
 import tensorflow as tf
 def weighted_binary_XE(y_true, y_pred):
     total_ones = tf.reduce_sum(y_true)   #sum total number of 1s in y_true
-    total_elements = reduce(lambda x, y: x*y, y_true.get_shape().as_list()) # no. elements in y_true
+    #total_elements = reduce(lambda x, y: x*y, y_true.get_shape().as_list()) # no. elements in y_true
+    total_elements = 256*256*32
     result = K.binary_crossentropy(y_pred, y_true)
     weights = tf.multiply(y_true, (total_elements-total_ones)*1.0/total_elements)
     return K.mean(tf.add(tf.multiply(result,weights),result),axis=-1) #mean( (1+weights)*result )

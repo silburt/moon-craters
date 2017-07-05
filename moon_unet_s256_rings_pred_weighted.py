@@ -87,8 +87,8 @@ def weighted_binary_XE(y_true, y_pred):
     #total_elements = reduce(lambda x, y: x*y, y_true.get_shape().as_list()) # no. elements in y_true
     total_elements = 256*256*32
     result = K.binary_crossentropy(y_pred, y_true)
-    weights = tf.multiply(y_true, (total_elements-total_ones)*1.0/total_elements)
-    return K.mean(tf.add(tf.multiply(result,weights),result),axis=-1) #mean( (1+weights)*result )
+    weights = y_true * (total_elements-total_ones)*1.0/total_elements
+    return K.mean(result*weights + result, axis=-1) 
 
 #https://github.com/fchollet/keras/issues/369
 #https://stackoverflow.com/questions/44454158/tensorflow-implementing-a-class-wise-weighted-cross-entropy-loss

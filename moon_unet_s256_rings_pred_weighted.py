@@ -89,7 +89,7 @@ import tensorflow as tf
 def weighted_binary_XE(y_true, y_pred):
     #sum total number of 1s and 0s in y_true
     total_ones = tf.reduce_sum(y_true)
-    total_zeros = tf.reduce_sum(tf.to_int32(tf.equal(y_true, tf.zeros_like(y_true))))
+    total_zeros = tf.reduce_sum(tf.to_float(tf.equal(y_true, tf.zeros_like(y_true))))
     #total_elements = reduce(lambda x, y: x*y, y_true.get_shape().as_list()) # no. elements in y_true
     #total_elements = 256*256*32 #dim*dim*batch_size - needs to change to be flexible
     #weights = y_true * (total_elements-total_ones)*1.0/total_elements

@@ -188,7 +188,7 @@ def unet_model(im_width,im_height,learn_rate,lmbda,FL,init):
     #optimizer/compile
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
     #model.compile(loss='binary_crossentropy', optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
-    model.compile(loss=weighted_binary_XE, optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
+    model.compile(loss=mixed_loss, optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
     print model.summary()
 
     return model
@@ -230,7 +230,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
         print ""
 
     if save_model == 1:
-        model.save('models/unet_s256_rings_FL%d_weightedpred.h5'%FL)
+        model.save('models/unet_s256_rings_FL%d_mixedloss.h5'%FL)
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 

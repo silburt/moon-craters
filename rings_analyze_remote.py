@@ -1,6 +1,6 @@
 import glob
 import numpy as np
-
+import tensorflow as tf
 from keras.models import load_model
 from keras import backend as K
 from utils.rescale_invcolor import rescale_and_invcolor

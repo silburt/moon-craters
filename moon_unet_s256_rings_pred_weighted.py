@@ -98,6 +98,7 @@ def weighted_binary_XE(y_true, y_pred):
     return K.mean(result*weights + result, axis=-1) 
 
 def jaccard_coef(y_true, y_pred):
+    smooth = 1.e-12
     intersection = K.sum(y_true * y_pred, axis=[0, 1, 2])
     sum_ = K.sum(y_true + y_pred, axis=[0, 1, 2])
     jac = (intersection + smooth) / (sum_ - intersection + smooth)

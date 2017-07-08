@@ -43,10 +43,10 @@ def make_predictions(modelfile, thresh, train_data, valid_data, test_data, dir):
     test_target[test_target >= thresh] = 1
     test_target[test_target < thresh] = 0
     np.save('%s/Train_rings/train_target_pred.npy'%dir,train_target)
-    np.save('%s/Dev_rings/valid_target_pred.npy'%dir,valid_target)
+    np.save('%s/Dev_rings/dev_target_pred.npy'%dir,valid_target)
     np.save('%s/Test_rings/test_target_pred.npy'%dir,test_target)
     np.save('%s/Train_rings/train_target_pred_sample.npy'%dir,train_target[:20])
-    np.save('%s/Dev_rings/valid_target_pred_sample.npy'%dir,valid_target[:20])
+    np.save('%s/Dev_rings/dev_target_pred_sample.npy'%dir,valid_target[:20])
     np.save('%s/Test_rings/test_target_pred_sample.npy'%dir,test_target[:20])
     return train_target, valid_target, test_target
 
@@ -205,7 +205,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     #load targets
     try:
         train_target=np.load('%s/Train_rings/train_target_pred.npy'%dir)
-        valid_target=np.load('%s/Dev_rings/valid_target_pred.npy'%dir)
+        valid_target=np.load('%s/Dev_rings/dev_target_pred.npy'%dir)
         test_target=np.load('%s/Test_rings/test_target_pred.npy'%dir)
         print "Successfully loaded iterated masks"
     except:

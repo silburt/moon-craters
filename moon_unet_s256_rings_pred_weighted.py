@@ -36,18 +36,21 @@ def make_predictions(modelfile, thresh, train_data, valid_data, test_data, dir):
     train_target = model.predict(train_data.astype('float32'))
     valid_target = model.predict(valid_data.astype('float32'))
     test_target = model.predict(test_data.astype('float32'))
+    np.save('%s/Train_rings/train_target_pred.npy'%dir,train_target)
+    np.save('%s/Dev_rings/dev_target_pred.npy'%dir,valid_target)
+    np.save('%s/Test_rings/test_target_pred.npy'%dir,test_target)
+    np.save('%s/Train_rings/train_target_pred_sample.npy'%dir,train_target[:20])
+    np.save('%s/Dev_rings/dev_target_pred_sample.npy'%dir,valid_target[:20])
+    np.save('%s/Test_rings/test_target_pred_sample.npy'%dir,test_target[:20])
+    return train_target, valid_target, test_target
+
+def binarize_predictions(thresh, train_target, valid_target, test_target):
     train_target[train_target >= thresh] = 1
     train_target[train_target < thresh] = 0
     valid_target[valid_target >= thresh] = 1
     valid_target[valid_target < thresh] = 0
     test_target[test_target >= thresh] = 1
     test_target[test_target < thresh] = 0
-    np.save('%s/Train_rings/train_target_pred.npy'%dir,train_target)
-    np.save('%s/Dev_rings/valid_target_pred.npy'%dir,valid_target)
-    np.save('%s/Test_rings/test_target_pred.npy'%dir,test_target)
-    np.save('%s/Train_rings/train_target_pred_sample.npy'%dir,train_target[:20])
-    np.save('%s/Dev_rings/valid_target_pred_sample.npy'%dir,valid_target[:20])
-    np.save('%s/Test_rings/test_target_pred_sample.npy'%dir,test_target[:20])
     return train_target, valid_target, test_target
 
 ########################
@@ -78,8 +81,8 @@ def custom_image_generator(data, target, batch_size=32):
             yield (d, t)
 
 
-###############################
-#weighted binary cross entropy#
+##############
+#loss options#
 ########################################################################
 import tensorflow as tf
 #https://github.com/fchollet/keras/blob/master/keras/losses.py
@@ -90,10 +93,8 @@ def weighted_binary_XE(y_true, y_pred):
     #sum total number of 1s and 0s in y_true
     total_ones = tf.reduce_sum(y_true)
     total_zeros = tf.reduce_sum(tf.to_float(tf.equal(y_true, tf.zeros_like(y_true))))
-    #total_elements = reduce(lambda x, y: x*y, y_true.get_shape().as_list()) # no. elements in y_true
-    #total_elements = 256*256*32 #dim*dim*batch_size - needs to change to be flexible
-    #weights = y_true * (total_elements-total_ones)*1.0/total_elements
     result = K.binary_crossentropy(y_pred, y_true)
+    #muliply the 1s in y_true by the number of zeros/(total elements).
     weights = y_true * total_zeros*1.0/(total_zeros + total_ones)
     return K.mean(result*weights + result, axis=-1) 
 
@@ -109,36 +110,6 @@ def jacc_loss(y_true, y_pred):
 
 def mixed_loss(y_true, y_pred):
     return K.binary_crossentropy(y_pred,y_true)+jacc_loss(y_true,y_pred)
-
-#https://github.com/fchollet/keras/issues/369
-#https://stackoverflow.com/questions/44454158/tensorflow-implementing-a-class-wise-weighted-cross-entropy-loss
-#def weighted_binary_XE(y_true, y_pred):
-#    y_true = tf.reshape(y_true, [-1])   #[-1] flattens tensor
-#    y_pred = tf.reshape(y_pred, [-1])
-#    cond_0, cond_1 = tf.equal(y_true,tf.zeros_like(y_true)), tf.equal(y_true,tf.ones_like(y_true))
-#    y_true_0, y_pred_0 = tf.where(cond_0, y_true), tf.where(cond_0, y_pred)
-#    y_true_1, y_pred_1 = tf.where(cond_1, y_true), tf.where(cond_1, y_pred)
-#    s0 = K.mean(K.binary_crossentropy(y_pred_0, y_true_0))
-#    s1 = K.mean(K.binary_crossentropy(y_pred_1, y_true_1))
-#    Npix = int(y_true_0.get_shape() + y_true_1.get_shape())
-#    return s0*int(y_true_1.get_shape())*1.0/Npix + s1*int(y_true_0.get_shape())*1.0/Npix
-
-#def weighted_binary_XE(y_true, y_pred):
-#    epsilon = _to_tensor(_EPSILON, output.dtype.base_dtype)
-#    output = tf.clip_by_value(output, epsilon, 1 - epsilon)
-#    output = tf.log(output / (1 - output))
-#    
-#    y_pred = tf.clip_by_value(y_pred, 10e-8, 1.-10e-8)
-#    y_pred = tf.log(y_pred / (1 - y_pred))
-#    with tf.Session() as sess:
-#        y_true, y_pred = y_true.eval(session=sess), y_pred.eval(session=sess)
-#    y_pred[y_pred < 0] *= -1
-#    y_true_0, y_pred_0 = y_true[y_true == 0], y_pred[y_true == 0]
-#    y_true_1, y_pred_1 = y_true[y_true == 1], y_pred[y_true == 1]
-#    s0 = np.mean(y_pred_0 - y_pred_0*y_true_0 + np.log(1. + np.exp(-y_pred_0)))
-#    s1 = np.mean(y_pred_1 - y_pred_1*y_true_1 + np.log(1. + np.exp(-y_pred_1)))
-#    Npix = y_true_0.shape[0] + y_true_1.shape[0]
-#    return s0*y_true_1.shape[0]*1.0/Npix + s1*y_true_0.shape[0]*1.0/Npix
 
 #############################
 #unet model (keras 1.2.2)#
@@ -189,7 +160,7 @@ def unet_model(im_width,im_height,learn_rate,lmbda,FL,init):
     #optimizer/compile
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
     #model.compile(loss='binary_crossentropy', optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
-    model.compile(loss=mixed_loss, optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
+    model.compile(loss=mixed_loss, optimizer=optimizer)  #mixed_loss, weighted_binary_XE
     print model.summary()
 
     return model
@@ -199,7 +170,7 @@ def unet_model(im_width,im_height,learn_rate,lmbda,FL,init):
 ########################################################################
 #Need to create this function so that memory is released every iteration (when function exits).
 #Otherwise the memory used accumulates and eventually the program crashes.
-def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data,loss_csvs,n_samples,learn_rate,batch_size,lmbda,FL,nb_epoch,im_width,im_height,save_model,init):
+def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data,loss_csvs,n_samples,learn_rate,batch_size,lmbda,FL,nb_epoch,im_width,im_height,save_model,init,binary_thresh):
     
     model = unet_model(im_width,im_height,learn_rate,lmbda,FL,init)
     
@@ -231,14 +202,14 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
         print ""
 
     if save_model == 1:
-        model.save('models/unet_s256_rings_FL%d_mixedloss.h5'%FL)
+        model.save('models/unet_s256_rings_FL3_mixedloss_thresh%.2f.h5'%binary_thresh)
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 
 ##############
 #Main Routine#
 ########################################################################
-def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_train_samples,save_models,inv_color,rescale,model_for_pred):
+def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_train_samples,save_models,inv_color,rescale,binary_thresh,model_for_pred):
     #Static arguments
     im_width = 256              #image width
     im_height = 256             #image height
@@ -246,7 +217,6 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     
     #model
     model = '%s/%s'%(dir,model_for_pred)
-    binary_thresh = 0.1         #target[target<binary_thresh]=0, target[target>binary_thresh]=1
     
     #Load data
     train_data=np.load('%s/Train_rings/train_data.npy'%dir)
@@ -269,7 +239,7 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     #load targets
     try:
         train_target=np.load('%s/Train_rings/train_target_pred.npy'%dir)
-        valid_target=np.load('%s/Dev_rings/valid_target_pred.npy'%dir)
+        valid_target=np.load('%s/Dev_rings/dev_target_pred.npy'%dir)
         test_target=np.load('%s/Test_rings/test_target_pred.npy'%dir)
         print "Successfully loaded iterated masks"
     except:
@@ -282,17 +252,18 @@ def run_cross_validation_create_models(learn_rate,batch_size,lmbda,nb_epoch,n_tr
     valid_data, valid_target = valid_data[:n_train_samples], valid_target[:n_train_samples]
     test_data, test_target = test_data[:n_train_samples], test_target[:n_train_samples]
 
+    #Apply binary threshold to target masks
+    train_target, valid_target, test_target = binarize_predictions(binary_thresh, train_target, valid_target, test_target)
+
     #Iterate
     N_runs = 1
-    FL, l = 3, 0
-    init = ['he_normal']
+    FL, l, I = 3, 0, 'he_normal'
     for i in range(N_runs):
-        I = init[i]
-        score = train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,loss_data,loss_csvs,n_train_samples,learn_rate,batch_size,l,FL,nb_epoch,im_width,im_height,save_models,I)
+        score = train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,loss_data,loss_csvs,n_train_samples,learn_rate,batch_size,l,FL,nb_epoch,im_width,im_height,save_models,I,binary_thresh)
         print '###################################'
         print '##########END_OF_RUN_INFO##########'
         print('\nTest Score is %f \n'%score)
-        print 'learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train_samples=%d, im_width=%d, im_height=%d, inv_color=%d, rescale=%d, init=%s'%(learn_rate,batch_size,FL,nb_epoch,n_train_samples,im_width,im_height,inv_color,rescale,I)
+        print 'learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train_samples=%d, im_width=%d, im_height=%d, inv_color=%d, rescale=%d, init=%s, binary_thresh=%f'%(learn_rate,batch_size,FL,nb_epoch,n_train_samples,im_width,im_height,inv_color,rescale,I,binary_thresh)
         print '###################################'
         print '###################################'
 
@@ -311,7 +282,10 @@ if __name__ == '__main__':
     save_models = 1     #save models
     inv_color = 1       #use inverse color
     rescale = 1         #rescale images to increase contrast (still 0-1 normalized)
-    model_for_pred = 'unet_s256_rings_FL3.h5'   #model used to generate new target predictions
+    binary_thresh = 0.1 #target[target<binary_thresh]=0, target[target>binary_thresh]=1 - between 0-1.
+    model_for_pred = 'unet_s256_rings_FL3.h5'   #model used to generate new target predictions (locaed in dir/ directory)
     
     #run models
-    run_cross_validation_create_models(lr,bs,lmbda,epochs,n_train,save_models,inv_color,rescale,model_for_pred)
+    binary_thresh = [0.05,0.1,0.15,0.2,0.25]
+    for B in binary_thresh:
+        run_cross_validation_create_models(lr,bs,lmbda,epochs,n_train,save_models,inv_color,rescale,B,model_for_pred)

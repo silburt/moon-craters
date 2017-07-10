@@ -160,7 +160,7 @@ def unet_model(im_width,im_height,learn_rate,lmbda,FL,init):
     #optimizer/compile
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
     #model.compile(loss='binary_crossentropy', optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
-    model.compile(loss=mixed_loss, optimizer=optimizer)  #mixed_loss, weighted_binary_XE
+    model.compile(loss=jacc_loss, optimizer=optimizer)  #mixed_loss, weighted_binary_XE
     print model.summary()
 
     return model
@@ -202,7 +202,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
         print ""
 
     if save_model == 1:
-        model.save('models/unet_s256_rings_FL3_mixedloss_thresh%.2f.h5'%binary_thresh)
+        model.save('models/unet_s256_rings_FL3_jaccard.h5')
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 
@@ -285,7 +285,4 @@ if __name__ == '__main__':
     binary_thresh = 0.1 #target[target<binary_thresh]=0, target[target>binary_thresh]=1 - between 0-1.
     model_for_pred = 'unet_s256_rings_FL3.h5'   #model used to generate new target predictions (locaed in dir/ directory)
     
-    #run models
-    binary_thresh = [0.05,0.1,0.15,0.2,0.25]
-    for B in binary_thresh:
-        run_cross_validation_create_models(lr,bs,lmbda,epochs,n_train,save_models,inv_color,rescale,B,model_for_pred)
+    run_cross_validation_create_models(lr,bs,lmbda,epochs,n_train,save_models,inv_color,rescale,binary_thresh,model_for_pred)

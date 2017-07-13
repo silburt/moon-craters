@@ -176,38 +176,38 @@ def unet_model(dim,learn_rate,lmbda,drop,FL,init,n_filters):
     print('Making UNET model...')
     img_input = Input(batch_shape=(None, dim, dim, 1))
 
-    a1 = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(img_input)
-    a1 = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a1)
+    a1 = Convolution2D(n_filters, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(img_input)
+    a1 = Convolution2D(n_filters, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a1)
     a1P = MaxPooling2D((2, 2), strides=(2, 2))(a1)
 
-    a2 = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a1P)
-    a2 = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a2)
+    a2 = Convolution2D(n_filters*2, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a1P)
+    a2 = Convolution2D(n_filters*2, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a2)
     a2P = MaxPooling2D((2, 2), strides=(2, 2))(a2)
 
-    a3 = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a2P)
-    a3 = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a3)
+    a3 = Convolution2D(n_filters*4, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a2P)
+    a3 = Convolution2D(n_filters*4, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a3)
     a3P = MaxPooling2D((2, 2), strides=(2, 2),)(a3)
 
-    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a3P)
-    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters*4, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a3P)
+    u = Convolution2D(n_filters*4, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
 
     u = UpSampling2D((2,2))(u)
     u = merge((a3, u), mode='concat', concat_axis=3)
     u = Dropout(drop)(u)
-    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
-    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters*4, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters*4, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
 
     u = UpSampling2D((2,2))(u)
     u = merge((a2, u), mode='concat', concat_axis=3)
     u = Dropout(drop)(u)
-    u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
-    u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters*2, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters*2, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
 
     u = UpSampling2D((2,2))(u)
     u = merge((a1, u), mode='concat', concat_axis=3)
     u = Dropout(drop)(u)
-    u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
-    u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
 
     #final output
     final_activation = 'sigmoid'       #sigmoid, relu

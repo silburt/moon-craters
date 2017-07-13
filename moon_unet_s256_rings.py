@@ -172,7 +172,7 @@ def prepare_custom_loss(path, dim):
 ########################################################################
 #Following https://arxiv.org/pdf/1505.04597.pdf
 #and this for merging specifics: https://gist.github.com/Neltherion/f070913fd6284c4a0b60abb86a0cd642
-def unet_model(dim,learn_rate,lmbda,FL,init,n_filters):
+def unet_model(dim,learn_rate,lmbda,drop,FL,init,n_filters):
     print('Making UNET model...')
     img_input = Input(batch_shape=(None, dim, dim, 1))
 
@@ -193,19 +193,19 @@ def unet_model(dim,learn_rate,lmbda,FL,init,n_filters):
 
     u = UpSampling2D((2,2))(u)
     u = merge((a3, u), mode='concat', concat_axis=3)
-    u = Dropout(0.25)(u)
+    u = Dropout(drop)(u)
     u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
     u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
 
     u = UpSampling2D((2,2))(u)
     u = merge((a2, u), mode='concat', concat_axis=3)
-    u = Dropout(0.25)(u)
+    u = Dropout(drop)(u)
     u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
     u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
 
     u = UpSampling2D((2,2))(u)
     u = merge((a1, u), mode='concat', concat_axis=3)
-    u = Dropout(0.25)(u)
+    u = Dropout(drop)(u)
     u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
     u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
 
@@ -217,8 +217,8 @@ def unet_model(dim,learn_rate,lmbda,FL,init,n_filters):
     
     #optimizer/compile
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-    model.compile(loss='binary_crossentropy', optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
-    #model.compile(loss=mixed_loss, optimizer=optimizer)
+    #model.compile(loss='binary_crossentropy', optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
+    model.compile(loss=mixed_loss, optimizer=optimizer)
     print model.summary()
 
     return model
@@ -228,8 +228,8 @@ def unet_model(dim,learn_rate,lmbda,FL,init,n_filters):
 ########################################################################
 #Need to create this function so that memory is released every iteration (when function exits).
 #Otherwise the memory used accumulates and eventually the program crashes.
-def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data,loss_csvs,dim,learn_rate,nb_epoch,batch_size,save_models,lmbda,FL,init,n_filters):
-    model = unet_model(dim,learn_rate,lmbda,FL,init,n_filters)
+def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data,loss_csvs,dim,learn_rate,nb_epoch,batch_size,save_models,lmbda,drop,FL,init,n_filters):
+    model = unet_model(dim,learn_rate,lmbda,drop,FL,init,n_filters)
     
     n_samples = len(X_train)
     for nb in range(nb_epoch):
@@ -260,7 +260,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
         print ""
 
     if save_models == 1:
-        model.save('models/unet_s256_rings_nFL%d.h5'%n_filters)
+        model.save('models/unet_s256_rings_mixedloss.h5')
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 
@@ -317,20 +317,22 @@ def run_cross_validation_create_models(dir,learn_rate,batch_size,nb_epoch,n_trai
     N_runs = 1
     filter_length=[3]
     n_filters=[96]          #64 works with batch_size=32
-    lmbda=[0]
-    I = 'he_normal'         #See unet model. Initialization of weights.
+    lmbda=[0]               #regularization
+    dropout=[0.25]          #dropout after merge layers
+    init = ['he_normal']         #See unet model. Initialization of weights.
 
     #Iterate
     for i in range(N_runs):
-        #I = init[i]
+        I = init[i]
         NF = n_filters[i]
         FL = filter_length[i]
         L = lmbda[i]
-        score = train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,loss_data,loss_csvs,dim,learn_rate,nb_epoch,batch_size,save_models,L,FL,I,NF)
+        drop = dropout[i]
+        score = train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,loss_data,loss_csvs,dim,learn_rate,nb_epoch,batch_size,save_models,L,drop,FL,I,NF)
         print '###################################'
         print '##########END_OF_RUN_INFO##########'
         print('\nTest Score is %f \n'%score)
-        print 'learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train_samples=%d, img_dimensions=%d, inv_color=%d, rescale=%d, init=%s, n_filters=%d, lambda=%e'%(learn_rate,batch_size,FL,nb_epoch,n_train_samples,dim,inv_color,rescale,I,NF,L)
+        print 'learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train_samples=%d, img_dimensions=%d, inv_color=%d, rescale=%d, init=%s, n_filters=%d, lambda=%e, dropout=%f'%(learn_rate,batch_size,FL,nb_epoch,n_train_samples,dim,inv_color,rescale,I,NF,L,drop)
         print '###################################'
         print '###################################'
 

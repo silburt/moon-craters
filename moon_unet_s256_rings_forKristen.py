@@ -314,7 +314,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
         print ""
 
     if save_models == 1:
-        model.save('models/unet_s256_rings_nFL%d.h5'%n_filters)
+        model.save('models/unet_s256_rings_Kristen.h5')
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 

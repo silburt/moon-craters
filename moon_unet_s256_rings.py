@@ -69,6 +69,12 @@ def custom_image_generator(data, target, batch_size=32):
         for i in range(0, len(data), batch_size):
             d, t = data[i:i+batch_size].copy(), target[i:i+batch_size].copy() #most efficient for memory?
             
+            #random color inversion
+            for j in np.where(np.random.randint(0,2,batch_size)==1)[0]:
+                img = d[j]
+                d[j] = img[img > 0.] = 1. - img[img > 0.]
+        
+            
             #horizontal/vertical flips
             for j in np.where(np.random.randint(0,2,batch_size)==1)[0]:
                 d[j], t[j] = np.fliplr(d[j]), np.fliplr(t[j])               #left/right
@@ -176,38 +182,38 @@ def unet_model(dim,learn_rate,lmbda,drop,FL,init,n_filters):
     print('Making UNET model...')
     img_input = Input(batch_shape=(None, dim, dim, 1))
 
-    a1 = Convolution2D(n_filters, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(img_input)
-    a1 = Convolution2D(n_filters, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a1)
+    a1 = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(img_input)
+    a1 = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a1)
     a1P = MaxPooling2D((2, 2), strides=(2, 2))(a1)
 
-    a2 = Convolution2D(n_filters*2, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a1P)
-    a2 = Convolution2D(n_filters*2, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a2)
+    a2 = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a1P)
+    a2 = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a2)
     a2P = MaxPooling2D((2, 2), strides=(2, 2))(a2)
 
-    a3 = Convolution2D(n_filters*4, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a2P)
-    a3 = Convolution2D(n_filters*4, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a3)
+    a3 = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a2P)
+    a3 = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a3)
     a3P = MaxPooling2D((2, 2), strides=(2, 2),)(a3)
 
-    u = Convolution2D(n_filters*4, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a3P)
-    u = Convolution2D(n_filters*4, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a3P)
+    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
 
     u = UpSampling2D((2,2))(u)
     u = merge((a3, u), mode='concat', concat_axis=3)
     u = Dropout(drop)(u)
-    u = Convolution2D(n_filters*4, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
-    u = Convolution2D(n_filters*4, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
 
     u = UpSampling2D((2,2))(u)
     u = merge((a2, u), mode='concat', concat_axis=3)
     u = Dropout(drop)(u)
-    u = Convolution2D(n_filters*2, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
-    u = Convolution2D(n_filters*2, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
 
     u = UpSampling2D((2,2))(u)
     u = merge((a1, u), mode='concat', concat_axis=3)
     u = Dropout(drop)(u)
-    u = Convolution2D(n_filters, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
-    u = Convolution2D(n_filters, FL, FL, activation='elu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
 
     #final output
     final_activation = 'sigmoid'       #sigmoid, relu
@@ -349,7 +355,7 @@ if __name__ == '__main__':
     epochs = 6              #number of epochs. 1 epoch = forward/back pass through all train data
     n_train = 20000         #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1         #save models
-    inv_color = 1           #use inverse color
+    inv_color = 0           #use inverse color
     rescale = 1             #rescale images to increase contrast (still 0-1 normalized)
     
     #run models

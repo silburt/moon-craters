@@ -139,16 +139,6 @@ def prepare_custom_loss(path, dim):
         print "out of %d files there are %d perfect matches"%(len(csvs_),N_perfect_matches)
     return imgs, csvs, N_perfect_matches
 
-#for weighted binary cross-entropy - already reshaped
-def get_class_weights(target):
-    ones = float(len(np.where(target == 1)[0]))
-    total = target.shape[0]*target.shape[1]
-    
-    weights = np.zeros((target.shape[0],target.shape[1]))
-    weights[:,0] = ones*1./total
-    weights[:,1] = (total-ones)*1./total
-    return weights
-
 ##########################
 #unet model (keras 1.2.2)#
 ########################################################################
@@ -175,22 +165,25 @@ def unet_model(dim,learn_rate,lmbda,FL,init,n_filters):
 
     u = UpSampling2D((2,2))(u)
     u = merge((a3, u), mode='concat', concat_axis=3)
+    u = Dropout(0.25)(u)
     u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
     u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
 
     u = UpSampling2D((2,2))(u)
     u = merge((a2, u), mode='concat', concat_axis=3)
+    u = Dropout(0.25)(u)
     u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
     u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
 
     u = UpSampling2D((2,2))(u)
     u = merge((a1, u), mode='concat', concat_axis=3)
+    u = Dropout(0.25)(u)
     u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
     u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
 
     #final output
     final_activation = 'sigmoid'       #sigmoid, relu
-    u = Convolution2D(2, 1, 1, activation=final_activation, init=init, W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
+    u = Convolution2D(1, 1, 1, activation=final_activation, init=init, W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
     #u = Reshape((dim*dim,2))(u)
     model = Model(input=img_input, output=u)
     
@@ -226,7 +219,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
                             
         # calcualte custom loss
         print ""
-        print "custom loss for epoch %d/%d:"%(nb,nb_epoch)
+        print "custom loss for epoch %d/%d:"%(nb+1,nb_epoch)
         match_csv_arr, templ_csv_arr, templ_new_arr = [], [], []
         loss_target = model.predict(loss_data.astype('float32'))
         loss_target = loss_target.reshape(len(loss_target),dim,dim)
@@ -246,7 +239,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
         print ""
 
     if save_models == 1:
-        model.save('models/unet_s256_rings_weighted.h5'%lmbda)
+        model.save('models/unet_s256_rings_weighted.h5')
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 
@@ -302,7 +295,7 @@ def run_cross_validation_create_models(dir,learn_rate,batch_size,nb_epoch,n_trai
 #    lmbda = [1e-7,5e-7,1e-6,5e-6,1e-5,5e-5]           #See unet model. L2 Weight regularization strength (lambda).
     N_runs = 1
     filter_length=[3]
-    n_filters=[64]
+    n_filters=[96]
     lmbda=[0]
     I = 'he_normal'      #See unet model. Initialization of weights.
 
@@ -329,8 +322,8 @@ if __name__ == '__main__':
     #args
     dir = 'datasets/rings'  #location of Train_rings/, Dev_rings/, Test_rings/, Dev_rings_for_loss/ folders. Don't include final '/' in path
     lr = 0.0001             #learning rate
-    bs = 32                 #batch size: smaller values = less memory but less accurate gradient estimate
-    epochs = 4              #number of epochs. 1 epoch = forward/back pass through all train data
+    bs = 8                  #batch size: smaller values = less memory but less accurate gradient estimate
+    epochs = 6              #number of epochs. 1 epoch = forward/back pass through all train data
     n_train = 20000         #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1         #save models
     inv_color = 1           #use inverse color

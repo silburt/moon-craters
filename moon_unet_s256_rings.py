@@ -163,16 +163,19 @@ def unet_model(dim,learn_rate,lmbda,FL,init,n_filters):
 
     u = UpSampling2D((2,2))(u)
     u = merge((a3, u), mode='concat', concat_axis=3)
+    u = Dropout(0.25)(u)
     u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
     u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
 
     u = UpSampling2D((2,2))(u)
     u = merge((a2, u), mode='concat', concat_axis=3)
+    u = Dropout(0.25)(u)
     u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
     u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
 
     u = UpSampling2D((2,2))(u)
     u = merge((a1, u), mode='concat', concat_axis=3)
+    u = Dropout(0.25)(u)
     u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
     u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
 
@@ -208,7 +211,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
                             
         # calcualte custom loss
         print ""
-        print "custom loss for epoch %d/%d:"%(nb,nb_epoch)
+        print "custom loss for epoch %d/%d:"%(nb+1,nb_epoch)
         match_csv_arr, templ_csv_arr, templ_new_arr = [], [], []
         loss_target = model.predict(loss_data.astype('float32'))
         for i in range(len(loss_data)):
@@ -226,7 +229,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
         print ""
 
     if save_models == 1:
-        model.save('models/unet_s256_rings_weighted.h5'%lmbda)
+        model.save('models/unet_s256_rings_nFL%d.h5'%n_filters)
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 
@@ -282,9 +285,9 @@ def run_cross_validation_create_models(dir,learn_rate,batch_size,nb_epoch,n_trai
 #    lmbda = [1e-7,5e-7,1e-6,5e-6,1e-5,5e-5]           #See unet model. L2 Weight regularization strength (lambda).
     N_runs = 1
     filter_length=[3]
-    n_filters=[64]
+    n_filters=[96]          #64 works with batch_size=32
     lmbda=[0]
-    I = 'he_normal'      #See unet model. Initialization of weights.
+    I = 'he_normal'         #See unet model. Initialization of weights.
 
     #Iterate
     for i in range(N_runs):
@@ -309,8 +312,8 @@ if __name__ == '__main__':
     #args
     dir = 'datasets/rings'  #location of Train_rings/, Dev_rings/, Test_rings/, Dev_rings_for_loss/ folders. Don't include final '/' in path
     lr = 0.0001             #learning rate
-    bs = 32                 #batch size: smaller values = less memory but less accurate gradient estimate
-    epochs = 4              #number of epochs. 1 epoch = forward/back pass through all train data
+    bs = 8                 #batch size: smaller values = less memory but less accurate gradient estimate
+    epochs = 6              #number of epochs. 1 epoch = forward/back pass through all train data
     n_train = 20000         #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1         #save models
     inv_color = 1           #use inverse color

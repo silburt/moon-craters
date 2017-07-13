@@ -86,6 +86,36 @@ def custom_image_generator(data, target, batch_size=32):
                 d[j], t[j] = np.rot90(d[j],r[j]), np.rot90(t[j],r[j])
             yield (d, t)
 
+##############
+#loss options#
+########################################################################
+import tensorflow as tf
+#https://github.com/fchollet/keras/blob/master/keras/losses.py
+#https://github.com/fchollet/keras/blob/master/keras/backend/tensorflow_backend.py
+#https://www.tensorflow.org/api_docs/python/tf/nn/sigmoid_cross_entropy_with_logits
+#https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/python/ops/nn_impl.py
+def weighted_binary_XE(y_true, y_pred):
+    #sum total number of 1s and 0s in y_true
+    total_ones = tf.reduce_sum(y_true)
+    total_zeros = tf.reduce_sum(tf.to_float(tf.equal(y_true, tf.zeros_like(y_true))))
+    result = K.binary_crossentropy(y_pred, y_true)
+    #muliply the 1s in y_true by the number of zeros/(total elements).
+    weights = y_true * total_zeros*1.0/(total_zeros + total_ones)
+    return K.mean(result*weights + result, axis=-1)
+
+def jaccard_coef(y_true, y_pred):
+    smooth = 1.e-12
+    intersection = K.sum(y_true * y_pred, axis=[0, 1, 2])
+    sum_ = K.sum(y_true + y_pred, axis=[0, 1, 2])
+    jac = (intersection + smooth) / (sum_ - intersection + smooth)
+    return K.mean(jac)
+
+def jacc_loss(y_true, y_pred):
+    return -jaccard_coef(y_true, y_pred)
+
+def mixed_loss(y_true, y_pred):
+    return 0.5*K.binary_crossentropy(y_pred,y_true)+jacc_loss(y_true,y_pred)
+
 #######################
 #custom loss functions#
 ########################################################################
@@ -188,6 +218,7 @@ def unet_model(dim,learn_rate,lmbda,FL,init,n_filters):
     #optimizer/compile
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
     model.compile(loss='binary_crossentropy', optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
+    #model.compile(loss=mixed_loss, optimizer=optimizer)
     print model.summary()
 
     return model

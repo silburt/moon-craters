@@ -215,8 +215,8 @@ def mixed_loss(y_true, y_pred):
 ########################################################################
 def prepare_custom_loss(path, dim):
     # load data
-    imgs = np.load("%s/custom_loss_images.npy"%path)
-    csvs = np.load("%s/custom_loss_csvs.npy"%path)
+    imgs = np.load('%s/custom_loss_images.npy'%path)
+    csvs = np.load('%s/custom_loss_csvs.npy'%path)
     N_perfect_matches = len(imgs)
     print "Successfully loaded files locally for custom_loss."
     return imgs, csvs, N_perfect_matches
@@ -314,14 +314,14 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
         print ""
 
     if save_models == 1:
-        model.save('models/unet_s256_rings_Kristen.h5')
+        model.save('unet_s256_rings_Kristen.h5')
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 
 ##############
 #Main Routine#
 ########################################################################
-def run_cross_validation_create_models(dir,learn_rate,batch_size,nb_epoch,n_train_samples,save_models,inv_color,rescale):
+def create_models(dir,learn_rate,batch_size,nb_epoch,n_train_samples,save_models,inv_color,rescale):
     #Static arguments
     dim = 256              #image width/height, assuming square images. Shouldn't change
     
@@ -372,11 +372,11 @@ def run_cross_validation_create_models(dir,learn_rate,batch_size,nb_epoch,n_trai
     filter_length=[3]
     n_filters=[96]          #64 works with batch_size=32
     lmbda=[0]
-    I = 'he_normal'         #See unet model. Initialization of weights.
+    init = ['he_normal']    #See unet model. Initialization of weights.
 
     #Iterate
     for i in range(N_runs):
-        #I = init[i]
+        I = init[i]
         NF = n_filters[i]
         FL = filter_length[i]
         L = lmbda[i]
@@ -405,4 +405,4 @@ if __name__ == '__main__':
     rescale = 1             #rescale images to increase contrast (still 0-1 normalized)
     
     #run models
-    run_cross_validation_create_models(dir,lr,bs,epochs,n_train,save_models,inv_color,rescale)
+    create_models(dir,lr,bs,epochs,n_train,save_models,inv_color,rescale)

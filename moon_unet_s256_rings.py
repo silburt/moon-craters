@@ -71,8 +71,7 @@ def custom_image_generator(data, target, batch_size=32):
             
             #random color inversion
             for j in np.where(np.random.randint(0,2,batch_size)==1)[0]:
-                img = d[j]
-                d[j] = img[img > 0.] = 1. - img[img > 0.]
+                d[j][d[j] > 0.] = 1. - d[j][d[j] > 0.]
         
             
             #horizontal/vertical flips

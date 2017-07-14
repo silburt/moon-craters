@@ -72,7 +72,6 @@ def custom_image_generator(data, target, batch_size=32):
             #random color inversion
             for j in np.where(np.random.randint(0,2,batch_size)==1)[0]:
                 d[j][d[j] > 0.] = 1. - d[j][d[j] > 0.]
-        
             
             #horizontal/vertical flips
             for j in np.where(np.random.randint(0,2,batch_size)==1)[0]:
@@ -222,8 +221,8 @@ def unet_model(dim,learn_rate,lmbda,drop,FL,init,n_filters):
     
     #optimizer/compile
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-    #model.compile(loss='binary_crossentropy', optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
-    model.compile(loss=mixed_loss, optimizer=optimizer)
+    model.compile(loss='binary_crossentropy', optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
+    #model.compile(loss=mixed_loss, optimizer=optimizer)
     print model.summary()
 
     return model
@@ -265,7 +264,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
         print ""
 
     if save_models == 1:
-        model.save('models/unet_s256_rings_mixedloss.h5')
+        model.save('models/unet_s256_rings_invcolgen.h5')
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 

@@ -56,7 +56,7 @@ def get_crater_dist(dir,type,n_imgs,modelname,inv_color,rescale):
 
     data, target, id = data[:n_imgs], target[:n_imgs], id[:n_imgs]
     if inv_color==1 or rescale==1:
-    print "inv_color=%d, rescale=%d, processing data"%(inv_color, rescale)
+        print "inv_color=%d, rescale=%d, processing data"%(inv_color, rescale)
         data = rescale_and_invcolor(data, inv_color, rescale)
 
     # generate model predictions and fit template match

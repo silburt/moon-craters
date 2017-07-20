@@ -10,8 +10,7 @@ def template_match_target(target, match_thresh2=50, minrad=3, maxrad=75):
     #Match Threshold (squared)
     # for template matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, remove (x2,y2,r2) circle (it is a duplicate).
     # for predicted target -> csv matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, positive detection
-    
-    #minrad - keep in mind that if the predicted target has thick rings, a small ring of diameter ~ ring thickness could be detected by match_filter.
+    # minrad - keep in mind that if the predicted target has thick rings, a small ring of diameter ~ ring_thickness could be detected by match_filter.
     
     # minrad/maxrad are the radii to search over during template matching
     # hyperparameters, probably don't need to change
@@ -52,12 +51,30 @@ def template_match_target(target, match_thresh2=50, minrad=3, maxrad=75):
         diffsum = np.asarray([sum(x) for x in diff])
         index = diffsum < match_thresh2
         if len(np.where(index==True)[0]) > 1:
-            #replace current coord with max-correlation coord from duplicate list
+            #replace current coord with match_template'd max-correlation coord from duplicate list
             coords_i, corr_i = coords[np.where(index==True)], corr[np.where(index==True)]
             coords[i] = coords_i[corr_i == np.max(corr_i)][0]
             index[i] = False
             coords = coords[np.where(index==False)]
         N, i = len(coords), i+1
+
+    # This might not be necessary if minrad > ring_thickness, but probably good to keep as a failsafe
+    # remove small false craters that arise because of thick edges
+    i, N = 0, len(coords)
+    dim = target.shape[0]
+    while i < N:
+        x,y,r = coords[i]
+        if r < 6:   #this effect is not present for large craters
+            mask = np.zeros((dim,dim))
+            cv2.circle(mask, (x,y), int(np.round(r)), 1, thickness=-1)
+            crater = target[mask==1]
+            if np.sum(crater) == len(crater):   #crater is completely filled in, likely a false positive
+                coords = np.delete(coords, i, axis=0)
+                N = len(coords)
+            else:
+                i += 1
+        else:
+            i += 1
 
     return coords
 

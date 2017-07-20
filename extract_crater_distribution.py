@@ -32,7 +32,7 @@ def read_and_normalize_data(path, dim, data_type):
     print('%s shape:'%data_type, data.shape)
     return data, target, id_
 
-def get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale):
+def get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale,ground_truth_dist):
     # properties of the dataset, shouldn't change (unless you use a different dataset)
     master_img_height_pix = 20000.  #number of pixels for height
     master_img_height_lat = 180.    #degrees used for latitude
@@ -64,27 +64,42 @@ def get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale):
     pred = model.predict(data.astype('float32'))
 
     # extract crater distribution
-    master_crater_dist = []
+    pred_crater_dist = []
     print "Extracting crater radius distribution of %d %s files"%(n_imgs,type)
     for i in range(n_imgs):
         coords = template_match_target(pred[i])
         img_pix_height = P[id[i]]['box'][2] - P[id[i]]['box'][0]
         pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180)*(img_pix_height/dim)*r_moon
         _,_,radii = zip(*coords*pix_to_km)
-        master_crater_dist += list(radii)
+        pred_crater_dist += list(radii)
 
-    master_crater_dist = np.asarray(master_crater_dist)
+    GT_crater_dist = []
+    if ground_truth_dist == 1:
+        minrad, maxrad = 3, 75    #min/max radius (in pixels) required to include crater in target
+        cutrad = 0.5              #0-1 range, if x+cutrad*r > img_width, remove, i.e. exclude craters ~half gone from image
+        for id_ in id:
+            csv = pd.read_csv('%slola_%s.csv'%(path[type],id_))
+            csv = csv[(csv['Diameter (pix)'] < 2*maxrad) & (csv['Diameter (pix)'] > 2*minrad)]
+            csv = csv[(csv['x']+cutrad*csv['Diameter (pix)']/2 <= dim)]
+            csv = csv[(csv['y']+cutrad*csv['Diameter (pix)']/2 <= dim)]
+            csv = csv[(csv['x']-cutrad*csv['Diameter (pix)']/2 > 0)]
+            csv = csv[(csv['y']-cutrad*csv['Diameter (pix)']/2 > 0)]
+            rad = csv['Diameter (pix)'].values/2
+            GT_crater_dist += list(rad)
+
+    pred_crater_dist, GT_crater_dist = np.asarray(master_crater_dist), np.asarray(GT_crater_dist)
     np.save('%s%s_craterdist_n%d.npy'%(path[type],type,n_imgs),master_crater_dist)
-    return master_crater_dist
+    return pred_crater_dist, GT_crater_dist
 
 if __name__ == '__main__':
     #args
     dir = 'datasets/rings'  #location of Train_rings/, Dev_rings/, Test_rings/, Dev_rings_for_loss/ folders. Don't include final '/' in path
-    type = 'test'          #what to get crater distribution of: train, dev, test
-    n_imgs = 30016            #number of images to use for getting crater distribution.
+    type = 'train'           #what to get crater distribution of: train, dev, test
+    n_imgs = 10          #number of images to use for getting crater distribution.
+    ground_truth_dist = 1   #get ground truth distribution too
     
     modelpath = 'models/unet_s256_rings_nFL96.h5'
     inv_color = 1           #**must be same setting as what model was trained on**
     rescale = 1             #**must be same setting as what model was trained on**
 
-    crater_dist = get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale)
+    crater_dist = get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale,ground_truth_dist)

@@ -20,6 +20,8 @@ CUDA_VISIBLE_DEVICES=2 nohup python moon_unet_s256_rings_customloss.py > unet_s2
 CUDA_VISIBLE_DEVICES=0 nohup python moon_unet_s256_rings.py > unet_s256_rings_invcolor_datagen.txt &
 CUDA_VISIBLE_DEVICES=1 nohup python moon_unet_s256_rings_forKristen.py > unet_s256_rings_forKristen.txt &
 
+CUDA_VISIBLE_DEVICES=1 nohup python extract_crater_distribution.py > extract_crater_dist.txt &
+
 CUDA_VISIBLE_DEVICES=0 python moon_vgg16_1.2.2.py --run_fold 1 > outputfold1.txt &
 CUDA_VISIBLE_DEVICES=1 python moon_vgg16_1.2.2.py --run_fold 2 > outputfold2.txt &
 CUDA_VISIBLE_DEVICES=2 python moon_vgg16_1.2.2.py --run_fold 3 > outputfold3.txt &

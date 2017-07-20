@@ -21,7 +21,7 @@ def load_data(path, data_type):
         img = cv2.imread(f, cv2.IMREAD_GRAYSCALE)/255.
         X.append(img)
         y.append(np.array(Image.open('%smask.tiff'%f.split('.png')[0])))
-        X_id.append(int(flbase.split('lola_')[1].split('.png')[0]))
+        X_id.append(int(os.path.basename(f).split('lola_')[1].split('.png')[0]))
     return  X, y, X_id
 
 def read_and_normalize_data(path, dim, data_type):

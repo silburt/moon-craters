@@ -78,12 +78,10 @@ def get_crater_dist(dir,type,n_imgs,modelname,inv_color,rescale):
 
 
 if __name__ == '__main__':
-    print('Keras version: {}'.format(keras_version))
-    
     #args
     dir = 'datasets/rings'  #location of Train_rings/, Dev_rings/, Test_rings/, Dev_rings_for_loss/ folders. Don't include final '/' in path
     type = 'train'          #what to get crater distribution of: train, dev, test
-    n_imgs = 100            #number of images to use for getting crater distribution.
+    n_imgs = 10            #number of images to use for getting crater distribution.
     
     modelname = 'models/unet_s256_rings_nFL96.h5'
     inv_color = 1           #**must be same setting as what model was trained on**

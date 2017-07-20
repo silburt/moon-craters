@@ -32,7 +32,7 @@ def read_and_normalize_data(path, dim, data_type):
     print('%s shape:'%data_type, data.shape)
     return data, target, id_
 
-def get_crater_dist(dir,type,n_imgs,modelname,inv_color,rescale):
+def get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale):
     # properties of the dataset, shouldn't change (unless you use a different dataset)
     master_img_height_pix = 20000.  #number of pixels for height
     master_img_height_lat = 180.    #degrees used for latitude
@@ -60,11 +60,12 @@ def get_crater_dist(dir,type,n_imgs,modelname,inv_color,rescale):
         data = rescale_and_invcolor(data, inv_color, rescale)
 
     # generate model predictions and fit template match
-    model = load_model(filename)
+    model = load_model(modelpath)
     pred = model.predict(data.astype('float32'))
 
     # extract crater distribution
     master_crater_dist = []
+    print "Extracting crater radius distribution of %d %s files"%(n_imgs,type)
     for i in range(n_imgs):
         coords = template_match_target(pred[i])
         img_pix_height = P[test_id[i]]['box'][2] - P[test_id[i]]['box'][0]
@@ -83,8 +84,8 @@ if __name__ == '__main__':
     type = 'train'          #what to get crater distribution of: train, dev, test
     n_imgs = 10            #number of images to use for getting crater distribution.
     
-    modelname = 'models/unet_s256_rings_nFL96.h5'
+    modelpath = 'models/unet_s256_rings_nFL96.h5'
     inv_color = 1           #**must be same setting as what model was trained on**
     rescale = 1             #**must be same setting as what model was trained on**
 
-    crater_dist = get_crater_dist(dir,type,n_imgs,modelname,inv_color,rescale)
+    crater_dist = get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale)

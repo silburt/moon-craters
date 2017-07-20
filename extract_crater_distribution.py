@@ -68,7 +68,7 @@ def get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale):
     print "Extracting crater radius distribution of %d %s files"%(n_imgs,type)
     for i in range(n_imgs):
         coords = template_match_target(pred[i])
-        img_pix_height = P[test_id[i]]['box'][2] - P[test_id[i]]['box'][0]
+        img_pix_height = P[id[i]]['box'][2] - P[id[i]]['box'][0]
         pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180)*(img_pix_height/dim)*r_moon
         _,_,radii = zip(*coords*pix_to_km)
         master_crater_dist += list(radii)

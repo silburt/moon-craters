@@ -65,7 +65,7 @@ def get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale,ground_truth_dis
 
     # extract crater distribution
     pred_crater_dist = []
-    print "Extracting crater radius distribution of %d %s files"%(n_imgs,type)
+    print "Extracting crater radius distribution of %d %s files."%(n_imgs,type)
     for i in range(n_imgs):
         coords = template_match_target(pred[i])
         img_pix_height = P[id[i]]['box'][2] - P[id[i]]['box'][0]
@@ -75,6 +75,7 @@ def get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale,ground_truth_dis
 
     GT_crater_dist = []
     if ground_truth_dist == 1:
+        print "Getting ground truth crater distribution."
         minrad, maxrad = 3, 75    #min/max radius (in pixels) required to include crater in target
         cutrad = 0.5              #0-1 range, if x+cutrad*r > img_width, remove, i.e. exclude craters ~half gone from image
         for id_ in id:
@@ -94,13 +95,13 @@ def get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale,ground_truth_dis
 
 if __name__ == '__main__':
     #args
-    dir = 'datasets/rings'  #location of Train_rings/, Dev_rings/, Test_rings/, Dev_rings_for_loss/ folders. Don't include final '/' in path
-    type = 'train'           #what to get crater distribution of: train, dev, test
-    n_imgs = 10          #number of images to use for getting crater distribution.
-    ground_truth_dist = 1   #get ground truth distribution too
+    dir = 'datasets/rings'  #location of Train_rings/, Dev_rings/, Test_rings/ folders. Exclude final '/' in path.
+    type = 'test'           #what to get crater distribution of: train, dev, test
+    n_imgs = 30016          #number of images to use for getting crater distribution.
+    ground_truth_dist = 1   #get ground truth crater distribution too (from csvs)
     
     modelpath = 'models/unet_s256_rings_nFL96.h5'
     inv_color = 1           #**must be same setting as what model was trained on**
     rescale = 1             #**must be same setting as what model was trained on**
 
-    crater_dist = get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale,ground_truth_dist)
+    pred_crater_dist, GT_crater_dist = get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale,ground_truth_dist)

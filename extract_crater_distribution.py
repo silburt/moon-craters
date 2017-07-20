@@ -87,7 +87,7 @@ def get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale,ground_truth_dis
             rad = csv['Diameter (pix)'].values/2
             GT_crater_dist += list(rad)
 
-    pred_crater_dist, GT_crater_dist = np.asarray(master_crater_dist), np.asarray(GT_crater_dist)
+    pred_crater_dist, GT_crater_dist = np.asarray(pred_crater_dist), np.asarray(GT_crater_dist)
     np.save('%s%s_predcraterdist_n%d.npy'%(path[type],type,n_imgs),pred_crater_dist)
     np.save('%s%s_GTcraterdist_n%d.npy'%(path[type],type,n_imgs),GT_crater_dist)
     return pred_crater_dist, GT_crater_dist

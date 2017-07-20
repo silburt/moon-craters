@@ -74,15 +74,14 @@ def get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale):
         master_crater_dist += list(radii)
 
     master_crater_dist = np.asarray(master_crater_dist)
-    np.save('%s%s_craterdist.npy'%(path[type],type),master_crater_dist)
+    np.save('%s%s_craterdist_n%d.npy'%(path[type],type,n_imgs),master_crater_dist)
     return master_crater_dist
-
 
 if __name__ == '__main__':
     #args
     dir = 'datasets/rings'  #location of Train_rings/, Dev_rings/, Test_rings/, Dev_rings_for_loss/ folders. Don't include final '/' in path
-    type = 'train'          #what to get crater distribution of: train, dev, test
-    n_imgs = 10            #number of images to use for getting crater distribution.
+    type = 'test'          #what to get crater distribution of: train, dev, test
+    n_imgs = 30016            #number of images to use for getting crater distribution.
     
     modelpath = 'models/unet_s256_rings_nFL96.h5'
     inv_color = 1           #**must be same setting as what model was trained on**

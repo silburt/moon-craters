@@ -78,7 +78,7 @@ def get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale,ground_truth_dis
         minrad, maxrad = 3, 75    #min/max radius (in pixels) required to include crater in target
         cutrad = 0.5              #0-1 range, if x+cutrad*r > img_width, remove, i.e. exclude craters ~half gone from image
         for id_ in id:
-            csv = pd.read_csv('%slola_%s.csv'%(path[type],id_))
+            csv = pd.read_csv('%slola_%s.csv'%(path[type],str(id_).zfill(5)))
             csv = csv[(csv['Diameter (pix)'] < 2*maxrad) & (csv['Diameter (pix)'] > 2*minrad)]
             csv = csv[(csv['x']+cutrad*csv['Diameter (pix)']/2 <= dim)]
             csv = csv[(csv['y']+cutrad*csv['Diameter (pix)']/2 <= dim)]
@@ -88,7 +88,8 @@ def get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale,ground_truth_dis
             GT_crater_dist += list(rad)
 
     pred_crater_dist, GT_crater_dist = np.asarray(master_crater_dist), np.asarray(GT_crater_dist)
-    np.save('%s%s_craterdist_n%d.npy'%(path[type],type,n_imgs),master_crater_dist)
+    np.save('%s%s_predcraterdist_n%d.npy'%(path[type],type,n_imgs),pred_crater_dist)
+    np.save('%s%s_GTcraterdist_n%d.npy'%(path[type],type,n_imgs),GT_crater_dist)
     return pred_crater_dist, GT_crater_dist
 
 if __name__ == '__main__':

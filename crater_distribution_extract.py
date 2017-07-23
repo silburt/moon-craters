@@ -84,8 +84,8 @@ def get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale,ground_truth_onl
 
     # Generate csv dist
     # hyperparameters
-    minrad, maxrad = 3, 75    #min/max radius (in pixels) required to include crater in target
-    cutrad = 0.85             #0-1 range, if x+cutrad*r > dim, remove, higher cutrad = larger % of circle required
+    minrad, maxrad = 3, 75  #min/max radius (in pixels) required to include crater in target
+    cutrad = 1              #0-1 range, if x+cutrad*r > dim, remove, higher cutrad = larger % of circle required
     print "Getting ground truth crater distribution."
     for id_ in id:
         csv = pd.read_csv('%slola_%s.csv'%(path[type],str(id_).zfill(5)))
@@ -98,7 +98,7 @@ def get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale,ground_truth_onl
         GT_crater_dist += list(GT_radius)
 
     GT_crater_dist = np.asarray(GT_crater_dist)
-    np.save('%s%s_GTcraterdist_n%d_cutrad0.85.npy'%(path[type],type,n_imgs),GT_crater_dist)
+    np.save('%s%s_GTcraterdist_n%d_cutrad1.npy'%(path[type],type,n_imgs),GT_crater_dist)
     return pred_crater_dist, GT_crater_dist
 
 if __name__ == '__main__':
@@ -113,3 +113,4 @@ if __name__ == '__main__':
     rescale = 1             #**must be same setting as what model was trained on**
 
     pred_crater_dist, GT_crater_dist = get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale,ground_truth_only)
+    print "Script completed successfully"

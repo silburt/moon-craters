@@ -35,7 +35,8 @@ def read_and_normalize_data(path, dim, data_type):
     return data, target, id_
 
 def get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale,ground_truth_only):
-    pred_crater_dist, GT_crater_dist = [], []
+    GT_crater_dist = []
+    pred_crater_dist = np.empty(0)
     
     # properties of the dataset, shouldn't change (unless you use a different dataset)
     master_img_height_pix = 20000.  #number of pixels for height
@@ -65,19 +66,24 @@ def get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale,ground_truth_onl
             print "inv_color=%d, rescale=%d, processing data"%(inv_color, rescale)
             data = rescale_and_invcolor(data, inv_color, rescale)
         
-        # generate model predictions and fit template match
+        # generate model predictions
         model = load_model(modelpath)
         pred = model.predict(data.astype('float32'))
 
-        # extract crater distribution
+        # extract crater distribution, remove duplicates live
         print "Extracting crater radius distribution of %d %s files."%(n_imgs,type)
         for i in range(len(pred)):
             coords = template_match_target(pred[i])
-            img_pix_height = P[id[i]]['box'][2] - P[id[i]]['box'][0]
-            pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180)*(img_pix_height/dim)*r_moon
             if len(coords) >= 1:
-                _,_,radii = zip(*coords*pix_to_km)
-                pred_crater_dist += list(radii)
+                P_ = P[id[i]]
+                img_pix_height = P_['box'][2] - P_['box'][0]
+                pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180)*(img_pix_height/dim)*r_moon
+                long_pix,lat_pix,radii_pix = coords.T
+                radii_km = radii_pix*pix_to_km
+                long_deg = P_['llbd'][0] + (P_['llbd'][1]-P_['llbd'][0])*long_pix
+                lat_deg = P_['llbd'][2] + (P_['llbd'][3]-P_['llbd'][2])*lat_pix
+                tuple = np.column_stack((long_deg,lat_deg,radii_km))
+                pred_crater_dist = np.concatenate((pred_crater_dist,tuple))
 
         pred_crater_dist = np.asarray(pred_crater_dist)
         np.save('%s%s_predcraterdist_n%d.npy'%(path[type],type,n_imgs),pred_crater_dist)

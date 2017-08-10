@@ -78,7 +78,7 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
                     print "P_2, P_0, img_pix_height:",P[id[i]]['box'][2], P[id[i]]['box'][0], img_pix_height
                     print "pix_to_km:",pix_to_km
                     print coords[k]
-                print "\n\n"
+            print "\n"
 
         pred_crater_dist = np.asarray(pred_crater_dist)
         np.save('%s/%s_predcraterdist_n%d.npy'%(data_dir,data_prefix,n_imgs),pred_crater_dist)

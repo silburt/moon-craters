@@ -22,7 +22,8 @@ def template_match_target(target, match_thresh2=50, minrad=3, maxrad=75):
     target[target >= target_thresh] = 1
     target[target < target_thresh] = 0
     
-    radii = np.linspace(minrad,maxrad,maxrad-minrad,dtype=int)
+    #radii = np.linspace(minrad,maxrad,maxrad-minrad,dtype=int)
+    radii = np.arange(minrad,maxrad+1,1,dtype=int)
     coords = []     #coordinates extracted from template matching
     corr = []       #correlation coefficient for coordinates set
     for r in radii:

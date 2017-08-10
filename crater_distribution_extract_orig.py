@@ -22,43 +22,41 @@ def load_data(path, data_type):
     for f in files:
         img = cv2.imread(f, cv2.IMREAD_GRAYSCALE)/255.
         X.append(img)
-        y.append(np.array(Image.open('%smask.tiff'%f.split('.png')[0])))
-        X_id.append(int(os.path.basename(f).split('lola_')[1].split('.png')[0]))
-    return  X, y, X_id
+        #y.append(np.array(Image.open('%smask.tiff'%f.split('.png')[0])))
+        X_id.append(int(os.path.basename(f).split('_')[1].split('.png')[0]))
+    return  X, X_id
 
 def read_and_normalize_data(path, dim, data_type):
-    data, target, id_ = load_data(path, data_type)
+    #data, target, id_ = load_data(path, data_type)
+    data, id_ = load_data(path, data_type)
     data = np.array(data).astype('float32')             #convert to numpy, convert to float
     data = data.reshape(len(data),dim, dim, 1)          #add dummy third dimension, required for keras
-    target = np.array(target).astype('float32')         #convert to numpy, convert to float
+    #target = np.array(target).astype('float32')         #convert to numpy, convert to float
     print('%s shape:'%data_type, data.shape)
-    return data, target, id_
+    return data, id_
 
-def get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale,ground_truth_only):
-    GT_crater_dist = []
-    pred_crater_dist = np.empty(0)
+def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,inv_color,rescale,ground_truth_only):
+    pred_crater_dist, GT_crater_dist = [], []
     
     # properties of the dataset, shouldn't change (unless you use a different dataset)
     master_img_height_pix = 20000.  #number of pixels for height
     master_img_height_lat = 180.    #degrees used for latitude
     r_moon = 1737                   #radius of the moon (km)
     dim = 256                       #image dimension (pixels, assume dim=height=width)
-    P = cPickle.load(open('%s/lolaout_%s.p'%(dir,type), 'r'))
+    P = cPickle.load(open(pickle_dir, 'r'))
     
     # get data
-    path = {'train':'%s/Train_rings/'%dir, 'dev':'%s/Dev_rings/'%dir, 'test':'%s/Test_rings/'%dir}
     try:
-        data=np.load('%s%s_data.npy'%(path[type],type))
-        target=np.load('%s%s_target.npy'%(path[type],type))
-        id=np.load('%s%s_id.npy'%(path[type],type))
-        print "Successfully loaded %s files locally."%path[type]
+        data=np.load('%s/%s_data.npy'%(data_dir,data_prefix))
+        #target=np.load('%s/%s_target.npy'%(data_dir,data_prefix))
+        id=np.load('%s/%s_id.npy'%(data_dir,data_prefix))
+        print "Successfully loaded %s files locally."%data_dir
     except:
         print "Couldnt find locally saved .npy files, loading from %s."%dir
-        data, target, id = read_and_normalize_data(path[type], dim, type)
-        np.save('%s%s_data.npy'%(path[type],type),data)
-        np.save('%s%s_target.npy'%(path[type],type),target)
-        np.save('%s%s_id.npy'%(path[type],type),id)
-
+        data, id = read_and_normalize_data(data_dir, dim, type)
+        np.save('%s/%s_data.npy'%(data_dir,data_prefix),data)
+        #np.save('%s/%s_target.npy'%(data_dir,data_prefix),target)
+        np.save('%s/%s_id.npy'%(data_dir,data_prefix),id)
     data, target, id = data[:n_imgs], target[:n_imgs], id[:n_imgs]
 
     if ground_truth_only == 0:
@@ -67,26 +65,21 @@ def get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale,ground_truth_onl
             data = rescale_and_invcolor(data, inv_color, rescale)
         
         # generate model predictions
-        model = load_model(modelpath)
+        model = load_model(model_loc)
         pred = model.predict(data.astype('float32'))
 
         # extract crater distribution, remove duplicates live
         print "Extracting crater radius distribution of %d %s files."%(n_imgs,type)
         for i in range(len(pred)):
             coords = template_match_target(pred[i])
+            img_pix_height = P[id[i]]['box'][2] - P[id[i]]['box'][0]
+            pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180)*(img_pix_height/dim)*r_moon
             if len(coords) >= 1:
-                P_ = P[id[i]]
-                img_pix_height = P_['box'][2] - P_['box'][0]
-                pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180)*(img_pix_height/dim)*r_moon
-                long_pix,lat_pix,radii_pix = coords.T
-                radii_km = radii_pix*pix_to_km
-                long_deg = P_['llbd'][0] + (P_['llbd'][1]-P_['llbd'][0])*long_pix
-                lat_deg = P_['llbd'][2] + (P_['llbd'][3]-P_['llbd'][2])*lat_pix
-                tuple = np.column_stack((long_deg,lat_deg,radii_km))
-                pred_crater_dist = np.concatenate((pred_crater_dist,tuple))
+                _,_,radii = zip(*coords*pix_to_km)
+                pred_crater_dist += list(radii)
 
         pred_crater_dist = np.asarray(pred_crater_dist)
-        np.save('%s%s_predcraterdist_n%d.npy'%(path[type],type,n_imgs),pred_crater_dist)
+        np.save('%s/%s_predcraterdist_n%d.npy'%(data_dir,data_prefix,n_imgs),pred_crater_dist)
 
     # Generate csv dist
     # hyperparameters
@@ -94,7 +87,7 @@ def get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale,ground_truth_onl
     cutrad = 1              #0-1 range, if x+cutrad*r > dim, remove, higher cutrad = larger % of circle required
     print "Getting ground truth crater distribution."
     for id_ in id:
-        csv = pd.read_csv('%slola_%s.csv'%(path[type],str(id_).zfill(5)))
+        csv = pd.read_csv('%s/%s_%s.csv'%(data_dir,csv_prefix,str(id_).zfill(5)))
         csv = csv[(csv['Diameter (pix)'] < 2*maxrad) & (csv['Diameter (pix)'] > 2*minrad)]
         csv = csv[(csv['x']+cutrad*csv['Diameter (pix)']/2 <= dim)]
         csv = csv[(csv['y']+cutrad*csv['Diameter (pix)']/2 <= dim)]
@@ -109,14 +102,16 @@ def get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale,ground_truth_onl
 
 if __name__ == '__main__':
     #args
-    dir = 'datasets/rings'  #location of Train_rings/, Dev_rings/, Test_rings/ folders. Exclude final '/' in path.
-    type = 'test'           #what to get crater distribution of: train, dev, test
-    n_imgs = 30016          #number of images to use for getting crater distribution.
-    ground_truth_only = 1   #get ground truth crater distribution only (from csvs), do not generate predictions
+    data_dir = 'datasets/ilen_1500_to_2500/ilen_1500'       #location of data to predict on. Exclude final '/' in path.
+    data_prefix = ''                                        #prefix of e.g. *_data.npy files.
+    csv_prefix = ''                                         #prefix of e.g. *_0001.csv files.
+    pickle_loc = '%s/outp_p0.p'%data_dir                    #location of corresponding pickle file
+    model_loc = 'models/unet_s256_rings_nFL96.h5'
     
-    modelpath = 'models/unet_s256_rings_nFL96.h5'
+    n_imgs = 1000          #number of images to use for getting crater distribution.
     inv_color = 1           #**must be same setting as what model was trained on**
     rescale = 1             #**must be same setting as what model was trained on**
+    ground_truth_only = 0   #get ground truth crater distribution only (from csvs), do not generate predictions
 
-    pred_crater_dist, GT_crater_dist = get_crater_dist(dir,type,n_imgs,modelpath,inv_color,rescale,ground_truth_only)
+    pred_crater_dist, GT_crater_dist = get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,inv_color,rescale,ground_truth_only)
     print "Script completed successfully"

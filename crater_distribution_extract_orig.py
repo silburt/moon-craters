@@ -74,7 +74,7 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
                 pred_crater_dist += list(radii)
             for k in range(len(radii)):
                 if radii[k] > 10 and radii[k] < 12:
-                    print "radii=%f"radii[k]
+                    print "radii=%f"%radii[k]
                     print "P_2, P_0, img_pix_height:",P[id[i]]['box'][2], P[id[i]]['box'][0], img_pix_height
                     print "pix_to_km:",pix_to_km
                     print coords[k]

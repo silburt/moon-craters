@@ -3,10 +3,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-#pred = np.load('datasets/rings/Test_rings/test_predcraterdist_n30016.npy')
-#truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_n30016_cutrad1.npy')
-pred = np.load('datasets/ilen_1500_to_2500/ilen_1500/_predcraterdist_n1000.npy')
-truth = np.load('datasets/ilen_1500_to_2500/ilen_1500/_GTcraterdist_n1000.npy')
+pred = np.load('datasets/rings/Test_rings/test_predcraterdist_n30016.npy')
+truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_n30016_cutrad1.npy')
+#pred = np.load('datasets/ilen_1500_to_2500/ilen_1500/_predcraterdist_n1000.npy')
+#truth = np.load('datasets/ilen_1500_to_2500/ilen_1500/_GTcraterdist_n1000.npy')
 
 norm = False
 nbins = 100

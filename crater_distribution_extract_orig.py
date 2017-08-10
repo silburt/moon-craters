@@ -74,7 +74,7 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
                 pred_crater_dist += list(radii)
             for k in range(len(radii)):
                 if radii[k] > 10 and radii[k] < 12:
-                    print "radii[%d]=%f"%(k,radii[k])
+                    print "radii=%f"radii[k]
                     print "P_2, P_0, img_pix_height:",P[id[i]]['box'][2], P[id[i]]['box'][0], img_pix_height
                     print "pix_to_km:",pix_to_km
                     print coords[k]
@@ -104,13 +104,19 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
 
 if __name__ == '__main__':
     #args
-    data_dir = 'datasets/ilen_1500_to_2500/ilen_1500'       #location of data to predict on. Exclude final '/' in path.
-    data_prefix = ''                                        #prefix of e.g. *_data.npy files.
-    csv_prefix = ''                                         #prefix of e.g. *_0001.csv files.
-    pickle_loc = '%s/outp_p0.p'%data_dir                    #location of corresponding pickle file
+#    data_dir = 'datasets/ilen_1500_to_2500/ilen_1500'       #location of data to predict on. Exclude final '/' in path.
+#    data_prefix = ''                                        #prefix of e.g. *_data.npy files.
+#    csv_prefix = ''                                         #prefix of e.g. *_0001.csv files.
+#    pickle_loc = '%s/outp_p0.p'%data_dir                    #location of corresponding pickle file
+#    model_loc = 'models/unet_s256_rings_nFL96.h5'
+
+    data_dir = 'datasets/rings/Test_rings'                  #location of data to predict on. Exclude final '/' in path.
+    data_prefix = 'test'                                    #prefix of e.g. *_data.npy files.
+    csv_prefix = 'lola'                                     #prefix of e.g. *_0001.csv files.
+    pickle_loc = '%s/lolaout_test.p'%data_dir               #location of corresponding pickle file
     model_loc = 'models/unet_s256_rings_nFL96.h5'
     
-    n_imgs = 1000          #number of images to use for getting crater distribution.
+    n_imgs = 30016          #number of images to use for getting crater distribution.
     inv_color = 1           #**must be same setting as what model was trained on**
     rescale = 1             #**must be same setting as what model was trained on**
     ground_truth_only = 0   #get ground truth crater distribution only (from csvs), do not generate predictions

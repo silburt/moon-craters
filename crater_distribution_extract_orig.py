@@ -16,22 +16,18 @@ from utils.template_match_target import *
 def load_data(path, data_type):
     X = []
     X_id = []
-    y = []
     files = glob.glob('%s*.png'%path)
     print "number of %s files are: %d"%(data_type,len(files))
     for f in files:
         img = cv2.imread(f, cv2.IMREAD_GRAYSCALE)/255.
         X.append(img)
-        #y.append(np.array(Image.open('%smask.tiff'%f.split('.png')[0])))
         X_id.append(int(os.path.basename(f).split('_')[1].split('.png')[0]))
     return  X, X_id
 
 def read_and_normalize_data(path, dim, data_type):
-    #data, target, id_ = load_data(path, data_type)
     data, id_ = load_data(path, data_type)
     data = np.array(data).astype('float32')             #convert to numpy, convert to float
     data = data.reshape(len(data),dim, dim, 1)          #add dummy third dimension, required for keras
-    #target = np.array(target).astype('float32')         #convert to numpy, convert to float
     print('%s shape:'%data_type, data.shape)
     return data, id_
 
@@ -48,16 +44,14 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
     # get data
     try:
         data=np.load('%s/%s_data.npy'%(data_dir,data_prefix))
-        #target=np.load('%s/%s_target.npy'%(data_dir,data_prefix))
         id=np.load('%s/%s_id.npy'%(data_dir,data_prefix))
         print "Successfully loaded %s files locally."%data_dir
     except:
         print "Couldnt find locally saved .npy files, loading from %s."%dir
         data, id = read_and_normalize_data(data_dir, dim, type)
         np.save('%s/%s_data.npy'%(data_dir,data_prefix),data)
-        #np.save('%s/%s_target.npy'%(data_dir,data_prefix),target)
         np.save('%s/%s_id.npy'%(data_dir,data_prefix),id)
-    data, target, id = data[:n_imgs], target[:n_imgs], id[:n_imgs]
+    data, id = data[:n_imgs], id[:n_imgs]
 
     if ground_truth_only == 0:
         if inv_color==1 or rescale==1:

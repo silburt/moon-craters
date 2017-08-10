@@ -13,22 +13,22 @@ from keras.models import load_model
 from utils.rescale_invcolor import *
 from utils.template_match_target import *
 
-def load_data(path, data_type):
+def load_data(path):
     X = []
     X_id = []
     files = glob.glob('%s/*.png'%path)
-    print "number of %s files are: %d"%(data_type,len(files))
+    print "number of files are: %d"%len(files)
     for f in files:
         img = cv2.imread(f, cv2.IMREAD_GRAYSCALE)/255.
         X.append(img)
         X_id.append(int(os.path.basename(f).split('_')[1].split('.png')[0]))
     return  X, X_id
 
-def read_and_normalize_data(path, dim, data_type):
-    data, id_ = load_data(path, data_type)
+def read_and_normalize_data(path, dim):
+    data, id_ = load_data(path)
     data = np.array(data).astype('float32')             #convert to numpy, convert to float
     data = data.reshape(len(data),dim, dim, 1)          #add dummy third dimension, required for keras
-    print('%s shape:'%data_type, data.shape)
+    print 'shape:', data.shape
     return data, id_
 
 def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,inv_color,rescale,ground_truth_only):
@@ -38,7 +38,7 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
     master_img_height_pix = 20000.  #number of pixels for height
     master_img_height_lat = 180.    #degrees used for latitude
     r_moon = 1737.                  #radius of the moon (km)
-    dim = 256.                      #image dimension (pixels, assume dim=height=width)
+    dim = 256                       #image dimension (pixels, assume dim=height=width)
     P = cPickle.load(open(pickle_loc, 'r'))
     
     # get data
@@ -48,7 +48,7 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
         print "Successfully loaded %s files locally."%data_dir
     except:
         print "Couldnt find locally saved .npy files, loading from %s."%data_dir
-        data, id = read_and_normalize_data(data_dir, dim, type)
+        data, id = read_and_normalize_data(data_dir, dim)
         np.save('%s/%s_data.npy'%(data_dir,data_prefix),data)
         np.save('%s/%s_id.npy'%(data_dir,data_prefix),id)
     data, id = data[:n_imgs], id[:n_imgs]
@@ -63,11 +63,11 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
         pred = model.predict(data.astype('float32'))
 
         # extract crater distribution, remove duplicates live
-        print "Extracting crater radius distribution of %d %s files."%(n_imgs,type)
+        print "Extracting crater radius distribution of %d files."%n_imgs
         for i in range(len(pred)):
             coords = template_match_target(pred[i])
-            img_pix_height = P[id[i]]['box'][2] - P[id[i]]['box'][0]
-            pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180)*(img_pix_height/dim)*r_moon
+            img_pix_height = float(P[id[i]]['box'][2] - P[id[i]]['box'][0])
+            pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180.)*(img_pix_height/dim)*r_moon
             if len(coords) >= 1:
                 _,_,radii = zip(*coords*pix_to_km)
                 pred_crater_dist += list(radii)

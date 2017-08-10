@@ -16,7 +16,7 @@ from utils.template_match_target import *
 def load_data(path, data_type):
     X = []
     X_id = []
-    files = glob.glob('%s*.png'%path)
+    files = glob.glob('%s/*.png'%path)
     print "number of %s files are: %d"%(data_type,len(files))
     for f in files:
         img = cv2.imread(f, cv2.IMREAD_GRAYSCALE)/255.
@@ -37,8 +37,8 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
     # properties of the dataset, shouldn't change (unless you use a different dataset)
     master_img_height_pix = 20000.  #number of pixels for height
     master_img_height_lat = 180.    #degrees used for latitude
-    r_moon = 1737                   #radius of the moon (km)
-    dim = 256                       #image dimension (pixels, assume dim=height=width)
+    r_moon = 1737.                  #radius of the moon (km)
+    dim = 256.                      #image dimension (pixels, assume dim=height=width)
     P = cPickle.load(open(pickle_loc, 'r'))
     
     # get data
@@ -47,7 +47,7 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
         id=np.load('%s/%s_id.npy'%(data_dir,data_prefix))
         print "Successfully loaded %s files locally."%data_dir
     except:
-        print "Couldnt find locally saved .npy files, loading from %s."%dir
+        print "Couldnt find locally saved .npy files, loading from %s."%data_dir
         data, id = read_and_normalize_data(data_dir, dim, type)
         np.save('%s/%s_data.npy'%(data_dir,data_prefix),data)
         np.save('%s/%s_id.npy'%(data_dir,data_prefix),id)

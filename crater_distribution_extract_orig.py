@@ -65,6 +65,7 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
         # extract crater distribution, remove duplicates live
         print "Extracting crater radius distribution of %d files."%n_imgs
         for i in range(len(pred)):
+            print i
             coords = template_match_target(pred[i])
             img_pix_height = float(P[id[i]]['box'][2] - P[id[i]]['box'][0])
             pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180.0)*(img_pix_height/float(dim))*r_moon

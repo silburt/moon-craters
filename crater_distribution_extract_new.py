@@ -34,9 +34,9 @@ def read_and_normalize_data(path, dim):
 def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,inv_color,rescale,ground_truth_only):
     
     # properties of the dataset, shouldn't change (unless you use a different dataset)
-    master_img_height_pix = 20000.  #number of pixels for height
+    master_img_height_pix = 23040.  #number of pixels for height
     master_img_height_lat = 180.    #degrees used for latitude
-    r_moon = 1737.                  #radius of the moon (km)
+    r_moon = 1737.4                 #radius of the moon (km)
     dim = 256                       #image dimension (pixels, assume dim=height=width)
     P = cPickle.load(open(pickle_loc, 'r'))
     
@@ -69,25 +69,26 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
         pred_crater_dist = np.empty([0,3])
         for i in range(len(pred)):
             coords = template_match_target(pred[i])
-            P_ = P[id[i]]
-            img_pix_height = float(P_['box'][2] - P_['box'][0])
-            pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180.0)*(img_pix_height/float(dim))*r_moon
-            long_pix,lat_pix,radii_pix = coords.T
-            radii_km = radii_pix*pix_to_km
-            long_deg = P_['llbd'][0] + (P_['llbd'][1]-P_['llbd'][0])*(long_pix/float(dim))
-            lat_deg = P_['llbd'][3] - (P_['llbd'][3]-P_['llbd'][2])*(lat_pix/float(dim))
-            tuple_ = np.column_stack((long_deg,lat_deg,radii_km))
-            
-            #only add unique (non-duplicate) values to the master pred_crater_dist
-            if len(pred_crater_dist) > 0:
-                for j in range(len(tuple_)):
-                    diff = (pred_crater_dist - tuple_[j])**2
-                    diffsum = np.asarray([sum(x) for x in diff])
-                    index = diffsum < unique_thresh2
-                    if len(np.where(index==True)[0]) == 0: #unique value
-                        pred_crater_dist = np.vstack((pred_crater_dist,tuple_[j]))
-            else:
-                pred_crater_dist = np.concatenate((pred_crater_dist,tuple_))
+            if len(coords) > 0:
+                P_ = P[id[i]]
+                img_pix_height = float(P_['box'][2] - P_['box'][0])
+                pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180.0)*(img_pix_height/float(dim))*r_moon
+                long_pix,lat_pix,radii_pix = coords.T
+                radii_km = radii_pix*pix_to_km
+                long_deg = P_['llbd'][0] + (P_['llbd'][1]-P_['llbd'][0])*(long_pix/float(dim))
+                lat_deg = P_['llbd'][3] - (P_['llbd'][3]-P_['llbd'][2])*(lat_pix/float(dim))
+                tuple_ = np.column_stack((long_deg,lat_deg,radii_km))
+                
+                #only add unique (non-duplicate) values to the master pred_crater_dist
+                if len(pred_crater_dist) > 0:
+                    for j in range(len(tuple_)):
+                        diff = (pred_crater_dist - tuple_[j])**2
+                        diffsum = np.asarray([sum(x) for x in diff])
+                        index = diffsum < unique_thresh2
+                        if len(np.where(index==True)[0]) == 0: #unique value
+                            pred_crater_dist = np.vstack((pred_crater_dist,tuple_[j]))
+                else:
+                    pred_crater_dist = np.concatenate((pred_crater_dist,tuple_))
 
         pred_crater_dist = np.asarray(pred_crater_dist)
         np.save('%s/%s_predcraterdist_unique_n%d.npy'%(data_dir,data_prefix,n_imgs),pred_crater_dist)

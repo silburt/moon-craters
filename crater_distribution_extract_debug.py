@@ -35,9 +35,9 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
     pred_crater_dist, GT_crater_dist = [], []
     
     # properties of the dataset, shouldn't change (unless you use a different dataset)
-    master_img_height_pix = 20000.  #number of pixels for height
+    master_img_height_pix = 23040.  #number of pixels for height
     master_img_height_lat = 180.    #degrees used for latitude
-    r_moon = 1737.                  #radius of the moon (km)
+    r_moon = 1737.4                 #radius of the moon (km)
     dim = 256                       #image dimension (pixels, assume dim=height=width)
     P = cPickle.load(open(pickle_loc, 'r'))
     

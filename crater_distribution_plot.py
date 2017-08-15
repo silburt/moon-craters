@@ -1,22 +1,24 @@
 #plot the results on local machine
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import cPickle
 
-pred = np.load('datasets/rings/Test_rings/test_predcraterdist_n30016.npy')
-truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_n30016_cutrad1.npy')
+#pred = np.load('datasets/rings/Test_rings/test_predcraterdist_n30016.npy')
+#truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_n30016_cutrad1.npy')
 #pred = np.load('datasets/ilen_1500_to_2500/ilen_1500/_predcraterdist_n1000.npy')
 #truth = np.load('datasets/ilen_1500_to_2500/ilen_1500/_GTcraterdist_n1000.npy')
 
-P = cPickle.load(open('datasets/rings/Test_rings/lolaout_test.p', 'r'))
-scales = []
-for i in range(len(P)):
-    P_ = P[i]
-    scales.append(P_['box'][2] - P_['box'][0])
+pred = np.load('datasets/rings/Test_rings/test_predcraterdist_unique_n30016.npy')
+truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_unique_n30016.npy')
+
+truthcsv = pd.read_csv('utils/alanalldata.csv')
+long, lat, pred = pred.T
+longT, latT, truth = truth.T
 
 norm = False
-nbins = 100
+nbins = 50
 
 #investigating
 inv = pred[(pred > 10)&(pred < 12)]
@@ -28,7 +30,14 @@ plt.hist(truth, nbins, range=[10,20], normed=norm, alpha=0.5, label='ground trut
 plt.legend()
 plt.yscale('log')
 
+
 #plot pickle
+#P = cPickle.load(open('datasets/rings/Test_rings/lolaout_test.p', 'r'))
+#scales = []
+#for i in range(len(P)):
+#    P_ = P[i]
+#    scales.append(P_['box'][2] - P_['box'][0])
+#
 #plt.hist(scales, nbins)
 #plt.xlabel('ilen image scales')
 

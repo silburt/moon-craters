@@ -94,7 +94,7 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
 #                    pred_crater_dist = np.concatenate((pred_crater_dist,tuple_))
 
         pred_crater_dist = np.asarray(pred_crater_dist)
-        np.save('%s/%s_predcraterdist_sample_n%d.npy'%(data_dir,data_prefix,n_imgs),pred_crater_dist)
+        np.save('%s/%s_predcraterdist_full.npy'%(data_dir,data_prefix),pred_crater_dist)
 
     # Generate csv dist
     GT_crater_dist = np.empty([0,3])
@@ -129,7 +129,7 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
 #            GT_crater_dist = np.concatenate((GT_crater_dist,tuple_))
 
     GT_crater_dist = np.asarray(GT_crater_dist)
-    np.save('%s/%s_GTcraterdist_sample_n%d.npy'%(data_dir,data_prefix,n_imgs),GT_crater_dist)
+    np.save('%s/%s_GTcraterdist_full.npy'%(data_dir,data_prefix),GT_crater_dist)
 
 if __name__ == '__main__':
     #args
@@ -146,7 +146,7 @@ if __name__ == '__main__':
     pickle_loc = '%s/lolaout_test.p'%data_dir               #location of corresponding pickle file
     model_loc = 'models/unet_s256_rings_nFL96.h5'
     
-    n_imgs = 100            #number of images to use for getting crater distribution.
+    n_imgs = 30016            #number of images to use for getting crater distribution.
     inv_color = 1           #**must be same setting as what model was trained on**
     rescale = 1             #**must be same setting as what model was trained on**
     ground_truth_only = 0   #get ground truth crater distribution only (from csvs), do not generate predictions

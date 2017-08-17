@@ -129,7 +129,7 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
 #            GT_crater_dist = np.concatenate((GT_crater_dist,tuple_))
 
     GT_crater_dist = np.asarray(GT_crater_dist)
-    np.save('%s/%s_GTcraterdist_sample_n%d.npy'%(data_dir,data_prefix,n_imgs),unique_thresh2)
+    np.save('%s/%s_GTcraterdist_sample_n%d.npy'%(data_dir,data_prefix,n_imgs),GT_crater_dist)
 
 if __name__ == '__main__':
     #args

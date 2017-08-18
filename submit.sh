@@ -20,7 +20,7 @@ CUDA_VISIBLE_DEVICES=2 nohup python moon_unet_s256_rings_customloss.py > unet_s2
 CUDA_VISIBLE_DEVICES=0 nohup python moon_unet_s256_rings.py > unet_s256_rings_invcolor_datagen.txt &
 CUDA_VISIBLE_DEVICES=1 nohup python moon_unet_s256_rings_forKristen.py > unet_s256_rings_forKristen.txt &
 
-CUDA_VISIBLE_DEVICES=1 nohup python crater_distribution_extract_debug.py > debug.txt &
+CUDA_VISIBLE_DEVICES=1 nohup python crater_distribution_extract_debug.py &>> debug_fullback.txt &
 CUDA_VISIBLE_DEVICES=2 nohup python crater_distribution_extract_new.py &>> get_sample.txt &
 python crater_distribution_extract_orig.py &>> debug.txt
 

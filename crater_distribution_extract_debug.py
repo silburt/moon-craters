@@ -66,12 +66,11 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
         print "Extracting crater radius distribution of %d files."%n_imgs
         for i in range(len(pred)):
             coords = template_match_target(pred[i])
-            img_pix_height = float(P[id[i]]['box'][2] - P[id[i]]['box'][0])
-            pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180.0)*(img_pix_height/float(dim))*r_moon
-            long_pix_to_deg = P_['llbd'][0] + (P_['llbd'][1]-P_['llbd'][0])/float(dim)
-            lat_pix_to_deg = P_['llbd'][3] - (P_['llbd'][3]-P_['llbd'][2])/float(dim)
             if len(coords) >= 1:
                 long,lat,radii = zip(*coords)
+                img_pix_height = float(P[id[i]]['box'][2] - P[id[i]]['box'][0])
+                pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180.0)*(img_pix_height/float(dim))*r_moon
+                P_ = P[id[i]]
                 N = len(radii)
                 vals = zip(long,lat,radii,[pix_to_km]*N,[P_['llbd'][0]]*N,[P_['llbd'][1]]*N,[P_['llbd'][2]]*N,[P_['llbd'][3]]*N)
                 pred_crater_dist += list(vals)

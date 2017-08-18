@@ -68,13 +68,16 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
             coords = template_match_target(pred[i])
             img_pix_height = float(P[id[i]]['box'][2] - P[id[i]]['box'][0])
             pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180.0)*(img_pix_height/float(dim))*r_moon
+            long_pix_to_deg = P_['llbd'][0] + (P_['llbd'][1]-P_['llbd'][0])/float(dim)
+            lat_pix_to_deg = P_['llbd'][3] - (P_['llbd'][3]-P_['llbd'][2])/float(dim)
             if len(coords) >= 1:
-                _,_,radii = zip(*coords)
-                vals = zip(radii,[pix_to_km]*len(radii))
+                long,lat,radii = zip(*coords)
+                N = len(radii)
+                vals = zip(long,lat,radii,[pix_to_km]*N,[P_['llbd'][0]]*N,[P_['llbd'][1]]*N,[P_['llbd'][2]]*N,[P_['llbd'][3]]*N)
                 pred_crater_dist += list(vals)
 
         pred_crater_dist = np.asarray(pred_crater_dist)
-        np.save('%s/%s_predcraterdist_debug_n%d.npy'%(data_dir,data_prefix,n_imgs),pred_crater_dist)
+        np.save('%s/%s_predcraterdist_debug_full.npy'%(data_dir,data_prefix,n_imgs),pred_crater_dist)
 
     # Generate csv dist
     # hyperparameters
@@ -92,7 +95,7 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
         GT_crater_dist += list(GT_radius)
 
     GT_crater_dist = np.asarray(GT_crater_dist)
-    np.save('%s/%s_GTcraterdist_n%d.npy'%(data_dir,data_prefix,n_imgs),GT_crater_dist)
+    np.save('%s/%s_GTcraterdist_debug_full.npy'%(data_dir,data_prefix,n_imgs),GT_crater_dist)
     return pred_crater_dist, GT_crater_dist
 
 if __name__ == '__main__':

@@ -5,6 +5,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import cPickle
 
+norm = False
+nbins = 40
+
 #pred = np.load('datasets/rings/Test_rings/test_predcraterdist_n30016.npy')
 #truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_n30016_cutrad1.npy')
 #pred = np.load('datasets/ilen_1500_to_2500/ilen_1500/_predcraterdist_n1000.npy')
@@ -19,16 +22,21 @@ import cPickle
 pred = np.load('datasets/rings/Test_rings/test_predcraterdist_debug_n30016.npy')
 truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_n30016_cutrad1.npy')
 rad, scale = pred.T
+plt.hist(rad*scale, nbins, range=[min(truth),max(truth)], normed=norm, label='scale')
+plt.hist(truth, nbins, normed=norm, alpha=0.5, label='ground truth')
 
-norm = False
-nbins = 40
+#pred = np.load('datasets/rings/Test_rings/test_predcraterdist_full.npy')
+#truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_full.npy')
+#long_pred, lat_pred, rad_pred = pred.T
+#long_GT, lat_GT, rad_GT = truth.T
+#plt.hist(rad_pred, nbins, range=[min(rad_GT),max(rad_GT)], normed=norm, label='scale')
+#plt.hist(rad_GT, nbins, normed=norm, alpha=0.5, label='ground truth')
 
 #plt.hist(pred, nbins, range=[5,20], normed=norm, label='pred')
 #plt.hist(truth, nbins, range=[5,20], normed=norm, alpha=0.5, label='ground truth')
 
 #plt.hist(rad, nbins, range=[5,20], normed=norm, label='pred')
-plt.hist(scale*rad, nbins, range=[min(truth),max(truth)], normed=norm, label='scale')
-plt.hist(truth, nbins, normed=norm, alpha=0.5, label='ground truth')
+
 plt.legend()
 plt.yscale('log')
 

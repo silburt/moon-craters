@@ -1,4 +1,4 @@
-#The point of this script is to take the outputted numpy files generated from crater_distribution_extract_*.py and generate a list of unique craters, i.e. no duplicates. The key hyperparameter to tune is thresh_unique2, which is guided by comparing the unique distirbution to the ground truth (alanalldata.csv) data.
+#The point of this script is to take the outputted numpy files generated from crater_distribution_extract_*.py and generate a list of unique craters, i.e. no duplicates. The key hyperparameter to tune is unique_thresh2, which is guided by comparing the unique distirbution to the ground truth (alanalldata.csv) data.
 
 import numpy as np
 
@@ -29,9 +29,9 @@ if __name__ == '__main__':
     output_namepred = 'unique_predcraters'
 
     unique_thresh2 = [0.005, 0.01, 0.05, 0.1, 0.5, 1, 5, 10]
-    for ut2 in thresh_unique2:
-        print "extracting unique ground truth craters, thresh_unique=%.2f"%ut2
+    for ut2 in unique_thresh2:
+        print "extracting unique ground truth craters, unique_thresh2=%.2f"%ut2
         GT = extract_unique(truth, ut2, dir, output_nameGT)
         
-#        print "extracting unique predicted craters, thresh_unique=%.2f"%ut2
+#        print "extracting unique predicted craters, unique_thresh2=%.2f"%ut2
 #        pred = extract_unique(pred, ut2, dir, output_namepred)

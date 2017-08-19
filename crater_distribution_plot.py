@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import cPickle
 
 norm = False
-nbins = 40
+nbins = 50
 
 #pred = np.load('datasets/rings/Test_rings/test_predcraterdist_n30016.npy')
 #truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_n30016_cutrad1.npy')
@@ -19,6 +19,7 @@ nbins = 40
 #long, lat, pred = pred.T
 #longT, latT, truth = truth.T
 
+#best
 pred = np.load('datasets/rings/Test_rings/test_predcraterdist_debug_n30016.npy')
 truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_n30016_cutrad1.npy')
 rad, scale = pred.T

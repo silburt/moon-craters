@@ -76,7 +76,7 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
                 pred_crater_dist += list(vals)
 
         pred_crater_dist = np.asarray(pred_crater_dist)
-        np.save('%s/%s_predcraterdist_debug_full.npy'%(data_dir,data_prefix,n_imgs),pred_crater_dist)
+        np.save('%s/%s_predcraterdist_debug_full.npy'%(data_dir,data_prefix),pred_crater_dist)
 
     # Generate csv dist
     # hyperparameters
@@ -94,7 +94,7 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
         GT_crater_dist += list(GT_radius)
 
     GT_crater_dist = np.asarray(GT_crater_dist)
-    np.save('%s/%s_GTcraterdist_debug_full.npy'%(data_dir,data_prefix,n_imgs),GT_crater_dist)
+    np.save('%s/%s_GTcraterdist_debug_full.npy'%(data_dir,data_prefix),GT_crater_dist)
     return pred_crater_dist, GT_crater_dist
 
 if __name__ == '__main__':

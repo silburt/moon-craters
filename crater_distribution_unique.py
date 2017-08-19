@@ -16,7 +16,7 @@ def extract_unique(data, unique_thresh2, dir, name):
             data = np.concatenate((data[0:i+1],data_cut[keep]))     #concatenate and remove duplicates
         N, i = len(data), i+1
     
-    np.save('%s/%s_ut2%.3f.npy'%(dir,name,unique_thresh2),data)
+    np.save('%s/%s_ut2_%.1e.npy'%(dir,name,unique_thresh2),data)
     return data
 
 if __name__ == '__main__':
@@ -28,10 +28,10 @@ if __name__ == '__main__':
     output_nameGT = 'unique_GTcraters'
     output_namepred = 'unique_predcraters'
 
-    unique_thresh2 = [0.005, 0.01, 0.05, 0.1, 0.5, 1, 5, 10]
+    unique_thresh2 = [1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3]
     for ut2 in unique_thresh2:
         print "extracting unique ground truth craters, unique_thresh2=%.2f"%ut2
         GT = extract_unique(truth, ut2, dir, output_nameGT)
         
-#        print "extracting unique predicted craters, unique_thresh2=%.2f"%ut2
-#        pred = extract_unique(pred, ut2, dir, output_namepred)
+        print "extracting unique predicted craters, unique_thresh2=%.2f"%ut2
+        pred = extract_unique(pred, ut2, dir, output_namepred)

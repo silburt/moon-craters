@@ -22,16 +22,18 @@ def extract_unique(data, unique_thresh2, dir, name):
 if __name__ == '__main__':
     #arrays = (long, lat, radii)
     dir = 'datasets/rings/Test_rings'
-    pred = np.load('%s/test_predcraterdist_full.npy'%dir)
+    
     truth = np.load('%s/test_GTcraterdist_full.npy'%dir)
+    pred = np.load('%s/test_predcraterdist_full.npy'%dir)
 
-    output_nameGT = 'unique_GTcraters'
+    output_nametruth = 'unique_GTcraters'
     output_namepred = 'unique_predcraters'
 
-    unique_thresh2 = [1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3]
+    #unique_thresh2 = [1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3]
+    unique_thresh2 = [1e-6]
     for ut2 in unique_thresh2:
-        print "extracting unique ground truth craters, unique_thresh2=%.2f"%ut2
-        GT = extract_unique(truth, ut2, dir, output_nameGT)
-        
+#        print "extracting unique ground truth craters, unique_thresh2=%.2f"%ut2
+#        GT = extract_unique(truth, ut2, dir, output_nametruth)
+
         print "extracting unique predicted craters, unique_thresh2=%.2f"%ut2
         pred = extract_unique(pred, ut2, dir, output_namepred)

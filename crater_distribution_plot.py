@@ -14,17 +14,30 @@ nbins = 50
 #truth = np.load('datasets/ilen_1500_to_2500/ilen_1500/_GTcraterdist_n1000.npy')
 
 #pred = np.load('datasets/rings/Test_rings/test_predcraterdist_unique_n30016.npy')
-#truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_unique_n30016.npy')
-#truthcsv = pd.read_csv('utils/alanalldata.csv')
-#long, lat, pred = pred.T
-#longT, latT, truth = truth.T
+#long, lat, rad = pred.T
+truth = np.load('datasets/rings/Test_rings/unique_GTcraters_ut2_1.0e-06.npy')
+longT, latT, radT = truth.T
+truthcsv = pd.read_csv('utils/alanalldata.csv')
+truthcsv = truthcsv[truthcsv['Long']>60]        #region of test data
+rad_alan = truthcsv['Diameter (km)'].values/2.
+#plt.hist(rad, nbins, range=[min(rad_alan),max(rad_alan)], normed=norm, label='scale')
+plt.hist(radT, nbins, range=[min(rad_alan),max(rad_alan)], normed=norm, label='scale')
+plt.hist(rad_alan, nbins, normed=norm, alpha=0.5, label='ground truth')
 
-#best
-pred = np.load('datasets/rings/Test_rings/test_predcraterdist_debug_n30016.npy')
-truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_n30016_cutrad1.npy')
-rad, scale = pred.T
-plt.hist(rad*scale, nbins, range=[min(truth),max(truth)], normed=norm, label='scale')
-plt.hist(truth, nbins, normed=norm, alpha=0.5, label='ground truth')
+print len(truthcsv), len(truth)
+
+#best - cannot reproduce for some reason
+#pred = np.load('datasets/rings/Test_rings/test_predcraterdist_debug_n30016.npy')
+#truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_n30016_cutrad1.npy')
+#rad, scale = pred.T
+#plt.hist(rad*scale, nbins, range=[min(truth),max(truth)], normed=norm, label='scale')
+#plt.hist(truth, nbins, normed=norm, alpha=0.5, label='ground truth')
+
+#pred = np.load('datasets/rings/Test_rings/test_predcraterdist_debug_n10000.npy')
+#truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_debug_n10000.npy')
+#long, lat, rad, scale, P0, P1, P2, P3 = pred.T
+#plt.hist(rad*scale, nbins, range=[min(truth),max(truth)], normed=norm, label='scale')
+#plt.hist(truth, nbins, normed=norm, alpha=0.5, label='ground truth')
 
 #pred = np.load('datasets/rings/Test_rings/test_predcraterdist_full.npy')
 #truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_full.npy')

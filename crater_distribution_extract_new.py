@@ -68,6 +68,7 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
         print "Extracting crater radius distribution of %d files."%n_imgs
         pred_crater_dist = np.empty([0,3])
         for i in range(len(pred)):
+            print i
             coords = template_match_target(pred[i])
             if len(coords) > 0:
                 P_ = P[id[i]]
@@ -79,7 +80,6 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
                 lat_deg = P_['llbd'][3] - (P_['llbd'][3]-P_['llbd'][2])*(lat_pix/float(dim))
                 tuple_ = np.column_stack((long_deg,lat_deg,radii_km))
 
-                pred_crater_dist = np.concatenate((pred_crater_dist,tuple_))
                 #only add unique (non-duplicate) values to the master pred_crater_dist
                 if len(pred_crater_dist) > 0:
                     for j in range(len(tuple_)):
@@ -102,31 +102,32 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
     minrad, maxrad = 3, 75  #min/max radius (in pixels) required to include crater in target
     cutrad = 1              #0-1 range, if x+cutrad*r > dim, remove, higher cutrad = larger % of circle required
     print "Getting ground truth crater distribution."
-    for id_ in id:
+    for i,id_ in enumerate(id):
+        print i
         csv = pd.read_csv('%s/%s_%s.csv'%(data_dir,csv_prefix,str(id_).zfill(5)))
         csv = csv[(csv['Diameter (pix)'] < 2*maxrad) & (csv['Diameter (pix)'] > 2*minrad)]
-        csv = csv[(csv['x']+cutrad*csv['Diameter (pix)']/2 <= dim)]
-        csv = csv[(csv['y']+cutrad*csv['Diameter (pix)']/2 <= dim)]
-        csv = csv[(csv['x']-cutrad*csv['Diameter (pix)']/2 > 0)]
-        csv = csv[(csv['y']-cutrad*csv['Diameter (pix)']/2 > 0)]
-        GT_radii = csv['Diameter (km)'].values/2
+        csv = csv[(csv['x']+cutrad*csv['Diameter (pix)']/2. <= dim)]
+        csv = csv[(csv['y']+cutrad*csv['Diameter (pix)']/2. <= dim)]
+        csv = csv[(csv['x']-cutrad*csv['Diameter (pix)']/2. > 0)]
+        csv = csv[(csv['y']-cutrad*csv['Diameter (pix)']/2. > 0)]
+        GT_radii = csv['Diameter (km)'].values/2.
         GT_lat = csv['Lat']
         GT_long = csv['Long']
-        tuple_ = np.column_stack((GT_long,GT_lat,GT_radii))
 
-        GT_crater_dist = np.concatenate((GT_crater_dist,tuple_))
-        #only add unique (non-duplicate) values to the master pred_crater_dist
-        if len(GT_crater_dist) > 0:
-            for j in range(len(tuple_)):
-                diff = (GT_crater_dist - tuple_[j])**2
-                diffsum = np.asarray([sum(x) for x in diff])
-                #long, lat, rad = GT_crater_dist.T
-                #diffsum = np.asarray(25*(long-tuple_[j][0])**2 + 25*(lat-tuple_[j][1])**2 + (rad-tuple_[j][2])**2)
-                index = diffsum < unique_thresh2
-                if len(np.where(index==True)[0]) == 0: #unique value
-                    GT_crater_dist = np.vstack((GT_crater_dist,tuple_[j]))
-        else:
-            GT_crater_dist = np.concatenate((GT_crater_dist,tuple_))
+        if len(GT_radii) > 0:
+            tuple_ = np.column_stack((GT_long,GT_lat,GT_radii))
+            #only add unique (non-duplicate) values to the master pred_crater_dist
+            if len(GT_crater_dist) > 0:
+                for j in range(len(tuple_)):
+                    diff = (GT_crater_dist - tuple_[j])**2
+                    diffsum = np.asarray([sum(x) for x in diff])
+                    #long, lat, rad = GT_crater_dist.T
+                    #diffsum = np.asarray(25*(long-tuple_[j][0])**2 + 25*(lat-tuple_[j][1])**2 + (rad-tuple_[j][2])**2)
+                    index = diffsum < unique_thresh2
+                    if len(np.where(index==True)[0]) == 0: #unique value
+                        GT_crater_dist = np.vstack((GT_crater_dist,tuple_[j]))
+            else:
+                GT_crater_dist = np.concatenate((GT_crater_dist,tuple_))
 
     GT_crater_dist = np.asarray(GT_crater_dist)
     np.save('%s/%s_GTcraterdist_n10000_new.npy'%(data_dir,data_prefix),GT_crater_dist)

@@ -93,7 +93,6 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
                 else:
                     pred_crater_dist = np.concatenate((pred_crater_dist,tuple_))
 
-        pred_crater_dist = np.asarray(pred_crater_dist)
         np.save('%s/%s_predcraterdist_n10000_new.npy'%(data_dir,data_prefix),pred_crater_dist)
 
     # Generate csv dist
@@ -110,12 +109,12 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
         csv = csv[(csv['y']+cutrad*csv['Diameter (pix)']/2. <= dim)]
         csv = csv[(csv['x']-cutrad*csv['Diameter (pix)']/2. > 0)]
         csv = csv[(csv['y']-cutrad*csv['Diameter (pix)']/2. > 0)]
-        GT_radii = csv['Diameter (km)'].values/2.
-        GT_lat = csv['Lat']
-        GT_long = csv['Long']
-
-        if len(GT_radii) > 0:
+        if len(csv) > 0:
+            GT_radii = csv['Diameter (km)'].values/2.
+            GT_lat = csv['Lat']
+            GT_long = csv['Long']
             tuple_ = np.column_stack((GT_long,GT_lat,GT_radii))
+            
             #only add unique (non-duplicate) values to the master pred_crater_dist
             if len(GT_crater_dist) > 0:
                 for j in range(len(tuple_)):
@@ -129,7 +128,6 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
             else:
                 GT_crater_dist = np.concatenate((GT_crater_dist,tuple_))
 
-    GT_crater_dist = np.asarray(GT_crater_dist)
     np.save('%s/%s_GTcraterdist_n10000_new.npy'%(data_dir,data_prefix),GT_crater_dist)
 
 if __name__ == '__main__':

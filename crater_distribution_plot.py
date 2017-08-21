@@ -8,6 +8,10 @@ import cPickle
 norm = False
 nbins = 50
 
+truthcsv = pd.read_csv('utils/alanalldata.csv')
+truthcsv = truthcsv[truthcsv['Long']>60]        #region of test data
+rad_alan = truthcsv['Diameter (km)'].values/2.
+
 #pred = np.load('datasets/rings/Test_rings/test_predcraterdist_n30016.npy')
 #truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_n30016_cutrad1.npy')
 #pred = np.load('datasets/ilen_1500_to_2500/ilen_1500/_predcraterdist_n1000.npy')
@@ -15,16 +19,11 @@ nbins = 50
 
 #pred = np.load('datasets/rings/Test_rings/test_predcraterdist_unique_n30016.npy')
 #long, lat, rad = pred.T
-truth = np.load('datasets/rings/Test_rings/unique_GTcraters_ut2_1.0e-06.npy')
-longT, latT, radT = truth.T
-truthcsv = pd.read_csv('utils/alanalldata.csv')
-truthcsv = truthcsv[truthcsv['Long']>60]        #region of test data
-rad_alan = truthcsv['Diameter (km)'].values/2.
+#truth = np.load('datasets/rings/Test_rings/unique_GTcraters_ut2_1.0e-06.npy')
+#longT, latT, radT = truth.T
 #plt.hist(rad, nbins, range=[min(rad_alan),max(rad_alan)], normed=norm, label='scale')
-plt.hist(radT, nbins, range=[min(rad_alan),max(rad_alan)], normed=norm, label='scale')
-plt.hist(rad_alan, nbins, normed=norm, alpha=0.5, label='ground truth')
-
-print len(truthcsv), len(truth)
+#plt.hist(radT, nbins, range=[min(rad_alan),max(rad_alan)], normed=norm, label='scale')
+#plt.hist(rad_alan, nbins, normed=norm, alpha=0.5, label='ground truth')
 
 #best - cannot reproduce for some reason
 #pred = np.load('datasets/rings/Test_rings/test_predcraterdist_debug_n30016.npy')
@@ -33,10 +32,20 @@ print len(truthcsv), len(truth)
 #plt.hist(rad*scale, nbins, range=[min(truth),max(truth)], normed=norm, label='scale')
 #plt.hist(truth, nbins, normed=norm, alpha=0.5, label='ground truth')
 
-#pred = np.load('datasets/rings/Test_rings/test_predcraterdist_debug_n10000.npy')
-#truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_debug_n10000.npy')
-#long, lat, rad, scale, P0, P1, P2, P3 = pred.T
-#plt.hist(rad*scale, nbins, range=[min(truth),max(truth)], normed=norm, label='scale')
+#testing how the distribution changes between unique and non-unique crater distributions
+#truth1 = np.load('datasets/rings/Test_rings/test_GTcraterdist_n30016_cutrad1.npy')
+#truth_unique = np.load('datasets/rings/Test_rings/unique_GTcraters_ut2_1.0e-06.npy')
+#_, _, rad_TU = truth_unique.T
+#plt.hist(truth1, nbins, normed=True, label='initial')
+#plt.hist(rad_TU, nbins, normed=True, alpha=0.5, label='unique')
+
+pred2 = np.load('datasets/rings/Test_rings/test_predcraterdist_debug_n30016_old.npy')
+rad2, scale2 = pred2.T
+pred = np.load('datasets/rings/Test_rings/test_predcraterdist_debug_n10000.npy')
+truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_debug_n10000.npy')
+long, lat, rad, scale, P0, P1, P2, P3 = pred.T
+plt.hist(rad*scale, nbins, range=[min(truth),max(truth)], normed=norm, label='scale')
+plt.hist(rad2*scale2, nbins, range=[min(truth),max(truth)], normed=norm, label='pred2', alpha=0.5)
 #plt.hist(truth, nbins, normed=norm, alpha=0.5, label='ground truth')
 
 #pred = np.load('datasets/rings/Test_rings/test_predcraterdist_full.npy')

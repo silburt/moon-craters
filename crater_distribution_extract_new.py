@@ -31,7 +31,7 @@ def read_and_normalize_data(path, dim):
     print 'shape:', data.shape
     return data, id_
 
-def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,inv_color,rescale,ground_truth_only):
+def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,inv_color,rescale,ground_truth_only,unique_thresh2):
     
     # properties of the dataset, shouldn't change (unless you use a different dataset)
     master_img_height_pix = 23040.  #number of pixels for height
@@ -81,20 +81,20 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
 
                 pred_crater_dist = np.concatenate((pred_crater_dist,tuple_))
                 #only add unique (non-duplicate) values to the master pred_crater_dist
-#                if len(pred_crater_dist) > 0:
-#                    for j in range(len(tuple_)):
-#                        diff = (pred_crater_dist - tuple_[j])**2
-#                        diffsum = np.asarray([sum(x) for x in diff])
-#                        #long, lat, rad = pred_crater_dist.T
-#                        #diffsum = np.asarray(25*(long-tuple_[j][0])**2 + 25*(lat-tuple_[j][1])**2 + (rad-tuple_[j][2])**2)
-#                        index = diffsum < unique_thresh2
-#                        if len(np.where(index==True)[0]) == 0: #unique value
-#                            pred_crater_dist = np.vstack((pred_crater_dist,tuple_[j]))
-#                else:
-#                    pred_crater_dist = np.concatenate((pred_crater_dist,tuple_))
+                if len(pred_crater_dist) > 0:
+                    for j in range(len(tuple_)):
+                        diff = (pred_crater_dist - tuple_[j])**2
+                        diffsum = np.asarray([sum(x) for x in diff])
+                        #long, lat, rad = pred_crater_dist.T
+                        #diffsum = np.asarray(25*(long-tuple_[j][0])**2 + 25*(lat-tuple_[j][1])**2 + (rad-tuple_[j][2])**2)
+                        index = diffsum < unique_thresh2
+                        if len(np.where(index==True)[0]) == 0: #unique value
+                            pred_crater_dist = np.vstack((pred_crater_dist,tuple_[j]))
+                else:
+                    pred_crater_dist = np.concatenate((pred_crater_dist,tuple_))
 
         pred_crater_dist = np.asarray(pred_crater_dist)
-        np.save('%s/%s_predcraterdist_full.npy'%(data_dir,data_prefix),pred_crater_dist)
+        np.save('%s/%s_predcraterdist_n10000.npy'%(data_dir,data_prefix),pred_crater_dist)
 
     # Generate csv dist
     GT_crater_dist = np.empty([0,3])
@@ -115,21 +115,21 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
         tuple_ = np.column_stack((GT_long,GT_lat,GT_radii))
 
         GT_crater_dist = np.concatenate((GT_crater_dist,tuple_))
-#        #only add unique (non-duplicate) values to the master pred_crater_dist
-#        if len(GT_crater_dist) > 0:
-#            for j in range(len(tuple_)):
-#                diff = (GT_crater_dist - tuple_[j])**2
-#                diffsum = np.asarray([sum(x) for x in diff])
-#                #long, lat, rad = GT_crater_dist.T
-#                #diffsum = np.asarray(25*(long-tuple_[j][0])**2 + 25*(lat-tuple_[j][1])**2 + (rad-tuple_[j][2])**2)
-#                index = diffsum < unique_thresh2
-#                if len(np.where(index==True)[0]) == 0: #unique value
-#                    GT_crater_dist = np.vstack((GT_crater_dist,tuple_[j]))
-#        else:
-#            GT_crater_dist = np.concatenate((GT_crater_dist,tuple_))
+        #only add unique (non-duplicate) values to the master pred_crater_dist
+        if len(GT_crater_dist) > 0:
+            for j in range(len(tuple_)):
+                diff = (GT_crater_dist - tuple_[j])**2
+                diffsum = np.asarray([sum(x) for x in diff])
+                #long, lat, rad = GT_crater_dist.T
+                #diffsum = np.asarray(25*(long-tuple_[j][0])**2 + 25*(lat-tuple_[j][1])**2 + (rad-tuple_[j][2])**2)
+                index = diffsum < unique_thresh2
+                if len(np.where(index==True)[0]) == 0: #unique value
+                    GT_crater_dist = np.vstack((GT_crater_dist,tuple_[j]))
+        else:
+            GT_crater_dist = np.concatenate((GT_crater_dist,tuple_))
 
     GT_crater_dist = np.asarray(GT_crater_dist)
-    np.save('%s/%s_GTcraterdist_full.npy'%(data_dir,data_prefix),GT_crater_dist)
+    np.save('%s/%s_GTcraterdist_n10000.npy'%(data_dir,data_prefix),GT_crater_dist)
 
 if __name__ == '__main__':
     #args
@@ -146,12 +146,13 @@ if __name__ == '__main__':
     pickle_loc = '%s/lolaout_test.p'%data_dir               #location of corresponding pickle file
     model_loc = 'models/unet_s256_rings_nFL96.h5'
     
-    n_imgs = 30016            #number of images to use for getting crater distribution.
+    n_imgs = 10016          #number of images to use for getting crater distribution.
     inv_color = 1           #**must be same setting as what model was trained on**
     rescale = 1             #**must be same setting as what model was trained on**
     ground_truth_only = 0   #get ground truth crater distribution only (from csvs), do not generate predictions
+    unique_thresh2 = 1e-6   #duplicate threshold
 
-    get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,inv_color,rescale,ground_truth_only)
+    get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,inv_color,rescale,ground_truth_only,unique_thresh2)
 
 #    unique_thresh2 = [0.01,0.05,0.1,0.5,1,5,10]
 #    for ut2 in unique_thresh2:

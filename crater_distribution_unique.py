@@ -43,7 +43,7 @@ if __name__ == '__main__':
     P = cPickle.load(open('%s/lolaout_test.p'%dir, 'r'))
 
     #unique_thresh2 = [1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3]
-    unique_thresh2 = [1e-1,1e-2,1e-3]
+    unique_thresh2 = [5,1,0.1]
     for ut2 in unique_thresh2:
 #        print "extracting unique ground truth craters, unique_thresh2=%.2f"%ut2
 #        GT = extract_unique(truth, ut2, dir, output_nametruth)

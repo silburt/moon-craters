@@ -2,6 +2,7 @@
 
 import numpy as np
 import cPickle
+from utils.template_match_target import *
 
 def extract_unique(pred, unique_thresh2, id, P):
     master_img_height_pix = 23040.  #number of pixels for height

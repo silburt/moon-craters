@@ -1,6 +1,7 @@
 #The point of this script is to take the outputted numpy files generated from crater_distribution_extract_*.py and generate a list of unique craters, i.e. no duplicates. The key hyperparameter to tune is unique_thresh2, which is guided by comparing the unique distirbution to the ground truth (alanalldata.csv) data.
 
 import numpy as np
+import cPickle
 
 def extract_unique(pred, unique_thresh2, id, P):
     master_img_height_pix = 23040.  #number of pixels for height

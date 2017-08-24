@@ -40,9 +40,6 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
     dim = 256                       #image dimension (pixels, assume dim=height=width)
     P = cPickle.load(open(pickle_loc, 'r'))
     
-    #this likely needs to be fine-tuned by comparing csv dist extracted here to the alanalldata.csv list.
-    #unique_thresh2 = 50
-    
     # get data
     try:
         data=np.load('%s/%s_data.npy'%(data_dir,data_prefix))
@@ -61,14 +58,19 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
             data = rescale_and_invcolor(data, inv_color, rescale)
         
         # generate model predictions
-        model = load_model(model_loc)
-        pred = model.predict(data.astype('float32'))
+        try:
+            np.load('%s/%s_modelpreds_n%d_new.npy'%(data_dir,data_prefix,n_imgs))
+            print "Loaded model preds successfully"
+        except:
+            print "Could not load model preds, generating now..."
+            model = load_model(model_loc)
+            pred = model.predict(data.astype('float32'))
+            np.save('%s/%s_modelpreds_n%d_new.npy'%(data_dir,data_prefix,n_imgs),pred)
 
         # extract crater distribution, remove duplicates live
         print "Extracting crater radius distribution of %d files."%n_imgs
         pred_crater_dist = np.empty([0,3])
         for i in range(len(pred)):
-            print i
             coords = template_match_target(pred[i])
             if len(coords) > 0:
                 P_ = P[id[i]]
@@ -93,7 +95,7 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
                 else:
                     pred_crater_dist = np.concatenate((pred_crater_dist,tuple_))
 
-        np.save('%s/%s_predcraterdist_n10000_new.npy'%(data_dir,data_prefix),pred_crater_dist)
+        np.save('%s/%s_predcraterdist_n%d_new.npy'%(data_dir,data_prefix,n_imgs),pred_crater_dist)
 
     # Generate csv dist
     GT_crater_dist = np.empty([0,3])
@@ -128,7 +130,7 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
             else:
                 GT_crater_dist = np.concatenate((GT_crater_dist,tuple_))
 
-    np.save('%s/%s_GTcraterdist_n10000_new.npy'%(data_dir,data_prefix),GT_crater_dist)
+    np.save('%s/%s_GTcraterdist_n%d_new.npy'%(data_dir,data_prefix,n_imgs),GT_crater_dist)
 
 if __name__ == '__main__':
     #args

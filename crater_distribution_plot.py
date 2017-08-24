@@ -8,9 +8,17 @@ import cPickle
 norm = False
 nbins = 50
 
-truthcsv = pd.read_csv('utils/alanalldata.csv')
-truthcsv = truthcsv[truthcsv['Long']>60]        #region of test data
-rad_alan = truthcsv['Diameter (km)'].values/2.
+truthcsv1 = pd.read_csv('utils/alanalldata.csv')
+truthcsv1 = truthcsv1[truthcsv1['Long']>60]        #region of test data
+craters_names = ["Long", "Lat", "Radius (deg)","Diameter (km)", "D_range", "p", "Name"]
+craters_types = [float, float, float, float, float, int, str]
+truthcsv2 = pd.read_csv(open('utils/LU78287GT.csv', 'r'), sep=',',
+                        usecols=list(range(1, 8)), header=0, engine="c", encoding = "ISO-8859-1",
+                        names=craters_names, dtype=dict(zip(craters_names, craters_types)))
+truthcsv2 = truthcsv2[(truthcsv2['Long']>60)&(truthcsv2['Diameter (km)']>20.)]
+
+rad_alan = np.concatenate((truthcsv1['Diameter (km)'].values/2.,truthcsv2['Diameter (km)'].values/2.))
+print len(rad_alan)
 
 #pred = np.load('datasets/rings/Test_rings/test_predcraterdist_n30016.npy')
 #truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_n30016_cutrad1.npy')
@@ -46,7 +54,7 @@ truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_debug_n10000.npy')
 long, lat, rad, scale, P0, P1, P2, P3 = pred.T
 plt.hist(rad*scale, nbins, range=[min(truth),max(truth)], normed=norm, label='scale')
 plt.hist(rad2*scale2, nbins, range=[min(truth),max(truth)], normed=norm, label='pred2', alpha=0.5)
-#plt.hist(truth, nbins, normed=norm, alpha=0.5, label='ground truth')
+plt.hist(rad_alan, nbins, range=[min(truth),max(truth)], normed=norm, alpha=0.5, label='alan ground truth')
 
 #pred = np.load('datasets/rings/Test_rings/test_predcraterdist_full.npy')
 #truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_full.npy')

@@ -5,7 +5,7 @@ ssh p8t03
 cd $SCRATCH/moon-craters/
 
 #loading Keras
-module load gcc/6.2.1 
+module load gcc/6.2.1
 module load cuda/8.0
 source /home/k/kristen/kristen/keras_venv_P8.v2/bin/activate 
 
@@ -22,6 +22,7 @@ CUDA_VISIBLE_DEVICES=1 nohup python moon_unet_s256_rings_forKristen.py > unet_s2
 
 CUDA_VISIBLE_DEVICES=0 nohup python crater_distribution_extract_debug_old.py &>> debug_old.txt &
 CUDA_VISIBLE_DEVICES=2 nohup python crater_distribution_extract_new.py > get_new.txt &
+CUDA_VISIBLE_DEVICES=2 nohup python crater_distribution_extract_scratch2.py &>> scratch2_getdist2.txt &
 python crater_distribution_extract_orig.py &>> debug.txt
 nohup python crater_distribution_unique.py &>> unique3.txt &
 

@@ -43,7 +43,8 @@ def extract_unique(pred, unique_thresh2, id, P):
 if __name__ == '__main__':
     #arrays = (long, lat, radii)
     dir = 'datasets/rings/Test_rings'
-    pred = np.load('%s/test_modelpreds_n10016_new.npy'%dir)
+    #pred = np.load('%s/test_modelpreds_n10016_new.npy'%dir)
+    pred = np.load('%s/test_modelpreds_n1000_new.npy'%dir)
     id = np.load('%s/test_id.npy'%dir)
     P = cPickle.load(open('%s/lolaout_test.p'%dir, 'r'))
 

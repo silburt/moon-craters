@@ -41,7 +41,7 @@ def extract_unique_GT(dir, unique_thresh2, id):
             else:
                 GT_crater_dist = np.concatenate((GT_crater_dist,tuple_))
 
-    np.save('%s/test_uniqueGT_ut%.1e_n%d.npy'%(dir,unique_thresh2,len(id)),pred_crater_dist)
+    np.save('%s/test_uniqueGT_ut%.1e_n%d.npy'%(dir,unique_thresh2,len(id)),GT_crater_dist)
     print "Elapsed time for GT with unique_thresh2=%.2f is %f"%(ut2,time.time() - t1)
     print ""
 

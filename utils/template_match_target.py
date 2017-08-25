@@ -6,7 +6,7 @@ import numpy as np
 from skimage.feature import match_template
 import cv2
 
-def template_match_target(target, match_thresh2=50, minrad=3, maxrad=60):
+def template_match_target(target, match_thresh2=50, minrad=3, maxrad=40):
     #Match Threshold (squared)
     # for template matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, remove (x2,y2,r2) circle (it is a duplicate).
     # for predicted target -> csv matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, positive detection
@@ -80,7 +80,7 @@ def template_match_target(target, match_thresh2=50, minrad=3, maxrad=60):
     return coords
 
 
-def template_match_target_to_csv(target, csv_coords, minrad=3, maxrad=60):
+def template_match_target_to_csv(target, csv_coords, minrad=3, maxrad=40):
     #Match Threshold (squared)
     # for template matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, remove (x2,y2,r2) circle (it is a duplicate).
     # for predicted target -> csv matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, positive detection

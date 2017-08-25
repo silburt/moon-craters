@@ -3,6 +3,7 @@
 import numpy as np
 import cPickle
 from utils.template_match_target import *
+import time
 
 def extract_unique(pred, unique_thresh2, id, P):
     master_img_height_pix = 23040.  #number of pixels for height
@@ -38,7 +39,6 @@ def extract_unique(pred, unique_thresh2, id, P):
 
     np.save('%s/test_uniquedist_ut%.1e.npy'%(dir,unique_thresh2),pred_crater_dist)
     print "Total Number of Matches for %f: %d"%(unique_thresh2,N_matches_tot)
-    print ""
 
 if __name__ == '__main__':
     #arrays = (long, lat, radii)
@@ -48,10 +48,13 @@ if __name__ == '__main__':
     P = cPickle.load(open('%s/lolaout_test.p'%dir, 'r'))
 
     #unique_thresh2 = [1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3]
-    unique_thresh2 = [1,0.1,1e-2,1e-3]
+    unique_thresh2 = [3,1,0.5,0.1,1e-2,1e-3]
     for ut2 in unique_thresh2:
 #        print "extracting unique ground truth craters, unique_thresh2=%.2f"%ut2
 #        GT = extract_unique(truth, ut2, dir, output_nametruth)
 
+        t1 = time.time()
         print "extracting unique predicted craters, unique_thresh2=%.2f"%ut2
         extract_unique(pred, ut2, id, P)
+        print "Elapsed time for unique_thresh2=%.2f is %f"%(ut2,time.time() - t1)
+        print ""

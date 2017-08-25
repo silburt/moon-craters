@@ -36,6 +36,7 @@ def extract_unique(pred, unique_thresh2, id, P):
                 pred_crater_dist = np.concatenate((pred_crater_dist,tuple_))
 
     np.save('%s/test_uniquedist_ut%.1e.npy'%(dir,unique_thresh2),pred_crater_dist)
+    print ""
 
 if __name__ == '__main__':
     #arrays = (long, lat, radii)

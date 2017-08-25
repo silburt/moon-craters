@@ -14,6 +14,7 @@ def extract_unique(pred, unique_thresh2, id, P):
     pred_crater_dist = np.empty([0,3])
     N_matches_tot = 0
     for i in range(len(pred)):
+        print i, len(pred_crater_dist)
         coords = template_match_target(pred[i])
         if len(coords) > 0:
             P_ = P[id[i]]
@@ -43,8 +44,8 @@ def extract_unique(pred, unique_thresh2, id, P):
 if __name__ == '__main__':
     #arrays = (long, lat, radii)
     dir = 'datasets/rings/Test_rings'
-    #pred = np.load('%s/test_modelpreds_n10016_new.npy'%dir)
-    pred = np.load('%s/test_modelpreds_n1000_new.npy'%dir)
+    pred = np.load('%s/test_modelpreds_n10016_new.npy'%dir)
+    #pred = np.load('%s/test_modelpreds_n1000_new.npy'%dir)
     id = np.load('%s/test_id.npy'%dir)
     P = cPickle.load(open('%s/lolaout_test.p'%dir, 'r'))
 

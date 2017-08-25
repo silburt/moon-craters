@@ -2,6 +2,7 @@
 
 import numpy as np
 import cPickle
+import pandas as pd
 from utils.template_match_target import *
 import time
 import glob
@@ -16,7 +17,7 @@ def extract_unique_GT(dir, unique_thresh2, id):
     cutrad = 1              #0-1 range, if x+cutrad*r > dim, remove, higher cutrad = larger % of circle required
     dim = 256
     
-    GT_crater_dist = np.empty([0,3]))
+    GT_crater_dist = np.empty([0,3])
     for i,id_ in enumerate(id):
         print i, len(GT_crater_dist)
         csv = pd.read_csv('%s/lola_%s.csv'%(dir,str(id_).zfill(5)))

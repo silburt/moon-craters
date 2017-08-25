@@ -102,8 +102,8 @@ if __name__ == '__main__':
     print ""
 
     #unique_thresh2 = [1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3]
-    unique_thresh2 = [3,1,0.5,0.1,1e-2,1e-3]
+    unique_thresh2 = [3,1,0.5,0.1,1e-2]
     for ut2 in unique_thresh2:
         extract_unique_GT(dir, ut2, id)
-        extract_unique(pred, ut2, id, P)
+        #extract_unique_pred(pred, ut2, id, P)
 

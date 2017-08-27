@@ -64,7 +64,6 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
     GT_crater_dist = np.empty([0,3])
     print "Extracting crater radius distribution of %d files."%n_imgs
     for i in range(len(pred)):
-        print i
         coords = template_match_target(pred[i])
         if len(coords) >= 1:
             P_ = P[id[i]]
@@ -89,6 +88,7 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
             if len(csv) > 1:
                 tuple_csv = np.column_stack((csv['Long'].values,csv['Lat'].values,csv['Diameter (km)'].values/2.))
                 GT_crater_dist = np.concatenate((GT_crater_dist,tuple_csv))
+            print i, minrad, maxrad
 
     np.save('%s/%s_predcraterdist_debug2_n%d.npy'%(data_dir,data_prefix,n_imgs),pred_crater_dist)
     np.save('%s/%s_GTcraterdist_debug2_n%d.npy'%(data_dir,data_prefix,n_imgs),GT_crater_dist)

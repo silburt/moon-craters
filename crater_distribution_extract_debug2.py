@@ -107,9 +107,9 @@ if __name__ == '__main__':
     pickle_loc = '%s/lolaout_test.p'%data_dir               #location of corresponding pickle file
     model_loc = 'models/unet_s256_rings_nFL96.h5'
     
-    n_imgs = 10016          #number of images to use for getting crater distribution.
+    n_imgs = 30016          #number of images to use for getting crater distribution.
     inv_color = 1           #**must be same setting as what model was trained on**
     rescale = 1             #**must be same setting as what model was trained on**
 
-    pred_crater_dist, GT_crater_dist = get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,inv_color,rescale)
+    get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,inv_color,rescale)
     print "Script completed successfully"

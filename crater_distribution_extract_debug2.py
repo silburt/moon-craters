@@ -7,7 +7,7 @@ import glob
 import os
 import pandas as pd
 from PIL import Image
-#from keras.models import load_model
+from keras.models import load_model
 
 from utils.rescale_invcolor import *
 from utils.template_match_target import *

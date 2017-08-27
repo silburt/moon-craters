@@ -1,5 +1,5 @@
 # This code is typically run on p8t03/04 on scinet.
-#Just for extracting the god damned predictions.... need to test locally to see wtf is going on...
+# Just for extracting the predictions
 
 import numpy as np
 import cPickle

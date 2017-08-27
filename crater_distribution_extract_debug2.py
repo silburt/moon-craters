@@ -42,23 +42,23 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
     
     # get data
     try:
-        data=np.load('%s/%s_data.npy'%(data_dir,data_prefix))
+        pred = np.load('%s/%s_modelpreds_n%d_new.npy'%(data_dir,data_prefix,n_imgs))
         id=np.load('%s/%s_id.npy'%(data_dir,data_prefix))
         print "Successfully loaded %s files locally."%data_dir
     except:
         print "Couldnt find locally saved .npy files, loading from %s."%data_dir
+        data=np.load('%s/%s_data.npy'%(data_dir,data_prefix))
+        id=np.load('%s/%s_id.npy'%(data_dir,data_prefix))
+        data, id = data[:n_imgs], id[:n_imgs]
         data, id = read_and_normalize_data(data_dir, dim)
-        np.save('%s/%s_data.npy'%(data_dir,data_prefix),data)
-        np.save('%s/%s_id.npy'%(data_dir,data_prefix),id)
-    data, id = data[:n_imgs], id[:n_imgs]
-
-    if inv_color==1 or rescale==1:
-        print "inv_color=%d, rescale=%d, processing data"%(inv_color, rescale)
-        data = rescale_and_invcolor(data, inv_color, rescale)
-    
-    # generate model predictions
-    model = load_model(model_loc)
-    pred = model.predict(data.astype('float32'))
+        if inv_color==1 or rescale==1:
+            print "inv_color=%d, rescale=%d, processing data"%(inv_color, rescale)
+            data = rescale_and_invcolor(data, inv_color, rescale)
+        # generate model predictions
+        model = load_model(model_loc)
+        pred = model.predict(data.astype('float32'))
+        np.save('%s/%s_modelpreds_n%d_new.npy'%(data_dir,data_prefix,n_imgs),pred)
+        print "generated and saved predictions"
 
     # extract crater distribution, remove duplicates live
     pred_crater_dist = np.empty([0,3])

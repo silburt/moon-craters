@@ -26,7 +26,7 @@ def add_unique_craters(tuple, crater_dist, thresh_longlat2, thresh_rad2):
 #########################
 def extract_unique_GT(dir, id, thresh_longlat2, thresh_rad2):
     t1 = time.time()
-    print "extracting unique ground truth craters, thresh_longlat2=%.2f, thresh_rad2=%.2f"%(thresh_longlat2, thresh_rad2)
+    print "extracting unique ground truth craters, thresh_longlat2=%.2e, thresh_rad2=%.2e"%(thresh_longlat2, thresh_rad2)
     
     # hyperparameters
     minrad, maxrad = 3, 50  #min/max radius (in pixels) required to include crater in target
@@ -53,13 +53,13 @@ def extract_unique_GT(dir, id, thresh_longlat2, thresh_rad2):
                 GT_crater_dist = np.concatenate((GT_crater_dist,tuple_))
 
     np.save('%s/test_uniqueGT_llt%.1e_rt%.1e_n%d.npy'%(dir,thresh_longlat2,thresh_rad2,len(id)),GT_crater_dist)
-    print "Elapsed time for GT with thresh_longlat2=%.2f,thresh_rad2=%.2f is %f"%(thresh_longlat2,thresh_rad2,time.time() - t1)
+    print "Elapsed time for GT with thresh_longlat2=%.2e,thresh_rad2=%.2e is %f"%(thresh_longlat2,thresh_rad2,time.time() - t1)
     print ""
 
 #########################
 def extract_unique_pred(pred, id, P, thresh_longlat2, thresh_rad2):
     t1 = time.time()
-    print "extracting unique predicted craters, thresh_longlat2=%.2f, thresh_rad2=%.2f"%(thresh_longlat2, thresh_rad2)
+    print "extracting unique predicted craters, thresh_longlat2=%.2e, thresh_rad2=%.2e"%(thresh_longlat2, thresh_rad2)
     
     master_img_height_pix = 23040.  #number of pixels for height
     master_img_height_lat = 180.    #degrees used for latitude
@@ -90,7 +90,7 @@ def extract_unique_pred(pred, id, P, thresh_longlat2, thresh_rad2):
 
     np.save('%s/test_uniquepred_llt%.1e_rt%.1e_n%d.npy'%(dir,thresh_longlat2,thresh_rad2,len(pred)),pred_crater_dist)
     print "Total Number of Matches: %d"%N_matches_tot
-    print "Elapsed time for pred with thresh_longlat2=%.2f,thresh_rad2=%.2f is %f"%(thresh_longlat2,thresh_rad2,time.time() - t1)
+    print "Elapsed time for pred with thresh_longlat2=%.2e,thresh_rad2=%.2e is %f"%(thresh_longlat2,thresh_rad2,time.time() - t1)
     print ""
 
 #########################
@@ -107,12 +107,12 @@ if __name__ == '__main__':
     print "Using Preds: %s/%s"%(dir,file)
     print ""
 
-    thresh_longlat2 = [1e-2,1e-4,1e-6]
-    thresh_rad2 = [1e-2,1e-4,1e-6]
+    thresh_longlat2 = [1e-1,1,10]
+    thresh_rad2 = [1e-2,1e-1,1,10]
     
     #perform grid search
-    thresholds = zip(np.repeat(thresh_longlat2,len(thresh_rad2)),thresh_rad2*len(thresh_longlat2))
+    thresholds = zip(thresh_longlat2*len(thresh_rad2),np.repeat(thresh_rad2,len(thresh_longlat2)))
     for llt2,rt2 in zip(thresh_longlat2,thresh_rad2):
-        extract_unique_GT(dir, id, llt2, rt2)
+        #extract_unique_GT(dir, id, llt2, rt2)
         extract_unique_pred(pred, id, P, llt2, rt2)
 

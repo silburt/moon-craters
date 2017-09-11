@@ -107,12 +107,13 @@ if __name__ == '__main__':
     print "Using Preds: %s/%s"%(dir,file)
     print ""
 
-    thresh_longlat2 = [1e-1,1,10]
-    thresh_rad2 = [1e-2,1e-1,1,10]
-    
+    thresh_longlat2 = [1e-1,1]
+    thresh_rad2 = [1e-1,1]
+
     #perform grid search
     thresholds = zip(thresh_longlat2*len(thresh_rad2),np.repeat(thresh_rad2,len(thresh_longlat2)))
-    for llt2,rt2 in zip(thresh_longlat2,thresh_rad2):
+    for llt2,rt2 in thresholds:
+        print llt2,rt2
         #extract_unique_GT(dir, id, llt2, rt2)
         extract_unique_pred(pred, id, P, llt2, rt2)
 

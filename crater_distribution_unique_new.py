@@ -107,8 +107,8 @@ if __name__ == '__main__':
     print "Using Preds: %s/%s"%(dir,file)
     print ""
 
-    thresh_longlat2 = [1e-1,1]
-    thresh_rad2 = [1e-1,1]
+    thresh_longlat2 = [1e-1,0.5,1]
+    thresh_rad2 = [1e-1,0.5,1]
 
     #perform grid search
     thresholds = zip(thresh_longlat2*len(thresh_rad2),np.repeat(thresh_rad2,len(thresh_longlat2)))

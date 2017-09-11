@@ -8,6 +8,7 @@ import cPickle
 norm = False
 nbins = 50
 
+#Original ground truth dataset
 truthalan = pd.read_csv('utils/alanalldata.csv')
 truthalan = truthalan[truthalan['Long']>60]        #region of test data
 craters_names = ["Long", "Lat", "Radius (deg)","Diameter (km)", "D_range", "p", "Name"]
@@ -47,10 +48,11 @@ rad_truth = np.concatenate((truthalan['Diameter (km)'].values/2.,truthLU['Diamet
 #plt.hist(truth1, nbins, normed=True, label='initial')
 #plt.hist(rad_TU, nbins, normed=True, alpha=0.5, label='unique')
 
-pred = np.load('datasets/rings/Test_rings/test_predcraterdist_debug2_n30016.npy')
+#pred = np.load('datasets/rings/Test_rings/test_predcraterdist_debug2_n30016.npy')
+pred = np.load('datasets/rings/Test_rings/test_uniquepred_llt1.0e+00_rt1.0e-01_n10016.npy')
 long, lat, rad = pred.T
-#GT = np.load('datasets/rings/Test_rings/test_uniqueGT_ut1.0e+00_n10016.npy')
-GT = np.load('datasets/rings/Test_rings/test_GTcraterdist_debug2_n30016.npy')
+GT = np.load('datasets/rings/Test_rings/test_uniqueGT_llt1.0e-06_rt1.0e-06_n10016.npy') #unique distribution for 10,000 images
+#GT = np.load('datasets/rings/Test_rings/test_GTcraterdist_debug2_n30016.npy')
 longGT, latGT, radGT = GT.T
 print len(GT)
 

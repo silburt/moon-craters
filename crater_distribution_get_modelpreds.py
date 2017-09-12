@@ -66,26 +66,23 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
 if __name__ == '__main__':
     #args
     # ilen_1500_to_2500 settings
-#    data_dir = 'datasets/ilen_1500_to_2500/ilen_1500'       #location of data to predict on. Exclude final '/' in path.
-#    data_prefix = ''                                        #prefix of e.g. *_data.npy files.
-#    csv_prefix = ''                                         #prefix of e.g. *_0001.csv files.
-#    pickle_loc = '%s/outp_p0.p'%data_dir                    #location of corresponding pickle file
-#    model_loc = 'models/unet_s256_rings_nFL96.h5'
-
-    data_dir = 'datasets/rings/Dev_rings'                  #location of data to predict on. Exclude final '/' in path.
-    data_prefix = 'dev'                                    #prefix of e.g. *_data.npy files.
-    csv_prefix = 'lola'                                     #prefix of e.g. *_0001.csv files.
-    pickle_loc = '%s/lolaout_dev.p'%data_dir               #location of corresponding pickle file
+    data_dir = 'datasets/ilen_1500_to_2500/ilen_2000'       #location of data to predict on. Exclude final '/' in path.
+    data_prefix = ''                                        #prefix of e.g. *_data.npy files.
+    csv_prefix = ''                                         #prefix of e.g. *_0001.csv files.
+    pickle_loc = '%s/outp_p0.p'%data_dir                    #location of corresponding pickle file
     model_loc = 'models/unet_s256_rings_nFL96.h5'
-    
-    n_imgs = 30016          #number of images to use for getting crater distribution.
+    n_imgs = 1000
+
+#    data_dir = 'datasets/rings/Dev_rings'                  #location of data to predict on. Exclude final '/' in path.
+#    data_prefix = 'dev'                                    #prefix of e.g. *_data.npy files.
+#    csv_prefix = 'lola'                                     #prefix of e.g. *_0001.csv files.
+#    pickle_loc = '%s/lolaout_dev.p'%data_dir               #location of corresponding pickle file
+#    model_loc = 'models/unet_s256_rings_nFL96.h5'
+#    n_imgs = 30016          #number of images to use for getting crater distribution.
+
+
     inv_color = 1           #**must be same setting as what model was trained on**
     rescale = 1             #**must be same setting as what model was trained on**
-    #get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,inv_color,rescale)
-
-    #TEMP
-    get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,30016,inv_color,rescale)
-    get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,10016,inv_color,rescale)
-    get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,1000,inv_color,rescale)
+    get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,inv_color,rescale)
 
     print "Script completed successfully"

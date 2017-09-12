@@ -32,7 +32,7 @@ def read_and_normalize_data(path, dim):
     print 'shape:', data.shape
     return data, id_
 
-def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,inv_color,rescale,ground_truth_only):
+def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,inv_color,rescale):
     
     # properties of the dataset, shouldn't change (unless you use a different dataset)
     master_img_height_pix = 23040.  #number of pixels for height

@@ -99,8 +99,8 @@ if __name__ == '__main__':
     #primary dataset paths
     datatype = 'train'
     dir = 'datasets/rings/Train_rings'
-    file = '%s_modelpreds_n10016_new.npy'%datatype
-    #file = '%s_modelpreds_n1000_new.npy'%datatype
+    #file = '%s_modelpreds_n10016_new.npy'%datatype
+    file = '%s_modelpreds_n1000_new.npy'%datatype
     
     #augmented ilen_1500_to_2500 paths - these are training data
     ilen_dirs = ['datasets/ilen_1500_to_2500/ilen_1500','datasets/ilen_1500_to_2500/ilen_1750',
@@ -129,7 +129,9 @@ if __name__ == '__main__':
         #GT_crater_dist = extract_unique_GT(GT_crater_dist, dir, id, llt2, rt2)
         pred_crater_dist = extract_unique_pred(pred_crater_dist, pred, id, P, llt2, rt2)
 
+        print "finished primary dataset, analyzing augmented ilen datasets"
         for ilen_dir in ilen_dirs:
+            print "analyzing %s"%ilen_dir
             ilen_pred = np.load('%s/%s'%(ilen_dir,ilen_file))
             ilen_id = np.load('%s/_id.npy'%ilen_dir)
             ilen_P = cPickle.load(open('%s/outp_p0.p'%ilen_dir, 'r'))

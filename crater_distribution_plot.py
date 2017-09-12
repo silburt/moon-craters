@@ -49,7 +49,8 @@ rad_truth = np.concatenate((truthalan['Diameter (km)'].values/2.,truthLU['Diamet
 #plt.hist(rad_TU, nbins, normed=True, alpha=0.5, label='unique')
 
 #pred = np.load('datasets/rings/Test_rings/test_predcraterdist_debug2_n30016.npy')
-pred = np.load('datasets/rings/Test_rings/test_uniquepred_llt1.0e+00_rt1.0e-01_n10016.npy')
+#pred = np.load('datasets/rings/Test_rings/test_uniquepred_llt1.0e+00_rt5.0e-01_n10016.npy')
+pred = np.load('datasets/rings/Test_rings/test_uniquepred_llt1.0e+00_rt1.0e+00_n10016.npy')
 long, lat, rad = pred.T
 GT = np.load('datasets/rings/Test_rings/test_uniqueGT_llt1.0e-06_rt1.0e-06_n10016.npy') #unique distribution for 10,000 images
 #GT = np.load('datasets/rings/Test_rings/test_GTcraterdist_debug2_n30016.npy')
@@ -88,5 +89,5 @@ plt.yscale('log')
 #plt.xlabel('ilen image scales')
 
 #final output
-plt.savefig('output_dir/images/raddist_bin50_exclude.png')
+plt.savefig('output_dir/images/unique_llt2=1_rt2=1.png')
 plt.show()

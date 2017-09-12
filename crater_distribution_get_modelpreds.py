@@ -32,7 +32,7 @@ def read_and_normalize_data(path, dim):
     print 'shape:', data.shape
     return data, id_
 
-def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,inv_color,rescale,ground_truth_only,unique_thresh2):
+def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,inv_color,rescale,ground_truth_only):
     
     # properties of the dataset, shouldn't change (unless you use a different dataset)
     master_img_height_pix = 23040.  #number of pixels for height
@@ -53,16 +53,15 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
         np.save('%s/%s_id.npy'%(data_dir,data_prefix),id)
     data, id = data[:n_imgs], id[:n_imgs]
 
-    if ground_truth_only == 0:
-        if inv_color==1 or rescale==1:
-            print "inv_color=%d, rescale=%d, processing data"%(inv_color, rescale)
-            data = rescale_and_invcolor(data, inv_color, rescale)
-        
-        # generate model predictions
-        model = load_model(model_loc)
-        pred = model.predict(data.astype('float32'))
-        np.save('%s/%s_modelpreds_n%d_new.npy'%(data_dir,data_prefix,n_imgs),pred)
-        print "generated and saved predictions"
+    if inv_color==1 or rescale==1:
+        print "inv_color=%d, rescale=%d, processing data"%(inv_color, rescale)
+        data = rescale_and_invcolor(data, inv_color, rescale)
+    
+    # generate model predictions
+    model = load_model(model_loc)
+    pred = model.predict(data.astype('float32'))
+    np.save('%s/%s_modelpreds_n%d_new.npy'%(data_dir,data_prefix,n_imgs),pred)
+    print "generated and saved predictions"
 
 if __name__ == '__main__':
     #args
@@ -73,18 +72,20 @@ if __name__ == '__main__':
 #    pickle_loc = '%s/outp_p0.p'%data_dir                    #location of corresponding pickle file
 #    model_loc = 'models/unet_s256_rings_nFL96.h5'
 
-    data_dir = 'datasets/rings/Test_rings'                  #location of data to predict on. Exclude final '/' in path.
-    data_prefix = 'test'                                    #prefix of e.g. *_data.npy files.
+    data_dir = 'datasets/rings/Dev_rings'                  #location of data to predict on. Exclude final '/' in path.
+    data_prefix = 'dev'                                    #prefix of e.g. *_data.npy files.
     csv_prefix = 'lola'                                     #prefix of e.g. *_0001.csv files.
-    pickle_loc = '%s/lolaout_test.p'%data_dir               #location of corresponding pickle file
+    pickle_loc = '%s/lolaout_dev.p'%data_dir               #location of corresponding pickle file
     model_loc = 'models/unet_s256_rings_nFL96.h5'
     
-    n_imgs = 10016          #number of images to use for getting crater distribution.
+    n_imgs = 30016          #number of images to use for getting crater distribution.
     inv_color = 1           #**must be same setting as what model was trained on**
     rescale = 1             #**must be same setting as what model was trained on**
-    ground_truth_only = 0   #get ground truth crater distribution only (from csvs), do not generate predictions
-    unique_thresh2 = 1e-6   #duplicate threshold
+    #get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,inv_color,rescale)
 
-    get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,inv_color,rescale,ground_truth_only,unique_thresh2)
+    #TEMP
+    get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,30016,inv_color,rescale)
+    get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,10016,inv_color,rescale)
+    get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,1000,inv_color,rescale)
 
     print "Script completed successfully"

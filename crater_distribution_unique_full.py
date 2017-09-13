@@ -112,20 +112,19 @@ if __name__ == '__main__':
     id = np.load('%s/%s_id.npy'%(dir,datatype))[0:len(pred)]
     P = cPickle.load(open('%s/lolaout_%s.p'%(dir,datatype), 'r'))
     
-    #empty crater dist
-    pred_crater_dist = np.empty([0,3])
-    GT_crater_dist = np.empty([0,3])
-    
     print "Using Preds: %s/%s"%(dir,file)
     print ""
 
-    thresh_longlat2 = [0.1,0.5,1]
-    thresh_rad2 = [0.1,0.5,1]
+    #thresh_longlat2 = [0.1,0.5,1]
+    #thresh_rad2 = [0.1,0.5,1]
+    #thresholds = zip(thresh_longlat2*len(thresh_rad2),np.repeat(thresh_rad2,len(thresh_longlat2)))
+    thresholds = [(0.5,0.5),(0.1,0.5),(0.5,0.1),(0.5,1),(1,0.5),(0.1,1),(1,0.1)]
 
     #perform grid search
-    thresholds = zip(thresh_longlat2*len(thresh_rad2),np.repeat(thresh_rad2,len(thresh_longlat2)))
     for llt2,rt2 in thresholds:
         print llt2,rt2
+        
+        pred_crater_dist = np.empty([0,3])  #reset empty crater dist
         pred_crater_dist = extract_unique_pred(pred_crater_dist, pred, id, P, llt2, rt2, datatype)
 
         print "finished primary dataset, analyzing augmented ilen datasets"
@@ -137,4 +136,5 @@ if __name__ == '__main__':
             pred_crater_dist = extract_unique_pred(pred_crater_dist, ilen_pred, ilen_id, ilen_P, llt2, rt2, datatype)
 
     print "getting ground truth"
+    GT_crater_dist = np.empty([0,3])
     GT_crater_dist = extract_unique_GT(GT_crater_dist, dir, id, llt2, rt2, datatype)

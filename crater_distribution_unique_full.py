@@ -24,7 +24,7 @@ def add_unique_craters(tuple, crater_dist, thresh_longlat2, thresh_rad2):
     return crater_dist
 
 #########################
-def extract_unique_GT(GT_crater_dist, dir, id, thresh_longlat2, thresh_rad2):
+def extract_unique_GT(GT_crater_dist, dir, id, thresh_longlat2, thresh_rad2, datatype):
     t1 = time.time()
     print "extracting unique ground truth craters, thresh_longlat2=%.2e, thresh_rad2=%.2e"%(thresh_longlat2, thresh_rad2)
     
@@ -52,13 +52,13 @@ def extract_unique_GT(GT_crater_dist, dir, id, thresh_longlat2, thresh_rad2):
             else:
                 GT_crater_dist = np.concatenate((GT_crater_dist,tuple_))
 
-    np.save('%s/test_uniqueGT_llt%.1e_rt%.1e_n%d.npy'%(dir,thresh_longlat2,thresh_rad2,len(id)),GT_crater_dist)
+    np.save('%s/%s_uniqueGT_llt%.1e_rt%.1e_n%d.npy'%(dir,datatype,thresh_longlat2,thresh_rad2,len(id)),GT_crater_dist)
     print "Elapsed time for GT with thresh_longlat2=%.2e,thresh_rad2=%.2e is %f"%(thresh_longlat2,thresh_rad2,time.time() - t1)
     print ""
     return GT_crater_dist
 
 #########################
-def extract_unique_pred(pred_crater_dist, pred, id, P, thresh_longlat2, thresh_rad2):
+def extract_unique_pred(pred_crater_dist, pred, id, P, thresh_longlat2, thresh_rad2, datatype):
     t1 = time.time()
     print "extracting unique predicted craters, thresh_longlat2=%.2e, thresh_rad2=%.2e"%(thresh_longlat2, thresh_rad2)
     
@@ -88,7 +88,7 @@ def extract_unique_pred(pred_crater_dist, pred, id, P, thresh_longlat2, thresh_r
             else:
                 pred_crater_dist = np.concatenate((pred_crater_dist,tuple_))
 
-    np.save('%s/test_uniquepred_llt%.1e_rt%.1e_n%d.npy'%(dir,thresh_longlat2,thresh_rad2,len(pred)),pred_crater_dist)
+    np.save('%s/%s_uniquepred_llt%.1e_rt%.1e_n%d.npy'%(dir,datatype,thresh_longlat2,thresh_rad2,len(pred)),pred_crater_dist)
     print "Total Number of Matches: %d"%N_matches_tot
     print "Elapsed time for pred with thresh_longlat2=%.2e,thresh_rad2=%.2e is %f"%(thresh_longlat2,thresh_rad2,time.time() - t1)
     print ""
@@ -99,8 +99,8 @@ if __name__ == '__main__':
     #primary dataset paths
     datatype = 'train'
     dir = 'datasets/rings/Train_rings'
-    #file = '%s_modelpreds_n10016_new.npy'%datatype
-    file = '%s_modelpreds_n1000_new.npy'%datatype
+    file = '%s_modelpreds_n10016_new.npy'%datatype
+    #file = '%s_modelpreds_n1000_new.npy'%datatype
     
     #augmented ilen_1500_to_2500 paths - these are training data
     ilen_dirs = ['datasets/ilen_1500_to_2500/ilen_1500','datasets/ilen_1500_to_2500/ilen_1750',
@@ -119,15 +119,14 @@ if __name__ == '__main__':
     print "Using Preds: %s/%s"%(dir,file)
     print ""
 
-    thresh_longlat2 = [1]
-    thresh_rad2 = [1]
+    thresh_longlat2 = [0.1,0.5,1]
+    thresh_rad2 = [0.1,0.5,1]
 
     #perform grid search
     thresholds = zip(thresh_longlat2*len(thresh_rad2),np.repeat(thresh_rad2,len(thresh_longlat2)))
     for llt2,rt2 in thresholds:
         print llt2,rt2
-        #GT_crater_dist = extract_unique_GT(GT_crater_dist, dir, id, llt2, rt2)
-        pred_crater_dist = extract_unique_pred(pred_crater_dist, pred, id, P, llt2, rt2)
+        pred_crater_dist = extract_unique_pred(pred_crater_dist, pred, id, P, llt2, rt2, datatype)
 
         print "finished primary dataset, analyzing augmented ilen datasets"
         for ilen_dir in ilen_dirs:
@@ -135,4 +134,7 @@ if __name__ == '__main__':
             ilen_pred = np.load('%s/%s'%(ilen_dir,ilen_file))
             ilen_id = np.load('%s/_id.npy'%ilen_dir)
             ilen_P = cPickle.load(open('%s/outp_p0.p'%ilen_dir, 'r'))
-            pred_crater_dist = extract_unique_pred(pred_crater_dist, ilen_pred, ilen_id, ilen_P, llt2, rt2)
+            pred_crater_dist = extract_unique_pred(pred_crater_dist, ilen_pred, ilen_id, ilen_P, llt2, rt2, datatype)
+
+    print "getting ground truth"
+    GT_crater_dist = extract_unique_GT(GT_crater_dist, dir, id, llt2, rt2, datatype)

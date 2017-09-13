@@ -10,13 +10,13 @@ nbins = 50
 
 #Original ground truth dataset
 truthalan = pd.read_csv('utils/alanalldata.csv')
-truthalan = truthalan[truthalan['Long']>60]        #region of test data
+truthalan = truthalan[truthalan['Long']<-60]        #region of train data
 craters_names = ["Long", "Lat", "Radius (deg)","Diameter (km)", "D_range", "p", "Name"]
 craters_types = [float, float, float, float, float, int, str]
 truthLU = pd.read_csv(open('utils/LU78287GT.csv', 'r'), sep=',',
                         usecols=list(range(1, 8)), header=0, engine="c", encoding = "ISO-8859-1",
                         names=craters_names, dtype=dict(zip(craters_names, craters_types)))
-truthLU = truthLU[(truthLU['Long']>60)&(truthLU['Diameter (km)']>20.)]
+truthLU = truthLU[(truthLU['Long']<-60)&(truthLU['Diameter (km)']>20.)]
 
 rad_truth = np.concatenate((truthalan['Diameter (km)'].values/2.,truthLU['Diameter (km)'].values/2.))
 #rad_truth = truthalan['Diameter (km)'].values/2.
@@ -48,18 +48,22 @@ rad_truth = np.concatenate((truthalan['Diameter (km)'].values/2.,truthLU['Diamet
 #plt.hist(truth1, nbins, normed=True, label='initial')
 #plt.hist(rad_TU, nbins, normed=True, alpha=0.5, label='unique')
 
+#test set
 #pred = np.load('datasets/rings/Test_rings/test_predcraterdist_debug2_n30016.npy')
 #pred = np.load('datasets/rings/Test_rings/test_uniquepred_llt1.0e+00_rt5.0e-01_n10016.npy')
-pred = np.load('datasets/rings/Test_rings/test_uniquepred_llt1.0e+00_rt1.0e+00_n10016.npy')
+#pred = np.load('datasets/rings/Test_rings/test_uniquepred_llt1.0e+00_rt1.0e+00_n10016_nonaugmented.npy')
+#GT = np.load('datasets/rings/Test_rings/test_GTcraterdist_debug2_n30016.npy')
+
+#train set
+pred = np.load('datasets/rings/Train_rings/train_uniquepred_llt1.0e+00_rt1.0e+00_n10016.npy')
 long, lat, rad = pred.T
 GT = np.load('datasets/rings/Test_rings/test_uniqueGT_llt1.0e-06_rt1.0e-06_n10016.npy') #unique distribution for 10,000 images
-#GT = np.load('datasets/rings/Test_rings/test_GTcraterdist_debug2_n30016.npy')
 longGT, latGT, radGT = GT.T
-print len(GT)
+print len(pred)
 
 plt.hist(rad, nbins, range=[min(rad_truth),50], normed=norm, label='pred extract')
-plt.hist(radGT, nbins, range=[min(rad_truth),50], alpha=0.5, normed=norm,label='GT extract')
-#plt.hist(rad_truth, nbins, range=[min(rad_truth),50], normed=norm, alpha=0.5, label='ground truth')
+#plt.hist(radGT, nbins, range=[min(rad_truth),50], alpha=0.5, normed=norm,label='GT extract')
+plt.hist(rad_truth, nbins, range=[min(rad_truth),50], normed=norm, alpha=0.5, label='ground truth')
 
 #pred = np.load('datasets/rings/Test_rings/test_predcraterdist_full.npy')
 #truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_full.npy')

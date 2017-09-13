@@ -4,9 +4,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import cPickle
+from scipy import stats
 
 norm = False
-nbins = 50
+nbins = 60
 
 #Original ground truth dataset
 truthalan = pd.read_csv('utils/alanalldata.csv')
@@ -55,7 +56,7 @@ rad_truth = np.concatenate((truthalan['Diameter (km)'].values/2.,truthLU['Diamet
 #GT = np.load('datasets/rings/Test_rings/test_GTcraterdist_debug2_n30016.npy')
 
 #train set
-pred = np.load('datasets/rings/Train_rings/train_uniquepred_llt1.0e+00_rt1.0e+00_n30016.npy')
+pred = np.load('datasets/rings/Train_rings/train_uniquepred_llt5.0e-01_rt5.0e-01_n10016.npy')
 long, lat, rad = pred.T
 GT = np.load('datasets/rings/Test_rings/test_uniqueGT_llt1.0e-06_rt1.0e-06_n10016.npy') #unique distribution for 10,000 images
 longGT, latGT, radGT = GT.T
@@ -65,33 +66,41 @@ plt.hist(rad, nbins, range=[min(rad_truth),50], normed=norm, label='pred extract
 #plt.hist(radGT, nbins, range=[min(rad_truth),50], alpha=0.5, normed=norm,label='GT extract')
 plt.hist(rad_truth, nbins, range=[min(rad_truth),50], normed=norm, alpha=0.5, label='ground truth')
 
-#pred = np.load('datasets/rings/Test_rings/test_predcraterdist_full.npy')
-#truth = np.load('datasets/rings/Test_rings/test_GTcraterdist_full.npy')
-#long_pred, lat_pred, rad_pred = pred.T
-#long_GT, lat_GT, rad_GT = truth.T
-#plt.hist(rad_pred, nbins, range=[min(rad_GT),max(rad_GT)], normed=norm, label='scale')
-#plt.hist(rad_GT, nbins, normed=norm, alpha=0.5, label='ground truth')
+#get list of most frequent values and confirm that they're caused by constant ilen values
+master_img_height_pix = 23040.  #number of pixels for height
+master_img_height_lat = 180.    #degrees used for latitude
+r_moon = 1737.4                 #radius of the moon (km)
+dim = 256.0                     #image dimension (pixels, assume dim=height=width), needs to be float
+img_pix_height = np.asarray([1500,1750,2250])   #different scales in the image
+pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180.0)*(img_pix_height/dim)*r_moon
 
-#plt.hist(pred, nbins, range=[5,20], normed=norm, label='pred')
-#plt.hist(truth, nbins, range=[5,20], normed=norm, alpha=0.5, label='ground truth')
-
-#plt.hist(rad, nbins, range=[5,20], normed=norm, label='pred')
+arr = rad.copy()
+print "r_km, \t    r_pix_1500 \t r_pix_1750 \t r_pix_2250 \t N_r_km"
+for i in range(10):
+    u, indices = np.unique(arr, return_inverse=True)
+    r_km = u[np.argmax(np.bincount(indices))]
+    print r_km, r_km/pix_to_km, len(arr[arr==r_km])
+    arr = arr[arr != r_km]
 
 plt.xlabel('crater radius (km)')
 plt.legend()
 plt.yscale('log')
+plt.savefig('output_dir/images/unique_llt2=0.5_rt2=0.5.png')
 
+#ks test
+#print stats.ks_2samp(rad, rad_truth)
 
+'''
 #plot pickle
-#P = cPickle.load(open('datasets/rings/Test_rings/lolaout_test.p', 'r'))
-#scales = []
-#for i in range(len(P)):
-#    P_ = P[i]
-#    scales.append(P_['box'][2] - P_['box'][0])
-#
-#plt.hist(scales, nbins)
-#plt.xlabel('ilen image scales')
+#P = cPickle.load(open('datasets/ilen_1500_to_2500/ilen_1750/outp_p0.p', 'r'))
+P = cPickle.load(open('datasets/rings/Train_rings/lolaout_train.p', 'r'))
+scales = []
+for i in range(len(P)):
+    P_ = P[i]
+    scales.append(P_['box'][2] - P_['box'][0])
 
-#final output
-plt.savefig('output_dir/images/unique_llt2=1_rt2=1.png')
+print np.mean(scales), np.min(scales), np.max(scales)
+plt.hist(scales, nbins)
+plt.xlabel('ilen image scales')
+'''
 plt.show()

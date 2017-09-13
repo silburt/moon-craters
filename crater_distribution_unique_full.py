@@ -65,7 +65,7 @@ def extract_unique_pred(pred_crater_dist, pred, id, P, thresh_longlat2, thresh_r
     master_img_height_pix = 23040.  #number of pixels for height
     master_img_height_lat = 180.    #degrees used for latitude
     r_moon = 1737.4                 #radius of the moon (km)
-    dim = 256                       #image dimension (pixels, assume dim=height=width)
+    dim = 256.0                     #image dimension (pixels, assume dim=height=width), needs to be float
     
     N_matches_tot = 0
     for i in range(len(pred)):
@@ -74,11 +74,11 @@ def extract_unique_pred(pred_crater_dist, pred, id, P, thresh_longlat2, thresh_r
         if len(coords) > 0:
             P_ = P[id[i]]
             img_pix_height = float(P_['box'][2] - P_['box'][0])
-            pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180.0)*(img_pix_height/float(dim))*r_moon
+            pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180.0)*(img_pix_height/dim)*r_moon
             long_pix,lat_pix,radii_pix = coords.T
             radii_km = radii_pix*pix_to_km
-            long_deg = P_['llbd'][0] + (P_['llbd'][1]-P_['llbd'][0])*(long_pix/float(dim))
-            lat_deg = P_['llbd'][3] - (P_['llbd'][3]-P_['llbd'][2])*(lat_pix/float(dim))
+            long_deg = P_['llbd'][0] + (P_['llbd'][1]-P_['llbd'][0])*(long_pix/dim)
+            lat_deg = P_['llbd'][3] - (P_['llbd'][3]-P_['llbd'][2])*(lat_pix/dim)
             tuple_ = np.column_stack((long_deg,lat_deg,radii_km))
             N_matches_tot += len(coords)
             

@@ -113,7 +113,7 @@ if __name__ == '__main__':
     highilen_file = 'highilen_%s_input_n5000.npy'%datatype
     
     highilen_pred = np.load('%s/%s'%(highilen_dir,highilen_file))
-    highilen_P = cPickle.load(open('%s/%soutp_v2.p'%(dir,datatype), 'r'))
+    highilen_P = cPickle.load(open('%s/%soutp_v2.p'%(highilen_dir,datatype), 'r'))
     highilen_id = range(len(highilen_P))    #preds and P have same index
     
     print "Using Preds: %s/%s"%(dir,file)

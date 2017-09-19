@@ -114,8 +114,7 @@ if __name__ == '__main__':
     highilen_dir = 'datasets/highilen'
     highilen_file = 'highilen_%s_modelpreds_n5000_new.npy'%datatype
     
-    highilen_pred = np.load('%s/%s'%(highilen_dir,highilen_file))/255.
-    highilen_pred = rescale_and_invcolor(highilen_pred, 1, 1)   #rescale and invcolor, Charles didn't do it.
+    highilen_pred = np.load('%s/%s'%(highilen_dir,highilen_file))
     highilen_P = cPickle.load(open('%s/%soutp_v2.p'%(highilen_dir,datatype), 'r'))
     highilen_id = range(len(highilen_P))    #preds and P have same index
     

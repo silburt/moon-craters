@@ -1,8 +1,7 @@
 # This code is typically run on p8t03/04 on scinet.
-# Just for extracting the predictions
+# Just for extracting the predictions.
 
 import numpy as np
-import cPickle
 import cv2
 import glob
 import os
@@ -32,26 +31,19 @@ def read_and_normalize_data(path, dim):
     print 'shape:', data.shape
     return data, id_
 
-def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,inv_color,rescale):
-    
-    # properties of the dataset, shouldn't change (unless you use a different dataset)
-    master_img_height_pix = 23040.  #number of pixels for height
-    master_img_height_lat = 180.    #degrees used for latitude
-    r_moon = 1737.4                 #radius of the moon (km)
-    dim = 256                       #image dimension (pixels, assume dim=height=width)
-    P = cPickle.load(open(pickle_loc, 'r'))
-    
+def get_modelpreds(data_dir,data_prefix,csv_prefix,model_loc,n_imgs,inv_color,rescale):
     # get data
     try:
-        data=np.load('%s/%s_data.npy'%(data_dir,data_prefix))
-        id=np.load('%s/%s_id.npy'%(data_dir,data_prefix))
+        data=np.load('%s/%s.npy'%(data_dir,data_prefix))/255.   #for Charles' highilen dataset
+        #data=np.load('%s/%s_data.npy'%(data_dir,data_prefix))
+        data = data[:n_imgs]
         print "Successfully loaded %s files locally."%data_dir
     except:
         print "Couldnt find locally saved .npy files, loading from %s."%data_dir
         data, id = read_and_normalize_data(data_dir, dim)
         np.save('%s/%s_data.npy'%(data_dir,data_prefix),data)
         np.save('%s/%s_id.npy'%(data_dir,data_prefix),id)
-    data, id = data[:n_imgs], id[:n_imgs]
+        data, id = data[:n_imgs], id[:n_imgs]
 
     if inv_color==1 or rescale==1:
         print "inv_color=%d, rescale=%d, processing data"%(inv_color, rescale)
@@ -65,24 +57,28 @@ def get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,
 
 if __name__ == '__main__':
     #args
-    # ilen_1500_to_2500 settings
-    data_dir = 'datasets/ilen_1500_to_2500/ilen_2000'       #location of data to predict on. Exclude final '/' in path.
-    data_prefix = ''                                        #prefix of e.g. *_data.npy files.
+    # ilen_1500_to_2500 settings - from Mohamad
+#    data_dir = 'datasets/ilen_1500_to_2500/ilen_2000'       #location of data to predict on. Exclude final '/' in path.
+#    data_prefix = ''                                        #prefix of e.g. *_data.npy files.
+#    csv_prefix = ''                                         #prefix of e.g. *_0001.csv files.
+#    model_loc = 'models/unet_s256_rings_nFL96.h5'
+#    n_imgs = 1000
+
+    # Charles highilen augmented dataset
+    data_dir = 'datasets/highilen'                          #location of data to predict on. Exclude final '/' in path.
+    data_prefix = 'highilen_train_input_n5000'              #prefix of e.g. *_data.npy files.
     csv_prefix = ''                                         #prefix of e.g. *_0001.csv files.
-    pickle_loc = '%s/outp_p0.p'%data_dir                    #location of corresponding pickle file
     model_loc = 'models/unet_s256_rings_nFL96.h5'
-    n_imgs = 1000
+    n_imgs = 5000
 
 #    data_dir = 'datasets/rings/Dev_rings'                  #location of data to predict on. Exclude final '/' in path.
 #    data_prefix = 'dev'                                    #prefix of e.g. *_data.npy files.
 #    csv_prefix = 'lola'                                     #prefix of e.g. *_0001.csv files.
-#    pickle_loc = '%s/lolaout_dev.p'%data_dir               #location of corresponding pickle file
 #    model_loc = 'models/unet_s256_rings_nFL96.h5'
 #    n_imgs = 30016          #number of images to use for getting crater distribution.
 
-
     inv_color = 1           #**must be same setting as what model was trained on**
     rescale = 1             #**must be same setting as what model was trained on**
-    get_crater_dist(data_dir,data_prefix,csv_prefix,pickle_loc,model_loc,n_imgs,inv_color,rescale)
+    get_modelpreds(data_dir,data_prefix,csv_prefix,model_loc,n_imgs,inv_color,rescale)
 
     print "Script completed successfully"

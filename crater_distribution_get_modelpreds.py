@@ -35,7 +35,7 @@ def get_modelpreds(data_dir,data_prefix,csv_prefix,model_loc,n_imgs,inv_color,re
     # get data
     try:
         #for Charles' highilen dataset
-        data=np.load('%s/%s_train_input_n5000.npy'%(data_dir,data_prefix))/255.
+        data=np.load('%s/%s_input_n5000.npy'%(data_dir,data_prefix))/255.
         data=data.reshape((5000,256,256,1))
         
         #data=np.load('%s/%s_data.npy'%(data_dir,data_prefix))
@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
     # Charles highilen augmented dataset
     data_dir = 'datasets/highilen'                          #location of data to predict on. Exclude final '/' in path.
-    data_prefix = 'highilen'                                #prefix of e.g. *_data.npy files.
+    data_prefix = 'highilen_train'                                #prefix of e.g. *_data.npy files.
     csv_prefix = ''                                         #prefix of e.g. *_0001.csv files.
     model_loc = 'models/unet_s256_rings_nFL96.h5'
     n_imgs = 5000

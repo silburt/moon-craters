@@ -8,6 +8,7 @@ from scipy import stats
 
 norm = False
 nbins = 60
+maxrad = 40
 
 #Original ground truth dataset
 truthalan = pd.read_csv('utils/alanalldata.csv')
@@ -56,20 +57,21 @@ rad_truth = np.concatenate((truthalan['Diameter (km)'].values/2.,truthLU['Diamet
 #GT = np.load('datasets/rings/Test_rings/test_GTcraterdist_debug2_n30016.npy')
 
 #train set
-pred = np.load('datasets/rings/Train_rings/train_uniquepred_llt5.0e-01_rt5.0e-01_n10016.npy')
+#pred = np.load('datasets/rings/Train_rings/train_uniquepred_llt5.0e-01_rt5.0e-01_n10016.npy')
+pred = np.load('datasets/rings/Train_rings/train_highilenpred_llt5.0e-01_rt5.0e-01_n30016.npy')
+#pred = np.load('datasets/rings/Train_rings/train_highilenpred_llt1.0e+00_rt5.0e-01_n10016.npy')
 long, lat, rad = pred.T
 GT = np.load('datasets/rings/Test_rings/test_uniqueGT_llt1.0e-06_rt1.0e-06_n10016.npy') #unique distribution for 10,000 images
 longGT, latGT, radGT = GT.T
 print len(pred)
 
 #get list of most frequent values and confirm that they're caused by constant ilen values
-master_img_height_pix = 23040.  #number of pixels for height
-master_img_height_lat = 180.    #degrees used for latitude
-r_moon = 1737.4                 #radius of the moon (km)
-dim = 256.0                     #image dimension (pixels, assume dim=height=width), needs to be float
-img_pix_height = np.asarray([1500,1750,2250])   #different scales in the image
-pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180.0)*(img_pix_height/dim)*r_moon
-
+#master_img_height_pix = 23040.  #number of pixels for height
+#master_img_height_lat = 180.    #degrees used for latitude
+#r_moon = 1737.4                 #radius of the moon (km)
+#dim = 256.0                     #image dimension (pixels, assume dim=height=width), needs to be float
+#img_pix_height = np.asarray([1500,1750,2250])   #different scales in the image
+#pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180.0)*(img_pix_height/dim)*r_moon
 #arr = rad.copy()
 #print "r_km, \t    r_pix_1500 \t r_pix_1750 \t r_pix_2250 \t N_r_km"
 #for i in range(10):
@@ -78,27 +80,27 @@ pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180.0)*(img_pix
 #    print r_km, r_km/pix_to_km, len(arr[arr==r_km])
 #    arr = arr[arr != r_km]
 
-cdf = 1
+cdf = 0
 if cdf == 1:
     pixel_rad = np.arange(20)
     for i,img_pix_height in enumerate([1500,1750,2250]):
         pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180.0)*(img_pix_height/dim)*r_moon
         rad_km = pixel_rad*pix_to_km
         plt.plot([rad_km,rad_km],[0,1],'k--')
-    rad_plot = rad[(rad>=min(rad_truth))&(rad<50)]
+    rad_plot = rad[(rad>=min(rad_truth))&(rad<maxrad)]
     plt.plot(np.sort(rad_plot),np.arange(len(rad_plot))/float(len(rad_plot)),label='pred_extract',lw=2)
     #plt.plot(np.sort(rad_truth),np.arange(len(rad_truth))/float(len(rad_truth)),label='ground_truth',lw=4)
     plt.xlabel('crater radius (km)')
-    plt.xlim([min(rad_truth),50])
+    plt.xlim([min(rad_truth),maxrad])
     plt.legend(loc='lower right')
     plt.savefig('output_dir/images/unique_llt2=0.5_rt2=0.5_cdf.png')
 else:
-    plt.hist(rad, nbins, range=[min(rad_truth),50], normed=norm, label='pred extract')
-    #plt.hist(radGT, nbins, range=[min(rad_truth),50], alpha=0.5, normed=norm,label='GT extract')
-    plt.hist(rad_truth, nbins, range=[min(rad_truth),50], normed=norm, alpha=0.5, label='ground truth')
+    plt.hist(rad, nbins, range=[min(rad_truth),maxrad], normed=norm, label='pred extract')
+    #plt.hist(radGT, nbins, range=[min(rad_truth),maxrad], alpha=0.5, normed=norm,label='GT extract')
+    plt.hist(rad_truth, nbins, range=[min(rad_truth),maxrad], normed=norm, alpha=0.5, label='ground truth')
     plt.xlabel('crater radius (km)')
     plt.yscale('log')
-    plt.savefig('output_dir/images/unique_llt2=0.5_rt2=0.5.png')
+    #plt.savefig('output_dir/images/unique_llt2=0.5_rt2=0.5.png')
     plt.legend()
 
 #ks test

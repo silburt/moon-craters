@@ -1,4 +1,5 @@
 # This code is typically run on p8t03/04 on scinet.
+# This is the code used to remove all ground truth values from the GT distribution with radii larger than the maximum radius value detected in the image. 
 
 import numpy as np
 import cPickle

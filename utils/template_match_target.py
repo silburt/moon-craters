@@ -6,17 +6,17 @@ import numpy as np
 from skimage.feature import match_template
 import cv2
 
-def template_match_target(target, match_thresh2=50, minrad=3, maxrad=50):
+def template_match_target(target, match_thresh2=50, minrad=3, maxrad=50, target_thresh=0.1):
     #Match Threshold (squared)
-    # for template matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, remove (x2,y2,r2) circle (it is a duplicate).
+    # match_thresh2: for template matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, remove (x2,y2,r2) circle (it is a duplicate).
     # for predicted target -> csv matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, positive detection
     # minrad - keep in mind that if the predicted target has thick rings, a small ring of diameter ~ ring_thickness could be detected by match_filter.
+    # target_thresh: 0-1 range, pixel values > target_thresh -> 1, pixel values < target_thresh -> 0
     
     # minrad/maxrad are the radii to search over during template matching
     # hyperparameters, probably don't need to change
     ring_thickness = 2       #thickness of rings for the templates. 2 seems to work well.
     template_thresh = 0.5    #0-1 range, if template matching probability > template_thresh, count as detection
-    target_thresh = 0.1      #0-1 range, pixel values > target_thresh -> 1, pixel values < target_thresh -> 0
     
     # target - can be predicted or ground truth
     target[target >= target_thresh] = 1

@@ -61,7 +61,7 @@ rad_truth = np.concatenate((truthalan['Diameter (km)'].values/2.,truthLU['Diamet
 #From crater_distribution_unique_full.py
 #########################################
 #pred = np.load('datasets/rings/Train_rings/train_uniquepred_llt5.0e-01_rt5.0e-01_n10016.npy')
-pred = np.load('datasets/rings/Train_rings/train_highilenpred_llt5.0e-01_rt5.0e-01_n30016.npy')
+pred = np.load('datasets/rings/Train_rings/train_highilenpred_llt6.0e-01_rt6.0e-01_n30016.npy')
 #pred = np.load('datasets/rings/Train_rings/train_highilenpred_llt6.0e-01_rt6.0e-01_n10016.npy')
 GT = np.load('datasets/rings/Test_rings/test_uniqueGT_llt1.0e-06_rt1.0e-06_n10016.npy') #unique distribution for 10,000 images
 #########################################

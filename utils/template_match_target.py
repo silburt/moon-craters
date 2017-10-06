@@ -80,7 +80,7 @@ def template_match_target(target, match_thresh2=50, minrad=3, maxrad=50, target_
     return coords
 
 
-def template_match_target_to_csv(target, csv_coords, minrad=3, maxrad=40):
+def template_match_target_to_csv(target, csv, minrad=3, maxrad=40):
     #Match Threshold (squared)
     # for template matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, remove (x2,y2,r2) circle (it is a duplicate).
     # for predicted target -> csv matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, positive detection
@@ -88,6 +88,16 @@ def template_match_target_to_csv(target, csv_coords, minrad=3, maxrad=40):
     
     #get coordinates from template matching
     templ_coords = template_match_target(target, match_thresh2, minrad, maxrad)
+
+    #TEMP - see how recall improves when large craters are excluded. 
+    remove_large_craters_csv = 1
+    maxr = 0
+    if remove_large_craters_csv == 1:
+        x,y,r = templ_coords.T
+        maxr = np.max(r)
+        csv_coords = csv[csv['Diameter (pix)']/2.< maxr]
+    else:
+        csv_coords = csv
 
     # compare template-matched results to "ground truth" csv input data
     N_match = 0
@@ -107,6 +117,6 @@ def template_match_target_to_csv(target, csv_coords, minrad=3, maxrad=40):
         if len(csv_coords) == 0:
             break
 
-    return N_match, N_csv, N_templ, csv_duplicate_flag
+    return N_match, N_csv, N_templ, maxr, csv_duplicate_flag
 
 

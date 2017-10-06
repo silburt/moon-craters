@@ -44,6 +44,7 @@ rad_truth = np.concatenate((truthalan['Diameter (km)'].values/2.,truthLU['Diamet
 #filename = 'datasets/rings/Train_rings/train_uniquepred_llt5.0e-01_rt5.0e-01_n10016.npy'
 #filename = 'datasets/rings/Train_rings/train_highilenpred_llt6.0e-01_rt6.0e-01_n10016.npy'
 filename = 'datasets/rings/Test_rings/test_highilenpred_llt6.0e-01_rt6.0e-01_n29976.npy'
+#filename = 'datasets/rings/Test_rings/test_highlowilenpred_llt6.0e-01_rt6.0e-01_n10016.npy'
 #filename = 'datasets/rings/Train_rings/train_highilenpred_llt6.0e-01_rt6.0e-01_n30016.npy'
 
 #GT = np.load('datasets/rings/Test_rings/test_uniqueGT_llt1.0e-06_rt1.0e-06_n10016.npy') #unique distribution for 10,000 images
@@ -69,7 +70,9 @@ else:
     plt.hist(rad_truth, nbins, range=[min(rad_truth),maxrad], normed=norm, alpha=0.5, label='ground truth')
     
     #extended
-    binnies = [dist_bins[0]-(dist_bins[1]-dist_bins[0]), dist_bins[0]]
+    bin_diff = dist_bins[1]-dist_bins[0]
+    binnies = [dist_bins[0]-bin_diff, dist_bins[0]]
+    print binnies
     plt.hist(rad, bins=binnies, normed=norm, label='new craters')
     ext = '_ext'
     

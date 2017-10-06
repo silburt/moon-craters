@@ -70,9 +70,9 @@ def custom_image_generator(data, target, batch_size=32):
             d, t = data[i:i+batch_size].copy(), target[i:i+batch_size].copy() #most efficient for memory?
             
             #random color inversion
-            for j in np.where(np.random.randint(0,2,batch_size)==1)[0]:
-                d[j][d[j] > 0.] = 1. - d[j][d[j] > 0.]
-            
+#            for j in np.where(np.random.randint(0,2,batch_size)==1)[0]:
+#                d[j][d[j] > 0.] = 1. - d[j][d[j] > 0.]
+
             #horizontal/vertical flips
             for j in np.where(np.random.randint(0,2,batch_size)==1)[0]:
                 d[j], t[j] = np.fliplr(d[j]), np.fliplr(t[j])               #left/right
@@ -247,24 +247,29 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
         # calcualte custom loss
         print ""
         print "custom loss for epoch %d/%d:"%(nb+1,nb_epoch)
-        match_csv_arr, templ_csv_arr, templ_new_arr = [], [], []
+        match_csv_arr, templ_csv_arr, templ_new_arr, templ_new2_arr, maxrad = [], [], [], [], []
         loss_target = model.predict(loss_data.astype('float32'))
         for i in range(len(loss_data)):
-            N_match, N_csv, N_templ, csv_duplicate_flag = template_match_target_to_csv(loss_target[i], loss_csvs[i])
+            N_match, N_csv, N_templ, maxr, csv_duplicate_flag = template_match_target_to_csv(loss_target[i], loss_csvs[i])
             match_csv, templ_csv, templ_new = 0, 0, 0
             if N_csv > 0:
                 match_csv = float(N_match)/float(N_csv)             #recall
                 templ_csv = float(N_templ)/float(N_csv)             #craters detected/craters in csv
             if N_templ > 0:
                 templ_new = float(N_templ - N_match)/float(N_templ) #fraction of craters that are new
-            match_csv_arr.append(match_csv); templ_csv_arr.append(templ_csv); templ_new_arr.append(templ_new)
+                templ_new2 = float(N_templ - N_match)/float(N_csv)  #fraction of craters that are new
+            match_csv_arr.append(match_csv); templ_csv_arr.append(templ_csv); templ_new_arr.append(templ_new); templ_new2_arr.append(templ_new2); maxrad.append(maxr)
+        
         print "mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(match_csv_arr), np.std(match_csv_arr))
         print "mean and std of N_template/N_csv = %f, %f"%(np.mean(templ_csv_arr), np.std(templ_csv_arr))
         print "mean and std of (N_template - N_match)/N_template (fraction of craters that are new) = %f, %f"%(np.mean(templ_new_arr), np.std(templ_new_arr))
+        print "mean and std of (N_template - N_match)/N_csv (fraction of craters that are new, 2) = %f, %f"%(np.mean(templ_new2_arr), np.std(templ_new2_arr))
+        print "mean and std of maximum detected pixel radius in an image = %f, %f"%(np.mean(maxrad), np.std(maxrad))
+        print "absolute maximum detected pixel radius over all images = %f"%np.max(maxrad)
         print ""
 
     if save_models == 1:
-        model.save('models/unet_s256_rings_invcolgen.h5')
+        model.save('models/unet_s256_rings_Oct2017.h5')
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 
@@ -323,7 +328,7 @@ def run_cross_validation_create_models(dir,learn_rate,batch_size,nb_epoch,n_trai
     n_filters=[96]          #64 works with batch_size=32
     lmbda=[0]               #regularization
     dropout=[0.25]          #dropout after merge layers
-    init = ['he_normal']         #See unet model. Initialization of weights.
+    init = ['he_normal']    #See unet model. Initialization of weights.
 
     #Iterate
     for i in range(N_runs):
@@ -353,7 +358,7 @@ if __name__ == '__main__':
     epochs = 6              #number of epochs. 1 epoch = forward/back pass through all train data
     n_train = 20000         #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1         #save models
-    inv_color = 0           #use inverse color
+    inv_color = 1           #use inverse color
     rescale = 1             #rescale images to increase contrast (still 0-1 normalized)
     
     #run models

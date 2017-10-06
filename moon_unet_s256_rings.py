@@ -137,7 +137,7 @@ def prepare_custom_loss(path, dim):
         print "Successfully loaded files locally for custom_loss."
     except:
         print "Couldn't load files for custom_loss, making now"
-        imgs, targets, csvs = [], [], np.zeros((0,3))
+        imgs, targets, csvs = [], [], []
         csvs_ = glob.glob('%s/*.csv'%path)
         N_perfect_matches = 0
         for c in csvs_:
@@ -162,7 +162,7 @@ def prepare_custom_loss(path, dim):
             if N_match == N_csv and csv_duplicate_flag == 0:
                 imgs.append(img)
                 targets.append(target)
-                csvs = np.concatenate((csvs,csv_coords))
+                csvs.append(csv)
                 N_perfect_matches += 1
         imgs = np.array(imgs).astype('float32').reshape(len(imgs),dim,dim,1)
         #targets = np.array(targets).astype('float32')

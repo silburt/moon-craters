@@ -95,7 +95,12 @@ def template_match_target_to_csv(target, csv, minrad=3, maxrad=40):
     if remove_large_craters_csv == 1:
         x,y,r = templ_coords.T
         maxr = np.max(r)
-        csv_coords = csv[csv.T[2] < maxr]
+        index = np.where(csv.T[2] < maxr)
+        if len(index[0]) > 0:
+            csv_coords = csv[index]
+        else:
+            print "all craters are larger than max detected radius"
+            csv_coords = csv
     else:
         csv_coords = csv
 

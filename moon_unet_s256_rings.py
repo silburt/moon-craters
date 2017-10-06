@@ -137,7 +137,7 @@ def prepare_custom_loss(path, dim):
         print "Successfully loaded files locally for custom_loss."
     except:
         print "Couldn't load files for custom_loss, making now"
-        imgs, targets, csvs = [], [], []
+        imgs, targets, csvs = np.zeros(0), np.zeros(0), np.zeros(0)
         csvs_ = glob.glob('%s/*.csv'%path)
         N_perfect_matches = 0
         for c in csvs_:
@@ -160,13 +160,13 @@ def prepare_custom_loss(path, dim):
             csv_coords = np.asarray((csv['x'],csv['y'],csv['Diameter (pix)']/2)).T
             N_match, N_csv, N_templ, csv_duplicate_flag = template_match_target_to_csv(target, csv_coords, minrad, maxrad)
             if N_match == N_csv and csv_duplicate_flag == 0:
-                imgs.append(img)
-                targets.append(target)
-                csvs.append(csv_coords)
+                imgs = np.concatenate((imgs,img))
+                targets = np.concatenate((targets,target))
+                csvs = np.concatenate((csvs,csv_coords))
                 N_perfect_matches += 1
-        imgs = np.array(imgs).astype('float32').reshape(len(imgs),dim,dim,1)
-        targets = np.array(targets).astype('float32')
-        np.save("%s/custom_loss_images.npy"%path,imgs)
+        #imgs = np.array(imgs).astype('float32').reshape(len(imgs),dim,dim,1)
+        #targets = np.array(targets).astype('float32')
+        np.save("%s/custom_loss_images.npy"%path,imgs.astype('float32'))
         np.save("%s/custom_loss_csvs.npy"%path,csvs)
         print "out of %d files there are %d perfect matches"%(len(csvs_),N_perfect_matches)
     return imgs, csvs, N_perfect_matches
@@ -356,7 +356,7 @@ if __name__ == '__main__':
     lr = 0.0001             #learning rate
     bs = 8                 #batch size: smaller values = less memory but less accurate gradient estimate
     epochs = 6              #number of epochs. 1 epoch = forward/back pass through all train data
-    n_train = 20000         #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    n_train = 1000         #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1         #save models
     inv_color = 1           #use inverse color
     rescale = 1             #rescale images to increase contrast (still 0-1 normalized)

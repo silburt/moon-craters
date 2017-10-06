@@ -158,7 +158,7 @@ def prepare_custom_loss(path, dim):
             # make target and csv array, ensure template matching algorithm is working - need Charles' ring routine
             target = mdm.make_mask(csv, img, binary=True, rings=True, ringwidth=2, truncate=True)
             csv_coords = np.asarray((csv['x'],csv['y'],csv['Diameter (pix)']/2)).T
-            N_match, N_csv, N_templ, csv_duplicate_flag = template_match_target_to_csv(target, csv_coords, minrad, maxrad)
+            N_match, N_csv, N_templ, maxr, csv_duplicate_flag = template_match_target_to_csv(target, csv_coords, minrad, maxrad)
             if N_match == N_csv and csv_duplicate_flag == 0:
                 imgs = np.concatenate((imgs,img))
                 targets = np.concatenate((targets,target))

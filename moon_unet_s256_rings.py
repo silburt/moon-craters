@@ -356,7 +356,7 @@ if __name__ == '__main__':
     lr = 0.0001             #learning rate
     bs = 8                 #batch size: smaller values = less memory but less accurate gradient estimate
     epochs = 6              #number of epochs. 1 epoch = forward/back pass through all train data
-    n_train = 8         #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    n_train = 20000         #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1         #save models
     inv_color = 1           #use inverse color
     rescale = 1             #rescale images to increase contrast (still 0-1 normalized)

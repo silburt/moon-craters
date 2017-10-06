@@ -137,7 +137,7 @@ def prepare_custom_loss(path, dim):
         print "Successfully loaded files locally for custom_loss."
     except:
         print "Couldn't load files for custom_loss, making now"
-        imgs, targets, csvs = [], [], np.zeros(0)
+        imgs, targets, csvs = [], [], np.zeros((0,3))
         csvs_ = glob.glob('%s/*.csv'%path)
         N_perfect_matches = 0
         for c in csvs_:

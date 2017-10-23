@@ -26,7 +26,7 @@ CUDA_VISIBLE_DEVICES=0 nohup python crater_distribution_extract_debug2.py &>> de
 CUDA_VISIBLE_DEVICES=2 nohup python crater_distribution_extract_new.py > get_new.txt &
 CUDA_VISIBLE_DEVICES=2 nohup python crater_distribution_extract_scratch2.py &>> scratch2_getdist2.txt &
 python crater_distribution_extract_orig.py &>> debug.txt
-nohup python crater_distribution_unique_new.py &>> unique.txt &
+nohup python crater_distribution_unique_full.py &>> unique_train.txt &
 
 CUDA_VISIBLE_DEVICES=0 python moon_vgg16_1.2.2.py --run_fold 1 > outputfold1.txt &
 CUDA_VISIBLE_DEVICES=1 python moon_vgg16_1.2.2.py --run_fold 2 > outputfold2.txt &

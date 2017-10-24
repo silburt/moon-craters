@@ -19,7 +19,7 @@ CUDA_VISIBLE_DEVICES=1 nohup python moon_unet_s256_rings_pred_weighted.py > unet
 CUDA_VISIBLE_DEVICES=1 nohup python moon_unet_s256_rings_pred.py > unet_s256_rings_predfull.txt &
 CUDA_VISIBLE_DEVICES=1 nohup python moon_unet_s256_rings_public.py > unet_s256_rings_public.txt &
 CUDA_VISIBLE_DEVICES=2 nohup python moon_unet_s256_rings_customloss.py > unet_s256_rings_cl.txt &
-CUDA_VISIBLE_DEVICES=0 nohup python moon_unet_s256_rings.py > unet_s256_rings_invcolor_datagen.txt &
+CUDA_VISIBLE_DEVICES=2 nohup python moon_unet_s256_rings.py > unet_s256_rings_iterate.txt &
 CUDA_VISIBLE_DEVICES=0 nohup python moon_unet_s256_rings_filtmod.py > unet_s256_rings_filtmod.txt &
 CUDA_VISIBLE_DEVICES=1 nohup python moon_unet_s256_rings_forKristen.py > unet_s256_rings_forKristen.txt &
 

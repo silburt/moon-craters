@@ -198,14 +198,14 @@ def unet_model(dim,learn_rate,lmbda,drop,FL,init,n_filters):
     u = UpSampling2D((2,2))(u)
     u = merge((a3, u), mode='concat', concat_axis=3)
     u = Dropout(drop)(u)
-    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
-    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
 
     u = UpSampling2D((2,2))(u)
     u = merge((a2, u), mode='concat', concat_axis=3)
     u = Dropout(drop)(u)
-    u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
-    u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
 
     u = UpSampling2D((2,2))(u)
     u = merge((a1, u), mode='concat', concat_axis=3)
@@ -269,7 +269,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
         print ""
 
     if save_models == 1:
-        model.save('models/unet_s256_rings_Oct2017.h5')
+        model.save('models/unet_s256_rings_n112_L%.1e_D%.2f.h5'%(lmbda,drop))
 
     return model.evaluate(X_test.astype('float32'), Y_test.astype('float32'))
 
@@ -323,18 +323,18 @@ def run_cross_validation_create_models(dir,learn_rate,batch_size,nb_epoch,n_trai
 #    filter_length = [3,3,3,3,3,3]   #See unet model. Filter length used.
 #    n_filters = [64,64,64,64,64,64]     #See unet model. Arranging this so that total number of model parameters <~ 10M, otherwise OOM problems
 #    lmbda = [1e-7,5e-7,1e-6,5e-6,1e-5,5e-5]           #See unet model. L2 Weight regularization strength (lambda).
-    N_runs = 1
-    filter_length=[3]
-    n_filters=[96]          #64 works with batch_size=32
-    lmbda=[0]               #regularization
-    dropout=[0.25]          #dropout after merge layers
-    init = ['he_normal']    #See unet model. Initialization of weights.
+    N_runs = 9
+    filter_length=3
+    n_filters=112
+    init = 'he_normal'                                  #See unet model. Initialization of weights.
+    lmbda=[0,1e-6,1e-5,0,1e-6,1e-5,0,1e-6,1e-5]         #regularization
+    dropout=[0.15,0.15,0.15,0.25,0.25,0.25,0.35,0.35,0.35]                  #dropout after merge layers
 
     #Iterate
     for i in range(N_runs):
-        I = init[i]
-        NF = n_filters[i]
-        FL = filter_length[i]
+        I = init
+        NF = n_filters
+        FL = filter_length
         L = lmbda[i]
         drop = dropout[i]
         score = train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,loss_data,loss_csvs,dim,learn_rate,nb_epoch,batch_size,save_models,L,drop,FL,I,NF)
@@ -356,9 +356,9 @@ if __name__ == '__main__':
     lr = 0.0001             #learning rate
     bs = 8                 #batch size: smaller values = less memory but less accurate gradient estimate
     epochs = 6              #number of epochs. 1 epoch = forward/back pass through all train data
-    n_train = 20000         #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    n_train = 30000         #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1         #save models
-    inv_color = 1           #use inverse color
+    inv_color = 0           #use inverse color
     rescale = 1             #rescale images to increase contrast (still 0-1 normalized)
     
     #run models

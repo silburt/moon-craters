@@ -19,7 +19,7 @@ for i in range(N_draws):
     N_dupes = 0
     for c in csvs:
         file = np.genfromtxt(c,delimiter=',',skip_header=1,usecols=[0,1,2])
-        if len(file) > 2:
+        if file.size >= 6:
             N_dupes += len(np.where(np.sum((file - sample)**2,axis=1) < tol)[0])
     random_numbers.append((rN[i],rS))
     N_duplicates.append(N_dupes - 1)

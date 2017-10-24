@@ -19,7 +19,8 @@ for i in range(N_draws):
     N_dupes = 0
     for c in csvs:
         file = np.genfromtxt(c,delimiter=',',skip_header=1,usecols=[0,1,2])
-        N_dupes += len(np.where(np.sum((file - sample)**2,axis=1) < tol)[0])
+        if len(file) > 1:
+            N_dupes += len(np.where(np.sum((file - sample)**2,axis=1) < tol)[0])
     random_numbers.append((rN[i],rS))
     N_duplicates.append(N_dupes - 1)
     print "completed draw %d"%i

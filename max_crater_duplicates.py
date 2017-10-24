@@ -28,3 +28,4 @@ N_duplicates, random_numbers = np.array(N_duplicates), np.array(random_numbers)
 index = np.where(N_duplicates > 0)
 N_duplicates, random_numbers = N_duplicates[index], random_numbers[index]
 print random_numbers, N_duplicates
+print "The mean number of duplicates is (total draws=%d, n_hits=%d): %f +/- %f"%(N_draws,len(N_duplicates),np.mean(N_duplicates),np.std(N_duplicates))

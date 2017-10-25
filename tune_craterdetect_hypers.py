@@ -30,7 +30,7 @@ def prep_csvs(dir, ids, nimgs):
             except:
                 print "couldnt process csv %s. Skipping in analysis."%csv_name
                 csvs.append(-1)
-        np.save(np.load('%s/csvs_%d.npy'%(dir,nimgs)), csvs)
+        np.save('%s/csvs_%d.npy'%(dir,nimgs), csvs)
     print "successfully loaded csvs"
     return csvs
 
@@ -51,7 +51,7 @@ if __name__ == '__main__':
     #data parameters
     dir = 'datasets/rings/Dev_rings'    #location of model predictions. Exclude final '/' in path.
     datatype = 'dev'
-    nimgs = 10016                        #1000, 10016, 30016
+    nimgs = 1000                        #1000, 10016, 30016
     
     #iterate parameters
     match_thresh2 = np.linspace(30,70,num=3)

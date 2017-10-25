@@ -62,7 +62,7 @@ if __name__ == '__main__':
     #load data
     file = '%s_modelpreds_n%d_new.npy'%(datatype,nimgs)
     preds = np.load('%s/%s'%(dir,file))
-    ids = np.load('%s/%s_id.npy'%(dir,datatype))[0:len(pred)]    #number for lola_X.csv
+    ids = np.load('%s/%s_id.npy'%(dir,datatype))        #number for lola_X.csv
 
     csvs = prep_csvs(dir,ids)
 

@@ -8,6 +8,7 @@ from utils.template_match_target import *
 import itertools
 
 def prep_csvs(dir, ids, nimgs):
+    minrad, maxrad, cutrad, min_craters = 2, 75, 1, 3
 #    try:
 #        csvs = np.load('%s/csvs_%d.npy'%(dir,nimgs))
 #    except:
@@ -31,9 +32,7 @@ def prep_csvs(dir, ids, nimgs):
     return csvs
 
 def get_recall(preds, csvs, nimgs, match_thresh2, template_thresh, target_thresh):
-    minrad, maxrad, cutrad, min_craters = 2, 75, 1, 3
     match_csv_arr = []
-    
     for i in range(nimgs):
         if csvs[i] == -1:
             continue

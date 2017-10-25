@@ -8,7 +8,7 @@ from utils.template_match_target import *
 import itertools
 
 def prep_csvs(dir, ids, nimgs):
-    minrad, maxrad, cutrad, min_craters = 2, 75, 1, 3
+    minrad, maxrad, cutrad, min_craters, dim = 2, 75, 1, 3, 256
 #    try:
 #        csvs = np.load('%s/csvs_%d.npy'%(dir,nimgs))
 #    except:

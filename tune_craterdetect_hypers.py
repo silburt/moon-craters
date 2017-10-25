@@ -24,9 +24,10 @@ def prep_csvs(dir, ids, nimgs):
         csv = csv[(csv['x']-cutrad*csv['Diameter (pix)']/2 > 0)]
         csv = csv[(csv['y']-cutrad*csv['Diameter (pix)']/2 > 0)]
         if len(csv) < min_craters:
-            continue
-        csv_coords = np.asarray((csv['x'],csv['y'],csv['Diameter (pix)']/2)).T
-        csvs.append(csv_coords)
+            csvs.append(-1)
+        else:
+            csv_coords = np.asarray((csv['x'],csv['y'],csv['Diameter (pix)']/2)).T
+            csvs.append(csv_coords)
     np.save('%s/csvs_%d.npy'%(dir,nimgs), csvs)
     print "successfully loaded csvs"
     return csvs

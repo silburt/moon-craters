@@ -13,6 +13,7 @@ def prep_csvs(dir, ids, nimgs):
     except:
         csvs = []
         for i in range(nimgs):
+            print i
             csv_name = '%s/lola_%d.csv'%(dir,ids[i])
             try:
                 csv = pd.read_csv(csv_name)
@@ -64,7 +65,7 @@ if __name__ == '__main__':
     preds = np.load('%s/%s'%(dir,file))
     ids = np.load('%s/%s_id.npy'%(dir,datatype))        #number for lola_X.csv
 
-    csvs = prep_csvs(dir,ids)
+    csvs = prep_csvs(dir,ids,nimgs)
 
     # Main Loop
     for ma2,te,ta in params:

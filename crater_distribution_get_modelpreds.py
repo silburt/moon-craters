@@ -77,7 +77,7 @@ if __name__ == '__main__':
 #    n_imgs = 10
 
     data_dir = 'datasets/rings/Test_rings'                  #location of data to predict on. Exclude final '/' in path.
-    np_data_file = 'test_data_50im'                                    #prefix of e.g. *_data.npy files.
+    np_data_file = 'test_data_50im'                         #prefix of e.g. *_data.npy files.
     csv_prefix = ''                                     #prefix of e.g. *_0001.csv files.
     model_loc = 'models/unet_s256_rings_nFL96.h5'
     n_imgs = 50          #number of images to use for getting crater distribution.

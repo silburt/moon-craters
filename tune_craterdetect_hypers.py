@@ -1,0 +1,70 @@
+# The purpose of this macro is to tune the hyperparameters of the crater detection algorithm
+# on the validation set, namely:
+# match_thresh2, template_thresh and target_thresh.
+
+import numpy as np
+import pandas as pd
+from utils.template_match_target import *
+import itertools
+
+def prep_csvs(dir, ids, nimgs):
+    try:
+        csvs = np.load('%s/csvs_%d.npy'%(dir,nimgs))
+    except:
+        csvs = []
+        for i in range(nimgs):
+            csv_name = '%s/lola_%d.csv'%(dir,ids[i])
+            try:
+                csv = pd.read_csv(csv_name)
+                # prune csv list for small/large/half craters
+                csv = csv[(csv['Diameter (pix)'] < 2*maxrad) & (csv['Diameter (pix)'] > 2*minrad)]
+                csv = csv[(csv['x']+cutrad*csv['Diameter (pix)']/2 <= dim)]
+                csv = csv[(csv['y']+cutrad*csv['Diameter (pix)']/2 <= dim)]
+                csv = csv[(csv['x']-cutrad*csv['Diameter (pix)']/2 > 0)]
+                csv = csv[(csv['y']-cutrad*csv['Diameter (pix)']/2 > 0)]
+                if len(csv) < min_craters:
+                    continue
+                csv_coords = np.asarray((csv['x'],csv['y'],csv['Diameter (pix)']/2)).T
+                csvs.append(csv_coords)
+            except:
+                print "couldnt process csv %s. Skipping in analysis."%csv_name
+                csvs.append(-1)
+        np.save(np.load('%s/csvs_%d.npy'%(dir,nimgs)), csvs)
+    print "successfully loaded csvs"
+    return csvs
+
+def get_recall(preds, csvs, nimgs, match_thresh2, template_thresh, target_thresh):
+    minrad, maxrad, cutrad, min_craters = 2, 75, 1, 3
+    match_csv_arr = []
+    
+    for i in range(nimgs):
+        if csvs[i] == -1:
+            continue
+        N_match, N_csv, N_templ, maxr, csv_duplicate_flag = template_match_target_to_csv(preds[i], csvs[i], minrad, maxrad, match_thresh2, template_thresh, target_thresh)
+        match_csv_arr.append(float(N_match)/float(N_csv))
+
+    print "match_thresh2=%f, template_thresh=%f, target_thresh=%f"%(match_thresh2, template_thresh, target_thresh)
+    print "mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(match_csv_arr), np.std(match_csv_arr))
+
+if __name___ == '__main__':
+    #data parameters
+    dir = 'datasets/rings/Dev_rings'    #location of model predictions. Exclude final '/' in path.
+    datatype = 'dev'
+    nimgs = 1000                        #1000, 10016, 30016
+    
+    #iterate parameters
+    match_thresh2 = np.linspace(30,70,num=3)
+    template_thresh = np.linspace(0.3,0.7,num=3)
+    target_thresh = np.array([0.01,0.05,0.1,0.15])
+    params = list(itertools.product(*[match_thresh2, template_thresh, target_thresh]))  #all combinations of above params
+    
+    #load data
+    file = '%s_modelpreds_n%d_new.npy'%(datatype,nimgs)
+    preds = np.load('%s/%s'%(dir,file))
+    ids = np.load('%s/%s_id.npy'%(dir,datatype))[0:len(pred)]    #number for lola_X.csv
+
+    csvs = prep_csvs(dir,ids)
+
+    # Main Loop
+    for ma2,te,ta in params:
+        get_recall(preds, csvs, nimgs, ma2, te, ta)

@@ -6,17 +6,17 @@ import numpy as np
 from skimage.feature import match_template
 import cv2
 
-def template_match_target(target, match_thresh2=50, minrad=3, maxrad=50, target_thresh=0.1):
-    #Match Threshold (squared)
-    # match_thresh2: for template matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, remove (x2,y2,r2) circle (it is a duplicate).
+def template_match_target(target, minrad=3, maxrad=50, match_thresh2=50, template_thresh = 0.5, target_thresh=0.1):
+    #HYPERPARAMETERS
+    # MATCH_THRESH2: for template matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, remove (x2,y2,r2) circle (it is a duplicate).
     # for predicted target -> csv matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, positive detection
+    # TEMPLATE_THRESH: 0-1 range, if template matching probability > template_thresh, count as detection
+    # TARGET_THRESH: 0-1 range, pixel values > target_thresh -> 1, pixel values < target_thresh -> 0
     # minrad - keep in mind that if the predicted target has thick rings, a small ring of diameter ~ ring_thickness could be detected by match_filter.
-    # target_thresh: 0-1 range, pixel values > target_thresh -> 1, pixel values < target_thresh -> 0
     
     # minrad/maxrad are the radii to search over during template matching
     # hyperparameters, probably don't need to change
     ring_thickness = 2       #thickness of rings for the templates. 2 seems to work well.
-    template_thresh = 0.5    #0-1 range, if template matching probability > template_thresh, count as detection
     
     # target - can be predicted or ground truth
     target[target >= target_thresh] = 1
@@ -80,22 +80,18 @@ def template_match_target(target, match_thresh2=50, minrad=3, maxrad=50, target_
     return coords
 
 
-def template_match_target_to_csv(target, csv, minrad=3, maxrad=40):
-    #Match Threshold (squared)
-    # for template matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, remove (x2,y2,r2) circle (it is a duplicate).
-    # for predicted target -> csv matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, positive detection
-    match_thresh2 = 50
-    
-    #get coordinates from template matching
-    templ_coords = template_match_target(target, match_thresh2, minrad, maxrad)
+def template_match_target_to_csv(target, csv, minrad=3, maxrad=50, match_thresh2=50, template_thresh=0.5, target_thresh=0.1):
 
-    #TEMP - see how recall improves when large craters are excluded. 
-    remove_large_craters_csv = 1
+    #get coordinates from template matching
+    templ_coords = template_match_target(target, minrad, maxrad, match_thresh2, template_thresh, target_thresh)
+
+    #If remove_large_craters_csv == 1, see how recall improves when large craters are excluded.
+    remove_large_craters_csv = 0
     maxr = 0
     if remove_large_craters_csv == 1 and len(templ_coords > 0):
         x,y,r = templ_coords.T
         maxr = np.max(r)
-        index = np.where(csv.T[2] < maxr)
+        index = np.where((csv.T[2] < maxr)&(csv.T[2] > minrad))
         if len(index[0]) > 0:
             csv_coords = csv[index]
         else:
@@ -109,10 +105,11 @@ def template_match_target_to_csv(target, csv, minrad=3, maxrad=40):
     csv_duplicate_flag = 0
     N_csv, N_templ = len(csv_coords), len(templ_coords)
     for tc in templ_coords:
-        diff = (csv_coords - tc)**2
-        diffsum = np.asarray([sum(x) for x in diff])
-        index = diffsum > match_thresh2
-        N = len(np.where(index==False)[0])
+        #diff = (csv_coords - tc)**2
+        #diffsum = np.asarray([sum(x) for x in diff])
+        #index = diffsum > match_thresh2
+        #N = len(np.where(index==False)[0])
+        N = len(np.where(np.sum((csv_coords - tc)**2,axis=1) < match_thresh2)[0])
         if N > 1:
             #print "multiple matches found in csv file for template matched crater ", tc, " :"
             #print csv_coords[np.where(index==False)]

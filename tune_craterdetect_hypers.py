@@ -14,7 +14,7 @@ def prep_csvs(dir, ids, nimgs):
     csvs = []
     for i in range(nimgs):
         print i
-        csv_name = '%s/lola_%d.csv'%(dir,ids[i])
+        csv_name = '%s/%s_%s.csv'%(data_dir,csv_prefix,str(ids[i]).zfill(5))
         csv = pd.read_csv(csv_name)
         # prune csv list for small/large/half craters
         csv = csv[(csv['Diameter (pix)'] < 2*maxrad) & (csv['Diameter (pix)'] > 2*minrad)]

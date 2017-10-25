@@ -9,10 +9,10 @@ from utils.template_match_target import *
 
 minrad, maxrad = 2, 75
 
-def prep_csvs(dir, ids, nimgs):
+def prep_csvs(dir, datatype, ids, nimgs):
     cutrad, dim = 1, 256
     try:
-        csvs = np.load('%s/csvs_%d.npy'%(dir,nimgs))
+        csvs = np.load('%s/%s_csvs_%d.npy'%(dir,datatype,nimgs))
     except:
         csvs = []
         for i in range(nimgs):
@@ -29,7 +29,7 @@ def prep_csvs(dir, ids, nimgs):
             else:
                 csv_coords = np.asarray((csv['x'],csv['y'],csv['Diameter (pix)']/2)).T
                 csvs.append(csv_coords)
-        np.save('%s/csvs_%d.npy'%(dir,nimgs), csvs)
+        np.save('%s/%s_csvs_%d.npy'%(dir,datatype,nimgs), csvs)
     print "successfully loaded csvs"
     return csvs
 
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     preds = np.load('%s/%s'%(dir,file))
     ids = np.load('%s/%s_id.npy'%(dir,datatype))        #number for lola_X.csv
 
-    csvs = prep_csvs(dir,ids,nimgs)
+    csvs = prep_csvs(dir,datatype,ids,nimgs)
 
     get_recall(preds, csvs, nimgs, match_thresh2, template_thresh, target_thresh)
 

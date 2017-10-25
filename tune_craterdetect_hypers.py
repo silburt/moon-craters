@@ -56,7 +56,8 @@ if __name___ == '__main__':
     match_thresh2 = np.linspace(30,70,num=3)
     template_thresh = np.linspace(0.3,0.7,num=3)
     target_thresh = np.array([0.01,0.05,0.1,0.15])
-    params = list(itertools.product(*[match_thresh2, template_thresh, target_thresh]))  #all combinations of above params
+    #params = list(itertools.product(*[match_thresh2, template_thresh, target_thresh]))  #all combinations of above params
+    params = [(30,0.3,0.01)]
     
     #load data
     file = '%s_modelpreds_n%d_new.npy'%(datatype,nimgs)

@@ -64,6 +64,7 @@ if __name__ == '__main__':
     csvs = prep_csvs(dir,datatype,ids,nimgs)
 
     get_recall(preds, csvs, nimgs, match_thresh2, template_thresh, target_thresh)
+    print "finised successfully"
 
 #    # Main Loop
 #    for ma2,te,ta in params:

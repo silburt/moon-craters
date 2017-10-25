@@ -8,29 +8,25 @@ from utils.template_match_target import *
 import itertools
 
 def prep_csvs(dir, ids, nimgs):
-    try:
-        csvs = np.load('%s/csvs_%d.npy'%(dir,nimgs))
-    except:
-        csvs = []
-        for i in range(nimgs):
-            print i
-            csv_name = '%s/lola_%d.csv'%(dir,ids[i])
-            try:
-                csv = pd.read_csv(csv_name)
-                # prune csv list for small/large/half craters
-                csv = csv[(csv['Diameter (pix)'] < 2*maxrad) & (csv['Diameter (pix)'] > 2*minrad)]
-                csv = csv[(csv['x']+cutrad*csv['Diameter (pix)']/2 <= dim)]
-                csv = csv[(csv['y']+cutrad*csv['Diameter (pix)']/2 <= dim)]
-                csv = csv[(csv['x']-cutrad*csv['Diameter (pix)']/2 > 0)]
-                csv = csv[(csv['y']-cutrad*csv['Diameter (pix)']/2 > 0)]
-                if len(csv) < min_craters:
-                    continue
-                csv_coords = np.asarray((csv['x'],csv['y'],csv['Diameter (pix)']/2)).T
-                csvs.append(csv_coords)
-            except:
-                print "couldnt process csv %s. Skipping in analysis."%csv_name
-                csvs.append(-1)
-        np.save('%s/csvs_%d.npy'%(dir,nimgs), csvs)
+#    try:
+#        csvs = np.load('%s/csvs_%d.npy'%(dir,nimgs))
+#    except:
+    csvs = []
+    for i in range(nimgs):
+        print i
+        csv_name = '%s/lola_%d.csv'%(dir,ids[i])
+        csv = pd.read_csv(csv_name)
+        # prune csv list for small/large/half craters
+        csv = csv[(csv['Diameter (pix)'] < 2*maxrad) & (csv['Diameter (pix)'] > 2*minrad)]
+        csv = csv[(csv['x']+cutrad*csv['Diameter (pix)']/2 <= dim)]
+        csv = csv[(csv['y']+cutrad*csv['Diameter (pix)']/2 <= dim)]
+        csv = csv[(csv['x']-cutrad*csv['Diameter (pix)']/2 > 0)]
+        csv = csv[(csv['y']-cutrad*csv['Diameter (pix)']/2 > 0)]
+        if len(csv) < min_craters:
+            continue
+        csv_coords = np.asarray((csv['x'],csv['y'],csv['Diameter (pix)']/2)).T
+        csvs.append(csv_coords)
+    np.save('%s/csvs_%d.npy'%(dir,nimgs), csvs)
     print "successfully loaded csvs"
     return csvs
 

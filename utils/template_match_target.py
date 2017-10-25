@@ -107,9 +107,9 @@ def template_match_target_to_csv(target, csv, minrad=3, maxrad=50, match_thresh2
     for tc in templ_coords:
         #diff = (csv_coords - tc)**2
         #diffsum = np.asarray([sum(x) for x in diff])
-        #index = diffsum > match_thresh2
-        #N = len(np.where(index==False)[0])
-        N = len(np.where(np.sum((csv_coords - tc)**2,axis=1) < match_thresh2)[0])
+        diffsum = np.sum((csv_coords - tc)**2,axis=1)
+        index = diffsum > match_thresh2
+        N = len(np.where(index==False)[0])
         if N > 1:
             #print "multiple matches found in csv file for template matched crater ", tc, " :"
             #print csv_coords[np.where(index==False)]

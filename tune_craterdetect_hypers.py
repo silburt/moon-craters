@@ -50,7 +50,7 @@ if __name__ == '__main__':
     #data parameters
     dir = 'datasets/rings/Dev_rings'    #location of model predictions. Exclude final '/' in path.
     datatype = 'dev'
-    nimgs = 1000                        #1000, 10016, 30016
+    nimgs = 10016                        #1000, 10016, 30016
     
     #iterate parameters
     match_thresh2 = np.linspace(30,70,num=3)

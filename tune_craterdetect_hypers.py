@@ -8,7 +8,7 @@ from utils.template_match_target import *
 import itertools
 
 def prep_csvs(dir, ids, nimgs):
-    minrad, maxrad, cutrad, min_craters, dim = 2, 75, 1, 3, 256
+    minrad, maxrad, cutrad, dim = 2, 75, 1, 256
 #    try:
 #        csvs = np.load('%s/csvs_%d.npy'%(dir,nimgs))
 #    except:
@@ -23,7 +23,7 @@ def prep_csvs(dir, ids, nimgs):
         csv = csv[(csv['y']+cutrad*csv['Diameter (pix)']/2 <= dim)]
         csv = csv[(csv['x']-cutrad*csv['Diameter (pix)']/2 > 0)]
         csv = csv[(csv['y']-cutrad*csv['Diameter (pix)']/2 > 0)]
-        if len(csv) < min_craters:
+        if len(csv) < 3:
             csvs.append(-1)
         else:
             csv_coords = np.asarray((csv['x'],csv['y'],csv['Diameter (pix)']/2)).T
@@ -35,7 +35,7 @@ def prep_csvs(dir, ids, nimgs):
 def get_recall(preds, csvs, nimgs, match_thresh2, template_thresh, target_thresh):
     match_csv_arr = []
     for i in range(nimgs):
-        if csvs[i] == -1:
+        if len(csvs[i]) < 3:
             continue
         N_match, N_csv, N_templ, maxr, csv_duplicate_flag = template_match_target_to_csv(preds[i], csvs[i], minrad, maxrad, match_thresh2, template_thresh, target_thresh)
         match_csv_arr.append(float(N_match)/float(N_csv))

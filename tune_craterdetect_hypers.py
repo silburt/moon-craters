@@ -7,8 +7,10 @@ import pandas as pd
 from utils.template_match_target import *
 import itertools
 
+minrad, maxrad = 2, 75
+
 def prep_csvs(dir, ids, nimgs):
-    minrad, maxrad, cutrad, dim = 2, 75, 1, 256
+    cutrad, dim = 1, 256
 #    try:
 #        csvs = np.load('%s/csvs_%d.npy'%(dir,nimgs))
 #    except:

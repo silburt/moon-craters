@@ -46,7 +46,7 @@ def get_recall(preds, csvs, nimgs, match_thresh2, template_thresh, target_thresh
     print "match_thresh2=%f, template_thresh=%f, target_thresh=%f"%(match_thresh2, template_thresh, target_thresh)
     print "mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(match_csv_arr), np.std(match_csv_arr))
 
-if __name___ == '__main__':
+if __name__ == '__main__':
     #data parameters
     dir = 'datasets/rings/Dev_rings'    #location of model predictions. Exclude final '/' in path.
     datatype = 'dev'

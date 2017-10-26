@@ -12,7 +12,7 @@ minrad, maxrad = 2, 75
 def prep_csvs(dir, datatype, ids, nimgs):
     cutrad, dim = 1, 256
     try:
-        csvs = np.load('%s/%s_csvs_%d.npy'%(dir,datatype,nimgs))
+        csvs = np.load('%s/%s_csvs_n%d_Oct2017.npy'%(dir,datatype,nimgs))
     except:
         csvs = []
         for i in range(nimgs):
@@ -29,13 +29,13 @@ def prep_csvs(dir, datatype, ids, nimgs):
             else:
                 csv_coords = np.asarray((csv['x'],csv['y'],csv['Diameter (pix)']/2)).T
                 csvs.append(csv_coords)
-        np.save('%s/%s_csvs_%d.npy'%(dir,datatype,nimgs), csvs)
+        np.save('%s/%s_csvs_n%d_Oct2017.npy'%(dir,datatype,nimgs), csvs)
     print "successfully loaded csvs"
     return csvs
 
 def get_recall(preds, csvs, nimgs, match_thresh2, template_thresh, target_thresh):
     match_csv_arr = []
-    for i in range(nimgs):
+    for i in range(5):
         print i
         if len(csvs[i]) < 3:
             continue
@@ -49,7 +49,7 @@ if __name__ == '__main__':
     #data parameters
     dir = 'datasets/rings/Dev_rings'    #location of model predictions. Exclude final '/' in path.
     datatype = 'dev'
-    nimgs = 1000                        #1000, 10016, 30016
+    nimgs = 5000                        #1000, 10016, 30016
     
     #load hyperparams
     match_thresh2 = float(sys.argv[1])
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     target_thresh = float(sys.argv[3])
     
     #load data
-    file = '%s_modelpreds_n%d_new.npy'%(datatype,nimgs)
+    file = '%s_modelpreds_n%d_Oct2017.npy'%(datatype,nimgs)
     preds = np.load('%s/%s'%(dir,file))
     ids = np.load('%s/%s_id.npy'%(dir,datatype))        #number for lola_X.csv
 

@@ -15,7 +15,7 @@ def prep_csvs(dir, datatype, ids, nimgs):
         csvs = np.load('%s/%s_csvs_n%d_Oct2017.npy'%(dir,datatype,nimgs))
     except:
         csvs = []
-        for i in range(nimgs):
+        for i in range(5):
             csv_name = '%s/lola_%s.csv'%(dir,str(ids[i]).zfill(5))
             csv = pd.read_csv(csv_name)
             # prune csv list for small/large/half craters
@@ -35,7 +35,7 @@ def prep_csvs(dir, datatype, ids, nimgs):
 
 def get_recall(preds, csvs, nimgs, match_thresh2, template_thresh, target_thresh):
     match_csv_arr = []
-    for i in range(5):
+    for i in range(nimgs):
         print i
         if len(csvs[i]) < 3:
             continue

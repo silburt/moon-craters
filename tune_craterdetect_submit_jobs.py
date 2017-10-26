@@ -3,9 +3,9 @@ import numpy as np
 import os
 
 #iterate parameters
-match_thresh2 = np.linspace(30,70,num=3)
-template_thresh = np.linspace(0.3,0.7,num=3)
-target_thresh = np.array([0.01,0.05,0.1,0.15])
+match_thresh2 = np.linspace(10,70,num=4)
+template_thresh = np.linspace(0.1,0.7,num=6)
+target_thresh = np.array([0.001,0.01,0.05,0.1,0.15])
 
 #all combinations of above params
 params = list(itertools.product(*[match_thresh2, template_thresh, target_thresh]))

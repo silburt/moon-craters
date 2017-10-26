@@ -35,7 +35,7 @@ def prep_csvs(dir, datatype, ids, nimgs):
 
 def get_recall(preds, csvs, nimgs, match_thresh2, template_thresh, target_thresh):
     match_csv_arr = []
-    for i in range(10):
+    for i in range(nimgs):
         print i
         if len(csvs[i]) < 3:
             continue

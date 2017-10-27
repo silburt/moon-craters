@@ -320,12 +320,14 @@ if __name__ == '__main__':
     MP['save_models'] = 1       #save keras models upon training completion
     
     #Model Parameters (to potentially iterate over, keep in lists)
-    MP['N_runs'] = 9
+    MP['N_runs'] = 1
     MP['filter_length'] = [3]
     MP['n_filters'] = [112]
     MP['init'] = ['he_normal']                                      #See unet model. Initialization of weights.
-    MP['lambda']=[0,1e-6,1e-5,0,1e-6,1e-5,0,1e-6,1e-5]              #regularization
-    MP['dropout']=[0.15,0.15,0.15,0.25,0.25,0.25,0.35,0.35,0.35]    #dropout after merge layers
+    MP['lambda']=[1e-6]
+    MP['dropout'] = [0.15]
+    #MP['lambda']=[0,1e-6,1e-5,0,1e-6,1e-5,0,1e-6,1e-5]              #regularization
+    #MP['dropout']=[0.15,0.15,0.15,0.25,0.25,0.25,0.35,0.35,0.35]    #dropout after merge layers
     
     #run models
     run_cross_validation_create_models(dir, MP)

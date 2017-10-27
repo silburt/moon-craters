@@ -211,7 +211,7 @@ def unet_model(dim,learn_rate,lmbda,drop,FL,init,n_filters):
 def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,ID_valid,ID_test,MP,i_MP):
     
     # static params
-    dim, learn_rate, nb_epoch, bs = MP['dim'], MP['lr'], MP['epochs'], MP['bs']
+    dir, dim, learn_rate, nb_epoch, bs = MP['dir'], MP['dim'], MP['lr'], MP['epochs'], MP['bs']
     
     # iterating params
     lmbda = get_param_i(MP['lambda'],i_MP)
@@ -233,8 +233,8 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,ID_valid,
                             nb_val_samples=n_samples,
                             callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
     
-        dir = '%s/Dev_rings/'%MP['dir']
-        get_recall(dir, MP['n_valid_recall'], model, X_valid, ID_valid)
+        valid_dir = '%s/Dev_rings/'%dir
+        get_recall(valid_dir, MP['n_valid_recall'], model, X_valid, ID_valid)
 
     if MP['save_models'] == 1:
         model.save('models/unet_s256_rings_n112_L%.1e_D%.2f.h5'%(lmbda,drop))
@@ -242,18 +242,18 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,ID_valid,
     print '###################################'
     print '##########END_OF_RUN_INFO##########'
     print 'learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train=%d, img_dimensions=%d, inv_color=%d, rescale=%d, init=%s, n_filters=%d, lambda=%e, dropout=%f'%(learn_rate,bs,FL,nb_epoch,MP['n_train'],MP['dim'],MP['inv_color'],MP['rescale'],init,n_filters,lmbda,drop)
-    dir = '%s/Test_rings/'%MP['dir']
-    get_recall(dir, MP['n_test_recall'], model, X_test, ID_test)
+    test_dir = '%s/Test_rings/'%dir
+    get_recall(test_dir, MP['n_test_recall'], model, X_test, ID_test)
     print '###################################'
     print '###################################'
 
 ##################
 #Load Data, Train#
 ########################################################################
-def run_cross_validation_create_models(dir,MP):
+def run_cross_validation_create_models(MP):
     
     #Load data
-    dim, n_train = MP['dim'], MP['n_train']
+    dir, dim, n_train = MP['dir'], MP['dim'], MP['n_train']
     try:
         train_data=np.load('%s/Train_rings/train_data.npy'%dir)
         train_target=np.load('%s/Train_rings/train_target.npy'%dir)
@@ -302,12 +302,12 @@ def run_cross_validation_create_models(dir,MP):
 ########################################################################
 if __name__ == '__main__':
     print('Keras version: {}'.format(keras_version))
+    MP = {}
     
     #location of Train_rings/, Dev_rings/, Test_rings/, Dev_rings_for_loss/ folders. Don't include final '/' in path
-    dir = 'datasets/rings'
+    MP['dir'] = 'datasets/rings'
     
     #Model Parameters
-    MP = {}
     MP['dim'] = 256             #image width/height, assuming square images. Shouldn't change
     MP['lr'] = 0.0001           #learning rate
     MP['bs'] = 8                #batch size: smaller values = less memory but less accurate gradient estimate
@@ -330,7 +330,7 @@ if __name__ == '__main__':
     #MP['dropout']=[0.15,0.15,0.15,0.25,0.25,0.25,0.35,0.35,0.35]    #dropout after merge layers
     
     #run models
-    run_cross_validation_create_models(dir, MP)
+    run_cross_validation_create_models(MP)
 
 
 '''

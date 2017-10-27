@@ -11,7 +11,7 @@ norm = False
 nbins = 50
 maxrad = 45
 cdf = 0
-truth_datatype = 'test'
+truth_datatype = 'dev'
 
 ###############Original ground truth dataset################
 try:
@@ -31,6 +31,10 @@ except:
     elif truth_datatype == 'test':
         truthalan = truthalan[truthalan['Long']>60]        #region of test data
         truthLU = truthLU[(truthLU['Long']>60)&(truthLU['Diameter (km)']>20.)]
+    elif truth_datatype == 'dev':
+        print "hi"
+        truthalan = truthalan[(truthalan['Long']>-60)&(truthalan['Long']<60)]        #region of test data
+        truthLU = truthLU[(truthLU['Long']<60)&(truthLU['Long']>-60)&(truthLU['Diameter (km)']>20.)]
 
     rad_truth = np.concatenate((truthalan['Diameter (km)'].values/2.,truthLU['Diameter (km)'].values/2.))
     np.save('datasets/LUalanGT_%s.npy'%truth_datatype,rad_truth)
@@ -50,8 +54,11 @@ except:
 #filename = 'datasets/rings/Train_rings/%s_highilenpred_llt6.0e-01_rt6.0e-01_n30016.npy'%truth_datatype
 #filename = 'datasets/rings/Test_rings/%s_highilenpred_llt6.0e-01_rt6.0e-01_n29976.npy'%truth_datatype
 
+#dev
+filename = 'datasets/rings/Dev_rings/%s_highlowilenpred_llt7.0e-01_rt5.0e-01_n10016.npy'%truth_datatype
+
 #best
-filename = 'datasets/rings/Test_rings/%s_highlowilenpred_llt6.0e-01_rt6.0e-01_n10016.npy'%truth_datatype
+#filename = 'datasets/rings/Test_rings/%s_highlowilenpred_llt6.0e-01_rt6.0e-01_n10016.npy'%truth_datatype
 #filename = 'datasets/rings/Train_rings/%s_highlowilenpred_llt6.0e-01_rt6.0e-01_n10016.npy'%truth_datatype
 
 #GT = np.load('datasets/rings/Test_rings/test_uniqueGT_llt1.0e-06_rt1.0e-06_n10016.npy') #unique distribution for 10,000 images

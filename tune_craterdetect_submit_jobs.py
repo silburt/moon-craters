@@ -11,7 +11,7 @@ target_thresh = np.array([0.001,0.01,0.05,0.1,0.15])
 params = list(itertools.product(*[match_thresh2, template_thresh, target_thresh]))
 
 #submit jobs as you make them. If ==0 just make them
-submit_jobs = 1
+submit_jobs = 0
 
 #make jobs
 jobs_dir = "tune_jobs"

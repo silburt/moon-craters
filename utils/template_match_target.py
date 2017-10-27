@@ -6,12 +6,11 @@ import numpy as np
 from skimage.feature import match_template
 import cv2
 
-def template_match_target(target, minrad=3, maxrad=50, match_thresh2=50, template_thresh = 0.5, target_thresh=0.1):
+def template_match_target(target, minrad=3, maxrad=50, match_thresh2=50, template_thresh=0.5, target_thresh=0.1):
     #HYPERPARAMETERS
-    # MATCH_THRESH2: for template matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, remove (x2,y2,r2) circle (it is a duplicate).
-    # for predicted target -> csv matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, positive detection
-    # TEMPLATE_THRESH: 0-1 range, if template matching probability > template_thresh, count as detection
-    # TARGET_THRESH: 0-1 range, pixel values > target_thresh -> 1, pixel values < target_thresh -> 0
+    # MATCH_THRESH2: for template matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, remove (x2,y2,r2) circle (it is a duplicate). For predicted target -> csv matching (i.e. in template_match_target_to_csv), if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, positive match. Maybe these should technically be separate parameters, but to first order they should be the same...
+    # TEMPLATE_THRESH: 0-1 range, if scikit-image's template matching probability > template_thresh, count as detection
+    # TARGET_THRESH: 0-1 range, set pixel values > target_thresh to 1, and pixel values < target_thresh -> 0
     # minrad - keep in mind that if the predicted target has thick rings, a small ring of diameter ~ ring_thickness could be detected by match_filter.
     
     # minrad/maxrad are the radii to search over during template matching

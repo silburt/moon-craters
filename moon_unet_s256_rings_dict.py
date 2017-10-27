@@ -37,7 +37,7 @@ from utils.rescale_invcolor import *
 from utils.template_match_target import *
 
 #############################
-#load/read/process functions#
+#Load/Read/Process Functions#
 ########################################################################
 def load_data(path, data_type):
     X = []
@@ -67,7 +67,7 @@ def get_param_i(param,i):
         return param[0]
 
 ########################
-#custom image generator#
+#Custom Image Generator#
 ########################################################################
 #Following https://github.com/fchollet/keras/issues/2708
 def custom_image_generator(data, target, batch_size=32):
@@ -97,62 +97,6 @@ def custom_image_generator(data, target, batch_size=32):
                 d[j], t[j] = np.rot90(d[j],r[j]), np.rot90(t[j],r[j])
             yield (d, t)
 
-##########################
-#unet model (keras 1.2.2)#
-########################################################################
-#Following https://arxiv.org/pdf/1505.04597.pdf
-#and this for merging specifics: https://gist.github.com/Neltherion/f070913fd6284c4a0b60abb86a0cd642
-def unet_model(dim,learn_rate,lmbda,drop,FL,init,n_filters):
-    print('Making UNET model...')
-    img_input = Input(batch_shape=(None, dim, dim, 1))
-
-    a1 = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(img_input)
-    a1 = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a1)
-    a1P = MaxPooling2D((2, 2), strides=(2, 2))(a1)
-
-    a2 = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a1P)
-    a2 = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a2)
-    a2P = MaxPooling2D((2, 2), strides=(2, 2))(a2)
-
-    a3 = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a2P)
-    a3 = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a3)
-    a3P = MaxPooling2D((2, 2), strides=(2, 2),)(a3)
-
-    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a3P)
-    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
-
-    u = UpSampling2D((2,2))(u)
-    u = merge((a3, u), mode='concat', concat_axis=3)
-    u = Dropout(drop)(u)
-    u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
-    u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
-
-    u = UpSampling2D((2,2))(u)
-    u = merge((a2, u), mode='concat', concat_axis=3)
-    u = Dropout(drop)(u)
-    u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
-    u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
-
-    u = UpSampling2D((2,2))(u)
-    u = merge((a1, u), mode='concat', concat_axis=3)
-    u = Dropout(drop)(u)
-    u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
-    u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
-
-    #final output
-    final_activation = 'sigmoid'       #sigmoid, relu
-    u = Convolution2D(1, 1, 1, activation=final_activation, init=init, W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
-    u = Reshape((dim, dim))(u)
-    model = Model(input=img_input, output=u)
-    
-    #optimizer/compile
-    optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-    model.compile(loss='binary_crossentropy', optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
-    #model.compile(loss=mixed_loss, optimizer=optimizer)
-    print model.summary()
-
-    return model
-
 ################################
 #Calculate Custom Loss (recall)#
 ########################################################################
@@ -164,7 +108,7 @@ def get_recall(dir, n_samples, model, X, ids):
     for i_r in range(n_samples):
         csv_name = '%s/lola_%s.csv'%(dir,str(ids[i_r]).zfill(5))
         csv = pd.read_csv(csv_name)
-        # prune csv list for small/large/half craters
+        # remove small/large/half craters
         csv = csv[(csv['Diameter (pix)'] < 2*maxrad) & (csv['Diameter (pix)'] > 2*minrad)]
         csv = csv[(csv['x']+cutrad*csv['Diameter (pix)']/2 <= dim)]
         csv = csv[(csv['y']+cutrad*csv['Diameter (pix)']/2 <= dim)]
@@ -178,7 +122,7 @@ def get_recall(dir, n_samples, model, X, ids):
     
     # calcualte custom loss
     print ""
-    print "custom loss for epoch %d/%d:"%(nb+1,nb_epoch)
+    print "*********Custom Loss*********"
     match_csv_arr, templ_csv_arr, templ_new_arr, templ_new2_arr, maxrad = [], [], [], [], []
     preds = model.predict(X[0:n_samples].astype('float32'))
     for i in range(n_samples):
@@ -188,7 +132,7 @@ def get_recall(dir, n_samples, model, X, ids):
         match_csv, templ_csv, templ_new, templ_new2 = 0, 0, 0, 0
         if N_csv > 0:
             match_csv = float(N_match)/float(N_csv)             #recall
-            templ_csv = float(N_templ)/float(N_csv)             #craters detected/craters in csv
+            templ_csv = float(N_templ)/float(N_csv)             #(craters detected)/(craters in csv)
         if N_templ > 0:
             templ_new = float(N_templ - N_match)/float(N_templ) #fraction of craters that are new
             templ_new2 = float(N_templ - N_match)/float(N_csv)  #fraction of craters that are new
@@ -203,6 +147,62 @@ def get_recall(dir, n_samples, model, X, ids):
     print "absolute maximum detected pixel radius over all images = %f"%np.max(maxrad)
     print ""
 
+##########################
+#Unet Model (keras 1.2.2)#
+########################################################################
+#Following https://arxiv.org/pdf/1505.04597.pdf
+#and this for merging specifics: https://gist.github.com/Neltherion/f070913fd6284c4a0b60abb86a0cd642
+def unet_model(dim,learn_rate,lmbda,drop,FL,init,n_filters):
+    print('Making UNET model...')
+    img_input = Input(batch_shape=(None, dim, dim, 1))
+    
+    a1 = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(img_input)
+    a1 = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a1)
+    a1P = MaxPooling2D((2, 2), strides=(2, 2))(a1)
+    
+    a2 = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a1P)
+    a2 = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a2)
+    a2P = MaxPooling2D((2, 2), strides=(2, 2))(a2)
+    
+    a3 = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a2P)
+    a3 = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a3)
+    a3P = MaxPooling2D((2, 2), strides=(2, 2),)(a3)
+    
+    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(a3P)
+    u = Convolution2D(n_filters*4, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    
+    u = UpSampling2D((2,2))(u)
+    u = merge((a3, u), mode='concat', concat_axis=3)
+    u = Dropout(drop)(u)
+    u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters*2, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    
+    u = UpSampling2D((2,2))(u)
+    u = merge((a2, u), mode='concat', concat_axis=3)
+    u = Dropout(drop)(u)
+    u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    
+    u = UpSampling2D((2,2))(u)
+    u = merge((a1, u), mode='concat', concat_axis=3)
+    u = Dropout(drop)(u)
+    u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    u = Convolution2D(n_filters, FL, FL, activation='relu', init=init, W_regularizer=l2(lmbda), border_mode='same')(u)
+    
+    #final output
+    final_activation = 'sigmoid'       #sigmoid, relu
+    u = Convolution2D(1, 1, 1, activation=final_activation, init=init, W_regularizer=l2(lmbda), name='output', border_mode='same')(u)
+    u = Reshape((dim, dim))(u)
+    model = Model(input=img_input, output=u)
+    
+    #optimizer/compile
+    optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+    model.compile(loss='binary_crossentropy', optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
+    #model.compile(loss=mixed_loss, optimizer=optimizer)
+    print model.summary()
+    
+    return model
+
 ##################
 #Train/Test Model#
 ########################################################################
@@ -210,15 +210,15 @@ def get_recall(dir, n_samples, model, X, ids):
 #Otherwise the memory used accumulates and eventually the program crashes.
 def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,ID_valid,ID_test,MP,i_MP):
     
+    # static params
+    dim, learn_rate, nb_epoch, bs = MP['dim'], MP['lr'], MP['epochs'], MP['bs']
+    
     # iterating params
     lmbda = get_param_i(MP['lambda'],i_MP)
     drop = get_param_i(MP['dropout'],i_MP)
     FL = get_param_i(MP['filter_length'],i_MP)
     init = get_param_i(MP['init'],i_MP)
     n_filters = get_param_i(MP['n_filters'],i_MP)
-    
-    # params
-    dim, learn_rate, nb_epoch, bs = MP['dim'], MP['lr'], MP['epochs'], MP['bs']
     
     # build model
     model = unet_model(dim,learn_rate,lmbda,drop,FL,init,n_filters)
@@ -247,8 +247,8 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,ID_valid,
     print '###################################'
     print '###################################'
 
-##############
-#Main Routine#
+##################
+#Load Data, Train#
 ########################################################################
 def run_cross_validation_create_models(dir,MP):
     
@@ -294,8 +294,7 @@ def run_cross_validation_create_models(dir,MP):
         test_data = rescale_and_invcolor(test_data, inv_color, rescale)
 
     #Iterate
-    N_runs = max(len(MP['filter_length']),len(MP['n_filters']),len(MP['init']),len(MP['lambda']),len(MP['dropout']))
-    for i in range(N_runs):
+    for i in range(MP['N_runs']):
         train_and_test_model(train_data,train_target,valid_data,valid_target,test_data,test_target,valid_ids,test_ids,MP,i)
 
 ################
@@ -321,6 +320,7 @@ if __name__ == '__main__':
     MP['save_models'] = 1       #save keras models upon training completion
     
     #Model Parameters (to potentially iterate over, keep in lists)
+    MP['N_runs'] = 9
     MP['filter_length'] = [3]
     MP['n_filters'] = [112]
     MP['init'] = ['he_normal']                                      #See unet model. Initialization of weights.

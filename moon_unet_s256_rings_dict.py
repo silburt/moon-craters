@@ -100,7 +100,7 @@ def custom_image_generator(data, target, batch_size=32):
 ################################
 #Calculate Custom Loss (recall)#
 ########################################################################
-def get_recall(dir, n_samples, model, X, ids):
+def get_recall(dir, n_samples, dim, model, X, ids):
     
     # get csvs for recall
     csvs = []
@@ -234,7 +234,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,ID_valid,
                             callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
     
         valid_dir = '%s/Dev_rings/'%dir
-        get_recall(valid_dir, MP['n_valid_recall'], model, X_valid, ID_valid)
+        get_recall(valid_dir, MP['n_valid_recall'], dim, model, X_valid, ID_valid)
 
     if MP['save_models'] == 1:
         model.save('models/unet_s256_rings_n112_L%.1e_D%.2f.h5'%(lmbda,drop))
@@ -243,7 +243,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,ID_valid,
     print '##########END_OF_RUN_INFO##########'
     print 'learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train=%d, img_dimensions=%d, inv_color=%d, rescale=%d, init=%s, n_filters=%d, lambda=%e, dropout=%f'%(learn_rate,bs,FL,nb_epoch,MP['n_train'],MP['dim'],MP['inv_color'],MP['rescale'],init,n_filters,lmbda,drop)
     test_dir = '%s/Test_rings/'%dir
-    get_recall(test_dir, MP['n_test_recall'], model, X_test, ID_test)
+    get_recall(test_dir, MP['n_test_recall'], dim, model, X_test, ID_test)
     print '###################################'
     print '###################################'
 

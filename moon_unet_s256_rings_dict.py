@@ -123,7 +123,7 @@ def get_recall(dir, n_samples, dim, model, X, ids):
     # calcualte custom loss
     print ""
     print "*********Custom Loss*********"
-    match_csv_arr, templ_csv_arr, templ_new_arr, templ_new2_arr, maxrad = [], [], [], [], []
+    match_csv_arr, templ_csv_arr, templ_new_arr, templ_new2_arr, maxrad_arr = [], [], [], [], []
     preds = model.predict(X[0:n_samples].astype('float32'))
     for i in range(n_samples):
         if len(csvs[i]) < 3:    #exclude csvs with tiny crater numbers
@@ -137,14 +137,14 @@ def get_recall(dir, n_samples, dim, model, X, ids):
             templ_new = float(N_templ - N_match)/float(N_templ) #fraction of craters that are new
             templ_new2 = float(N_templ - N_match)/float(N_csv)  #fraction of craters that are new
         match_csv_arr.append(match_csv); templ_csv_arr.append(templ_csv);
-        templ_new_arr.append(templ_new); templ_new2_arr.append(templ_new2); maxrad.append(maxr)
+        templ_new_arr.append(templ_new); templ_new2_arr.append(templ_new2); maxrad_arr.append(maxr)
 
     print "mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(match_csv_arr), np.std(match_csv_arr))
     print "mean and std of N_template/N_csv = %f, %f"%(np.mean(templ_csv_arr), np.std(templ_csv_arr))
     print "mean and std of (N_template - N_match)/N_template (fraction of craters that are new) = %f, %f"%(np.mean(templ_new_arr), np.std(templ_new_arr))
     print "mean and std of (N_template - N_match)/N_csv (fraction of craters that are new, 2) = %f, %f"%(np.mean(templ_new2_arr), np.std(templ_new2_arr))
-    print "mean and std of maximum detected pixel radius in an image = %f, %f"%(np.mean(maxrad), np.std(maxrad))
-    print "absolute maximum detected pixel radius over all images = %f"%np.max(maxrad)
+    print "mean and std of maximum detected pixel radius in an image = %f, %f"%(np.mean(maxrad_arr), np.std(maxrad_arr))
+    print "absolute maximum detected pixel radius over all images = %f"%np.max(maxrad_arr)
     print ""
 
 ##########################
@@ -320,14 +320,14 @@ if __name__ == '__main__':
     MP['save_models'] = 1       #save keras models upon training completion
     
     #Model Parameters (to potentially iterate over, keep in lists)
-    MP['N_runs'] = 1
+    MP['N_runs'] = 4
     MP['filter_length'] = [3]
     MP['n_filters'] = [112]
     MP['init'] = ['he_normal']                                      #See unet model. Initialization of weights.
-    MP['lambda']=[1e-6]
-    MP['dropout'] = [0.15]
-    #MP['lambda']=[0,1e-6,1e-5,0,1e-6,1e-5,0,1e-6,1e-5]              #regularization
-    #MP['dropout']=[0.15,0.15,0.15,0.25,0.25,0.25,0.35,0.35,0.35]    #dropout after merge layers
+    #MP['lambda']=[1e-6]
+    #MP['dropout'] = [0.15]
+    MP['lambda']=[0,1e-7,1e-6,1e-5]                 #regularization
+    MP['dropout']=[0.15,0.15,0.15,0.15]             #dropout after merge layers
     
     #run models
     run_cross_validation_create_models(MP)

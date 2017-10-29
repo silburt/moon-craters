@@ -87,9 +87,10 @@ def template_match_target_to_csv(target, csv, minrad=3, maxrad=50, match_thresh2
     #If remove_large_craters_csv == 1, see how recall improves when large craters are excluded.
     remove_large_craters_csv = 0
     maxr = 0
-    if remove_large_craters_csv == 1 and len(templ_coords > 0):
+    if len(templ_coords > 0):
         x,y,r = templ_coords.T
         maxr = np.max(r)
+    if remove_large_craters_csv == 1:
         index = np.where((csv.T[2] < maxr)&(csv.T[2] > minrad))
         if len(index[0]) > 0:
             csv_coords = csv[index]

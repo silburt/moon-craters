@@ -326,8 +326,8 @@ if __name__ == '__main__':
     MP['init'] = ['he_normal']                                      #See unet model. Initialization of weights.
     #MP['lambda']=[1e-6]
     #MP['dropout'] = [0.15]
-    MP['lambda']=[0,1e-7,1e-6,1e-5]                 #regularization
-    MP['dropout']=[0.15,0.15,0.15,0.15]             #dropout after merge layers
+    MP['lambda']=[1e-4,1e-3,1e-4,1e-3]                 #regularization
+    MP['dropout']=[0.25,0.25,0.15,0.15]             #dropout after merge layers
     
     #run models
     run_cross_validation_create_models(MP)

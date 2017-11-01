@@ -190,7 +190,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,loss_data
         for i in range(len(loss_data)):
             N_match, N_csv, N_templ, csv_duplicate_flag = template_match_target_to_csv(loss_target[i], loss_csvs[i])
             match_csv, templ_csv, templ_new = 0, 0, 0
-            if N_csv > 0:
+            if N_csv > 0: 
                 match_csv = float(N_match)/float(N_csv)             #recall
                 templ_csv = float(N_templ)/float(N_csv)             #craters detected/craters in csv
             if N_templ > 0:

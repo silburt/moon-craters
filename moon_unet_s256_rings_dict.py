@@ -18,7 +18,6 @@ import random
 from PIL import Image
 from skimage.feature import match_template
 
-from keras import losses
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Dropout, Flatten, Reshape
 from keras.layers import AveragePooling2D, merge, Input
@@ -140,7 +139,7 @@ def get_recall(dir, n_samples, dim, model, X, Y, ids):
         match_csv_arr.append(match_csv); templ_csv_arr.append(templ_csv);
         templ_new_arr.append(templ_new); templ_new2_arr.append(templ_new2); maxrad_arr.append(maxr)
 
-    print "binary XE score = %f"%binary_crossentropy(Y[0:n_samples].astype('float32'),Y_pred)
+    print "binary XE score = %f"%K.mean(K.binary_crossentropy(Y[0:n_samples].astype('float32'), Y_pred), axis=-1)
     print "mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(match_csv_arr), np.std(match_csv_arr))
     print "mean and std of N_template/N_csv = %f, %f"%(np.mean(templ_csv_arr), np.std(templ_csv_arr))
     print "mean and std of (N_template - N_match)/N_template (fraction of craters that are new) = %f, %f"%(np.mean(templ_new_arr), np.std(templ_new_arr))

@@ -18,6 +18,7 @@ import random
 from PIL import Image
 from skimage.feature import match_template
 
+from keras import losses
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Dropout, Flatten, Reshape
 from keras.layers import AveragePooling2D, merge, Input
@@ -100,7 +101,7 @@ def custom_image_generator(data, target, batch_size=32):
 ################################
 #Calculate Custom Loss (recall)#
 ########################################################################
-def get_recall(dir, n_samples, dim, model, X, ids):
+def get_recall(dir, n_samples, dim, model, X, Y, ids):
     
     # get csvs for recall
     csvs = []
@@ -124,11 +125,11 @@ def get_recall(dir, n_samples, dim, model, X, ids):
     print ""
     print "*********Custom Loss*********"
     match_csv_arr, templ_csv_arr, templ_new_arr, templ_new2_arr, maxrad_arr = [], [], [], [], []
-    preds = model.predict(X[0:n_samples].astype('float32'))
+    Y_pred = model.predict(X[0:n_samples].astype('float32'))
     for i in range(n_samples):
         if len(csvs[i]) < 3:    #exclude csvs with tiny crater numbers
             continue
-        N_match, N_csv, N_templ, maxr, csv_duplicate_flag = template_match_target_to_csv(preds[i], csvs[i])
+        N_match, N_csv, N_templ, maxr, csv_duplicate_flag = template_match_target_to_csv(Y_pred[i], csvs[i])
         match_csv, templ_csv, templ_new, templ_new2 = 0, 0, 0, 0
         if N_csv > 0:
             match_csv = float(N_match)/float(N_csv)             #recall
@@ -139,6 +140,7 @@ def get_recall(dir, n_samples, dim, model, X, ids):
         match_csv_arr.append(match_csv); templ_csv_arr.append(templ_csv);
         templ_new_arr.append(templ_new); templ_new2_arr.append(templ_new2); maxrad_arr.append(maxr)
 
+    print "binary XE score = %f"%binary_crossentropy(Y[0:n_samples].astype('float32'),Y_pred)
     print "mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(match_csv_arr), np.std(match_csv_arr))
     print "mean and std of N_template/N_csv = %f, %f"%(np.mean(templ_csv_arr), np.std(templ_csv_arr))
     print "mean and std of (N_template - N_match)/N_template (fraction of craters that are new) = %f, %f"%(np.mean(templ_new_arr), np.std(templ_new_arr))
@@ -234,7 +236,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,ID_valid,
                             callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
     
         valid_dir = '%s/Dev_rings/'%dir
-        get_recall(valid_dir, MP['n_valid_recall'], dim, model, X_valid, ID_valid)
+        get_recall(valid_dir, MP['n_valid_recall'], dim, model, X_valid, Y_valid, ID_valid)
 
     if MP['save_models'] == 1:
         model.save('models/unet_s256_rings_n112_L%.1e_D%.2f.h5'%(lmbda,drop))
@@ -243,7 +245,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,ID_valid,
     print '##########END_OF_RUN_INFO##########'
     print 'learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train=%d, img_dimensions=%d, inv_color=%d, rescale=%d, init=%s, n_filters=%d, lambda=%e, dropout=%f'%(learn_rate,bs,FL,nb_epoch,MP['n_train'],MP['dim'],MP['inv_color'],MP['rescale'],init,n_filters,lmbda,drop)
     test_dir = '%s/Test_rings/'%dir
-    get_recall(test_dir, MP['n_test_recall'], dim, model, X_test, ID_test)
+    get_recall(test_dir, MP['n_test_recall'], dim, model, X_test, Y_test, ID_test)
     print '###################################'
     print '###################################'
 
@@ -323,11 +325,11 @@ if __name__ == '__main__':
     MP['N_runs'] = 4
     MP['filter_length'] = [3]
     MP['n_filters'] = [112]
-    MP['init'] = ['he_normal']                                      #See unet model. Initialization of weights.
+    MP['init'] = ['he_normal']                      #See unet model. Initialization of weights.
     #MP['lambda']=[1e-6]
     #MP['dropout'] = [0.15]
-    MP['lambda']=[1e-4,1e-3,1e-4,1e-3]                 #regularization
-    MP['dropout']=[0.25,0.25,0.15,0.15]             #dropout after merge layers
+    MP['lambda']=[1e-5,1e-5,1e-6,1e-6]                 #regularization
+    MP['dropout']=[0.25,0.15,0.25,0.15]             #dropout after merge layers
     
     #run models
     run_cross_validation_create_models(MP)

@@ -7,7 +7,7 @@ import pandas as pd
 import sys
 from utils.template_match_target import *
 
-minrad, maxrad = 2, 75
+minrad, maxrad = 2, 50
 
 def prep_csvs(dir, datatype, ids, nimgs):
     cutrad, dim = 1, 256
@@ -34,16 +34,19 @@ def prep_csvs(dir, datatype, ids, nimgs):
     return csvs
 
 def get_recall(preds, csvs, nimgs, match_thresh2, template_thresh, target_thresh):
-    match_csv_arr = []
+    recall, precision, f1 = [], [], []
     for i in range(nimgs):
-        print i
         if len(csvs[i]) < 3:
             continue
         N_match, N_csv, N_templ, maxr, csv_duplicate_flag = template_match_target_to_csv(preds[i], csvs[i], minrad, maxrad, match_thresh2, template_thresh, target_thresh)
-        match_csv_arr.append(float(N_match)/float(N_csv))
+        p = float(N_match)/float(N_match + (N_templ-N_match))   #assuming all unmatched detected circles are false positives
+        r = float(N_match)/float(N_csv)                         #N_csv = tp + fn, i.e. total ground truth matches
+        recall.append(r); precision.append(p); f1.append(2*r*p/(r+p))
 
     print "match_thresh2=%f, template_thresh=%f, target_thresh=%f"%(match_thresh2, template_thresh, target_thresh)
-    print "mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(match_csv_arr), np.std(match_csv_arr))
+    print "mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(recall), np.std(recall))
+    print "mean and std of N_match/(N_match + (N_templ-N_match)) (precision) = %f, %f"%(np.mean(precision), np.std(precision))
+    print "mean and std of 2rp/(r+p) (F1 score) = %f, %f"%(np.mean(f1), np.std(f1))
 
 if __name__ == '__main__':
     #data parameters

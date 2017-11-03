@@ -6,7 +6,7 @@ import numpy as np
 from skimage.feature import match_template
 import cv2
 
-def template_match_target(target, minrad=3, maxrad=50, match_thresh2=50, template_thresh=0.5, target_thresh=0.1):
+def template_match_target(target, minrad=3, maxrad=50, match_thresh2=50, template_thresh=0.6, target_thresh=0.1):
     #HYPERPARAMETERS
     # MATCH_THRESH2: for template matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, remove (x2,y2,r2) circle (it is a duplicate). For predicted target -> csv matching (i.e. in template_match_target_to_csv), if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, positive match. Maybe these should technically be separate parameters, but to first order they should be the same...
     # TEMPLATE_THRESH: 0-1 range, if scikit-image's template matching probability > template_thresh, count as detection
@@ -79,7 +79,7 @@ def template_match_target(target, minrad=3, maxrad=50, match_thresh2=50, templat
     return coords
 
 
-def template_match_target_to_csv(target, csv, minrad=3, maxrad=50, match_thresh2=50, template_thresh=0.5, target_thresh=0.1):
+def template_match_target_to_csv(target, csv, minrad=3, maxrad=50, match_thresh2=50, template_thresh=0.6, target_thresh=0.1):
 
     #get coordinates from template matching
     templ_coords = template_match_target(target, minrad, maxrad, match_thresh2, template_thresh, target_thresh)

@@ -31,7 +31,7 @@ def read_and_normalize_data(path, dim):
     print 'shape:', data.shape
     return data, id_
 
-def get_modelpreds(data_dir,np_data_file,csv_prefix,model_loc,n_imgs,inv_color,rescale):
+def get_modelpreds(data_dir,np_data_file,model_loc,n_imgs,inv_color,rescale):
     dim=256
     # get data
     try:
@@ -53,37 +53,30 @@ def get_modelpreds(data_dir,np_data_file,csv_prefix,model_loc,n_imgs,inv_color,r
     # generate model predictions
     model = load_model(model_loc)
     pred = model.predict(data.astype('float32'))
-    np.save('%s/%s_modelpreds_n%d_new.npy'%(data_dir,np_data_file,n_imgs),pred)
+    np.save('%s/%s_modelpreds_n%d_final.npy'%(data_dir,np_data_file,n_imgs),pred)
     print "generated and saved predictions"
 
 if __name__ == '__main__':
-    #args
-    # ilen_1500_to_2500 settings - from Mohamad
-#    data_dir = 'datasets/ilen_1500_to_2500/ilen_2000'       #location of data to predict on. Exclude final '/' in path.
-#    data_prefix = ''                                        #prefix of e.g. *_data.npy files.
-#    csv_prefix = ''                                         #prefix of e.g. *_0001.csv files.
-#    model_loc = 'models/unet_s256_rings_nFL96.h5'
-#    n_imgs = 1000
-
-    # Charles highilen augmented dataset
+    #Charles highilen augmented dataset
     #data_dir = 'datasets/highilen'                          #location of data to predict on. Exclude final '/' in path.
     #np_data_file = 'highilen_train_input_n5000.npy'        #numpy data file - highilen dataset
 
     #Mercury
 #    data_dir = 'datasets/mercury'
 #    np_data_file = 'merc_0_input_charles'                   #location of numpy data file, or name for it when saving
-#    csv_prefix = ''                                         #for if numpy file doesnt exist, prefix of e.g. *_0001.csv files.
 #    model_loc = 'models/unet_s256_rings_nFL96.h5'
 #    n_imgs = 10
 
+    #Normal dataset
     data_dir = 'datasets/rings/Test_rings'                  #location of data to predict on. Exclude final '/' in path.
-    np_data_file = 'test_data_50im'                         #prefix of e.g. *_data.npy files.
-    csv_prefix = ''                                     #prefix of e.g. *_0001.csv files.
-    model_loc = 'models/unet_s256_rings_nFL96.h5'
-    n_imgs = 50          #number of images to use for getting crater distribution.
+    np_data_file = 'test_data'                         #prefix of e.g. *_data.npy files.
+    
+    #model_loc = 'models/unet_s256_rings_nFL96.h5'
+    model_loc = 'models/unet_s256_rings_n112_L1.0e-05_D0.15.h5'
+    n_imgs = 10016          #number of images to use for getting crater distribution.
 
-    inv_color = 1           #**must be same setting as what model was trained on**
+    inv_color = 0           #**must be same setting as what model was trained on**
     rescale = 1             #**must be same setting as what model was trained on**
-    get_modelpreds(data_dir,np_data_file,csv_prefix,model_loc,n_imgs,inv_color,rescale)
+    get_modelpreds(data_dir,np_data_file,model_loc,n_imgs,inv_color,rescale)
 
     print "Script completed successfully"

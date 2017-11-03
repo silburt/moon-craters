@@ -1,6 +1,6 @@
 # The purpose of this macro is to tune the hyperparameters of the crater detection algorithm
 # on the validation set, namely:
-# match_thresh2, template_thresh and target_thresh.
+# match_thresh2, template_thresh and target_thresh. 
 
 import numpy as np
 import pandas as pd
@@ -39,12 +39,12 @@ def get_recall(preds, csvs, nimgs, match_thresh2, template_thresh, target_thresh
         if len(csvs[i]) < 3:
             continue
         N_match, N_csv, N_templ, maxr, csv_duplicate_flag = template_match_target_to_csv(preds[i], csvs[i], minrad, maxrad, match_thresh2, template_thresh, target_thresh)
-        p = float(N_match)/float(N_match + (N_templ-N_match))   #assuming all unmatched detected circles are false positives
-        r = float(N_match)/float(N_csv)                         #N_csv = tp + fn, i.e. total ground truth matches
-        if r+p > 0:
+        if N_match > 0:
+            p = float(N_match)/float(N_match + (N_templ-N_match))   #assuming all unmatched detected circles are false positives
+            r = float(N_match)/float(N_csv)                         #N_csv = tp + fn, i.e. total ground truth matches
             recall.append(r); precision.append(p); f1.append(2*r*p/(r+p))
         else:
-            print "skipping iteration, r=%f,p=%f,r+p=%f,N_csv=%d,N_templ=%d,iteration=%d"%(r,p,r+p,N_csv,N_templ,i)
+            print "skipping iteration %d,N_csv=%d,N_templ=%d,N_match=%d"%(i,N_csv,N_templ,N_match)
 
     print "match_thresh2=%f, template_thresh=%f, target_thresh=%f"%(match_thresh2, template_thresh, target_thresh)
     print "mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(recall), np.std(recall))

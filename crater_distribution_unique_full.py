@@ -114,7 +114,7 @@ if __name__ == '__main__':
         datatype, dir = datatypes[i], dirs[i]
         
         #primary model preds
-        file = '%s_modelpreds_n%d_new.npy'%(datatype,nimgs)
+        file = '%s_modelpreds_n%d_final.npy'%(datatype,nimgs)
         pred = np.load('%s/%s'%(dir,file))
         id = np.load('%s/%s_id.npy'%(dir,datatype))[0:len(pred)]
         P = cPickle.load(open('%s/lolaout_%s.p'%(dir,datatype), 'r'))
@@ -122,13 +122,13 @@ if __name__ == '__main__':
         print ""
         
         #highilen dataset
-        highilen_file = 'highilen_%s_modelpreds_n5000_new.npy'%datatype
+        highilen_file = 'highilen_%s_modelpreds_n5000_final.npy'%datatype
         highilen_pred = np.load('%s/%s'%(highilen_dir,highilen_file))
         highilen_P = cPickle.load(open('%s/%soutp_v2.p'%(highilen_dir,datatype), 'r'))
         highilen_id = range(len(highilen_P))    #preds and P have same index, dummy id array
         
         #lowilen dataset
-        lowilen_file = 'lowilen_%s_modelpreds_n15000_new.npy'%datatype
+        lowilen_file = 'lowilen_%s_modelpreds_n15000_final.npy'%datatype
         lowilen_pred = np.load('%s/%s'%(lowilen_dir,lowilen_file))
         lowilen_P = cPickle.load(open('%s/%soutp_v2.p'%(lowilen_dir,datatype), 'r'))
         lowilen_id = range(len(lowilen_P))    #preds and P have same index, dummy id array
@@ -137,7 +137,7 @@ if __name__ == '__main__':
             t1 = time.time()
             print "thresh_longlat2=%.2e,thresh_rad2=%.2e"%(llt2,rt2)
             
-            pred_output_name = '%s/%s_highlowilenpred_llt%.1e_rt%.1e_n%d.npy'%(dir,datatype,llt2,rt2,len(pred))   #save directory
+            pred_output_name = '%s/%s_highlowilenpred_llt%.1e_rt%.1e_n%d_final.npy'%(dir,datatype,llt2,rt2,len(pred))   #save directory
             pred_crater_dist = np.empty([0,3])  #reset empty crater dist
             pred_crater_dist = extract_unique_pred(pred_crater_dist, pred, id, P, llt2, rt2, pred_output_name)
 

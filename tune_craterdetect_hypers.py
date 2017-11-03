@@ -44,7 +44,7 @@ def get_recall(preds, csvs, nimgs, match_thresh2, template_thresh, target_thresh
         if r+p > 0:
             recall.append(r); precision.append(p); f1.append(2*r*p/(r+p))
         else:
-            print "skipping iteration, r=%f,p=%f,r+p=%f"%(r,p,r+p)
+            print "skipping iteration, r=%f,p=%f,r+p=%f,N_csv=%d,N_templ=%d,iteration=%d"%(r,p,r+p,N_csv,N_templ,i)
 
     print "match_thresh2=%f, template_thresh=%f, target_thresh=%f"%(match_thresh2, template_thresh, target_thresh)
     print "mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(recall), np.std(recall))

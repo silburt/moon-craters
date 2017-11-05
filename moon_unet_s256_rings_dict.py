@@ -18,6 +18,7 @@ import random
 from PIL import Image
 from skimage.feature import match_template
 
+import tensorflow as tf
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Dropout, Flatten, Reshape
 from keras.layers import AveragePooling2D, merge, Input
@@ -139,7 +140,7 @@ def get_recall(dir, n_samples, dim, model, X, Y, ids):
         match_csv_arr.append(match_csv); templ_csv_arr.append(templ_csv);
         templ_new_arr.append(templ_new); templ_new2_arr.append(templ_new2); maxrad_arr.append(maxr)
 
-    score = K.binary_crossentropy(Y[0:n_samples].astype('float32'), Y_pred.astype('float32'))
+    score = K.binary_crossentropy(tf.convert_to_tensor(Y[0:n_samples],np.float32), tf.convert_to_tensor(Y_pred,np.float32))
     print "binary XE score = %f"%K.mean(score, axis=-1)
     #print "binary XE score = %f"%model.evaluate(X[0:n_samples].astype('float32'), Y[0:n_samples].astype('float32'))
     print "mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(match_csv_arr), np.std(match_csv_arr))

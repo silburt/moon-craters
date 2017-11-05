@@ -139,8 +139,9 @@ def get_recall(dir, n_samples, dim, model, X, Y, ids):
         match_csv_arr.append(match_csv); templ_csv_arr.append(templ_csv);
         templ_new_arr.append(templ_new); templ_new2_arr.append(templ_new2); maxrad_arr.append(maxr)
 
-    #print "binary XE score = %f"%K.mean(K.binary_crossentropy(Y[0:n_samples].astype('float32'), Y_pred.astype('float32')), axis=-1)
-    print "binary XE score = %f"%model.evaluate(X[0:n_samples].astype('float32'), Y[0:n_samples].astype('float32'))
+    score = K.binary_crossentropy(Y[0:n_samples].astype('float32'), Y_pred.astype('float32'))
+    print "binary XE score = %f"%K.mean(score, axis=-1)
+    #print "binary XE score = %f"%model.evaluate(X[0:n_samples].astype('float32'), Y[0:n_samples].astype('float32'))
     print "mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(match_csv_arr), np.std(match_csv_arr))
     print "mean and std of N_template/N_csv = %f, %f"%(np.mean(templ_csv_arr), np.std(templ_csv_arr))
     print "mean and std of (N_template - N_match)/N_template (fraction of craters that are new) = %f, %f"%(np.mean(templ_new_arr), np.std(templ_new_arr))
@@ -228,13 +229,14 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,ID_valid,
     # main loop
     n_samples = len(X_train)
     for nb in range(nb_epoch):
+        '''
         model.fit_generator(custom_image_generator(X_train,Y_train,batch_size=bs),
                             samples_per_epoch=n_samples,nb_epoch=1,verbose=1,
                             #validation_data=(X_valid, Y_valid), #no generator for validation data
                             validation_data=custom_image_generator(X_valid,Y_valid,batch_size=bs),
                             nb_val_samples=n_samples,
                             callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
-    
+        '''
         valid_dir = '%s/Dev_rings/'%dir
         get_recall(valid_dir, MP['n_valid_recall'], dim, model, X_valid, Y_valid, ID_valid)
 

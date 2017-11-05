@@ -11,7 +11,7 @@ norm = False
 nbins = 50
 maxrad = 45
 cdf = 0
-truth_datatype = 'dev'
+truth_datatype = 'test'
 
 ###############Original ground truth dataset################
 try:
@@ -55,11 +55,12 @@ except:
 #filename = 'datasets/rings/Test_rings/%s_highilenpred_llt6.0e-01_rt6.0e-01_n29976.npy'%truth_datatype
 
 #dev
-filename = 'datasets/rings/Dev_rings/%s_highlowilenpred_llt7.0e-01_rt5.0e-01_n10016.npy'%truth_datatype
+#filename = 'datasets/rings/Dev_rings/%s_highlowilenpred_llt7.0e-01_rt5.0e-01_n10016.npy'%truth_datatype
 
 #best
 #filename = 'datasets/rings/Test_rings/%s_highlowilenpred_llt6.0e-01_rt6.0e-01_n10016.npy'%truth_datatype
 #filename = 'datasets/rings/Train_rings/%s_highlowilenpred_llt6.0e-01_rt6.0e-01_n10016.npy'%truth_datatype
+filename = 'datasets/rings/Test_rings/%s_highlowilenpred_llt6.0e-01_rt6.0e-01_n10016_final.npy'%truth_datatype
 
 #GT = np.load('datasets/rings/Test_rings/test_uniqueGT_llt1.0e-06_rt1.0e-06_n10016.npy') #unique distribution for 10,000 images
 #########################################

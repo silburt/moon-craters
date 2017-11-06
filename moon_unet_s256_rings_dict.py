@@ -240,14 +240,12 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,ID_valid,
     # main loop
     n_samples = len(X_train)
     for nb in range(nb_epoch):
-        '''
         model.fit_generator(custom_image_generator(X_train,Y_train,batch_size=bs),
                             samples_per_epoch=n_samples,nb_epoch=1,verbose=1,
                             #validation_data=(X_valid, Y_valid), #no generator for validation data
                             validation_data=custom_image_generator(X_valid,Y_valid,batch_size=bs),
                             nb_val_samples=n_samples,
                             callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
-        '''
         valid_dir = '%s/Dev_rings/'%dir
         get_recall(valid_dir, MP['n_valid_recall'], dim, model, X_valid, Y_valid, ID_valid)
 

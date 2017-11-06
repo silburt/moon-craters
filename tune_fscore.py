@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import glob
 
-beta = 1 #controls precision's weakness in f1 score
+beta = 1 #controls precision's weakness in f_beta score
 real_data = 1
 
 f_beta, precision, recall = [], [], []

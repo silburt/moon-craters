@@ -322,7 +322,7 @@ if __name__ == '__main__':
     MP = {}
     
     #location of Train_rings/, Dev_rings/, Test_rings/, Dev_rings_for_loss/ folders. Don't include final '/' in path
-    MP['dir'] = 'datasets/rings'
+    MP['dir'] = 'datasets/nofeatures'
     
     #Model Parameters
     MP['dim'] = 256             #image width/height, assuming square images. Shouldn't change

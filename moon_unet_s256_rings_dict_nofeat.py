@@ -270,13 +270,13 @@ def run_cross_validation_create_models(MP):
     dir, dim, n_train = MP['dir'], MP['dim'], MP['n_train']
     
     train_data=np.load('%s/train_0_input.npy'%dir)
-    train_target=np.load('%s/train_0_target.npy'%dir)
+    train_target=np.load('%s/train_0_targets.npy'%dir)
     #train_ids = np.load('%s/Train_rings/train_ids.npy'%dir)
     valid_data=np.load('%s/dev_0_input.npy'%dir)
-    valid_target=np.load('%s/dev_0_target.npy'%dir)
+    valid_target=np.load('%s/dev_0_targets.npy'%dir)
     #valid_ids = np.load('%s/Dev_rings/dev_ids.npy'%dir)
     test_data=np.load('%s/test_0_input.npy'%dir)
-    test_target=np.load('%s/test_0_target.npy'%dir)
+    test_target=np.load('%s/test_0_targets.npy'%dir)
     #test_ids = np.load('%s/Test_rings/test_ids.npy'%dir)
     train_ids = range(len(train_data))
     valid_ids = train_ids.copy()

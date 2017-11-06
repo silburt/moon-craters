@@ -147,7 +147,7 @@ def get_recall(dir, n_samples, dim, model, X, Y, ids):
             templ_new = float(N_templ - N_match)/float(N_templ) #fraction of craters that are new
             templ_new2 = float(N_templ - N_match)/float(N_csv)  #fraction of craters that are new
         if csv_duplicate_flag == 1:
-            print "duplicate(s) found in image %d"%i
+            print "duplicate(s) (shown above) found in image %d"%i
         match_csv_arr.append(match_csv); templ_csv_arr.append(templ_csv);
         templ_new_arr.append(templ_new); templ_new2_arr.append(templ_new2); maxrad_arr.append(maxr)
 
@@ -335,14 +335,14 @@ if __name__ == '__main__':
     MP['save_models'] = 1       #save keras models upon training completion
     
     #Model Parameters (to potentially iterate over, keep in lists)
-    MP['N_runs'] = 4
+    MP['N_runs'] = 1
     MP['filter_length'] = [3]
     MP['n_filters'] = [112]
     MP['init'] = ['he_normal']                      #See unet model. Initialization of weights.
-    #MP['lambda']=[1e-6]
-    #MP['dropout'] = [0.15]
-    MP['lambda']=[1e-5,1e-5,1e-6,1e-6]                 #regularization
-    MP['dropout']=[0.25,0.15,0.25,0.15]             #dropout after merge layers
+    MP['lambda']=[1e-5]
+    MP['dropout'] = [0.15]
+    #MP['lambda']=[1e-5,1e-5,1e-6,1e-6]                 #regularization
+    #MP['dropout']=[0.25,0.15,0.25,0.15]             #dropout after merge layers
     
     #run models
     run_cross_validation_create_models(MP)

@@ -112,7 +112,10 @@ def template_match_target_to_csv(target, csv, minrad=3, maxrad=50, match_thresh2
         N = len(np.where(index==False)[0])
         if N > 1:
             csv_duplicate_flag = 1  #more than one match found
-        N_match += N
+            for idd in np.where(index==False)[0]:
+                print "duplicate entry:", csv_coords[idd]
+        #N_match += N
+        N_match += min(1,N)
         csv_coords = csv_coords[index]
         if len(csv_coords) == 0:
             break

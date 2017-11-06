@@ -268,35 +268,21 @@ def run_cross_validation_create_models(MP):
     
     #Load data
     dir, dim, n_train = MP['dir'], MP['dim'], MP['n_train']
-    try:
-        train_data=np.load('%s/Train_rings/train_data.npy'%dir)
-        train_target=np.load('%s/Train_rings/train_target.npy'%dir)
-        #train_ids = np.load('%s/Train_rings/train_ids.npy'%dir)
-        valid_data=np.load('%s/Dev_rings/dev_data.npy'%dir)
-        valid_target=np.load('%s/Dev_rings/dev_target.npy'%dir)
-        #valid_ids = np.load('%s/Dev_rings/dev_ids.npy'%dir)
-        test_data=np.load('%s/Test_rings/test_data.npy'%dir)
-        test_target=np.load('%s/Test_rings/test_target.npy'%dir)
-        #test_ids = np.load('%s/Test_rings/test_ids.npy'%dir)
-        train_ids = range(len(train_data))
-        valid_ids = train_ids.copy()
-        test_ids = train_ids.copy()
-        print "Successfully loaded files locally."
-    except:
-        print "Couldnt find locally saved .npy files, loading from %s."%dir
-        train_path, valid_path, test_path = '%s/Train_rings/'%dir, '%s/Dev_rings/'%dir, '%s/Test_rings/'%dir
-        train_data, train_target, train_ids = read_and_normalize_data(train_path, dim, 'train')
-        valid_data, valid_target, valid_ids = read_and_normalize_data(valid_path, dim, 'dev')
-        test_data, test_target, test_ids = read_and_normalize_data(test_path, dim, 'test')
-        np.save('%s/Train_rings/train_data.npy'%dir,train_data)
-        np.save('%s/Train_rings/train_target.npy'%dir,train_target)
-        np.save('%s/Train_rings/train_ids.npy'%dir,train_ids)
-        np.save('%s/Dev_rings/dev_data.npy'%dir,valid_data)
-        np.save('%s/Dev_rings/dev_target.npy'%dir,valid_target)
-        np.save('%s/Dev_rings/dev_ids.npy'%dir,valid_ids)
-        np.save('%s/Test_rings/test_data.npy'%dir,test_data)
-        np.save('%s/Test_rings/test_target.npy'%dir,test_target)
-        np.save('%s/Test_rings/test_ids.npy'%dir,test_ids)
+    
+    train_data=np.load('%s/train_0_input.npy'%dir)
+    train_target=np.load('%s/train_0_target.npy'%dir)
+    #train_ids = np.load('%s/Train_rings/train_ids.npy'%dir)
+    valid_data=np.load('%s/dev_0_input.npy'%dir)
+    valid_target=np.load('%s/dev_0_target.npy'%dir)
+    #valid_ids = np.load('%s/Dev_rings/dev_ids.npy'%dir)
+    test_data=np.load('%s/test_0_input.npy'%dir)
+    test_target=np.load('%s/test_0_target.npy'%dir)
+    #test_ids = np.load('%s/Test_rings/test_ids.npy'%dir)
+    train_ids = range(len(train_data))
+    valid_ids = train_ids.copy()
+    test_ids = train_ids.copy()
+    print "Successfully loaded files locally."
+
     #take desired subset of data
     train_data, train_target, train_ids = train_data[:n_train], train_target[:n_train], train_ids[:n_train]
     valid_data, valid_target, valid_ids = valid_data[:n_train], valid_target[:n_train], valid_ids[:n_train]

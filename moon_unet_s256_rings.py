@@ -323,12 +323,14 @@ def run_cross_validation_create_models(dir,learn_rate,batch_size,nb_epoch,n_trai
 #    filter_length = [3,3,3,3,3,3]   #See unet model. Filter length used.
 #    n_filters = [64,64,64,64,64,64]     #See unet model. Arranging this so that total number of model parameters <~ 10M, otherwise OOM problems
 #    lmbda = [1e-7,5e-7,1e-6,5e-6,1e-5,5e-5]           #See unet model. L2 Weight regularization strength (lambda).
-    N_runs = 9
+    N_runs = 1
     filter_length=3
     n_filters=112
     init = 'he_normal'                                  #See unet model. Initialization of weights.
-    lmbda=[0,1e-6,1e-5,0,1e-6,1e-5,0,1e-6,1e-5]         #regularization
-    dropout=[0.15,0.15,0.15,0.25,0.25,0.25,0.35,0.35,0.35]                  #dropout after merge layers
+    lmbda=[1e-5]
+    dropout=[0.15]
+    #lmbda=[0,1e-6,1e-5,0,1e-6,1e-5,0,1e-6,1e-5]         #regularization
+    #dropout=[0.15,0.15,0.15,0.25,0.25,0.25,0.35,0.35,0.35]                  #dropout after merge layers
 
     #Iterate
     for i in range(N_runs):
@@ -355,7 +357,7 @@ if __name__ == '__main__':
     dir = 'datasets/rings'  #location of Train_rings/, Dev_rings/, Test_rings/, Dev_rings_for_loss/ folders. Don't include final '/' in path
     lr = 0.0001             #learning rate
     bs = 8                 #batch size: smaller values = less memory but less accurate gradient estimate
-    epochs = 6              #number of epochs. 1 epoch = forward/back pass through all train data
+    epochs = 4              #number of epochs. 1 epoch = forward/back pass through all train data
     n_train = 30000         #number of training samples, needs to be a multiple of batch size. Big memory hog.
     save_models = 1         #save models
     inv_color = 0           #use inverse color

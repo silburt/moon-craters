@@ -4,7 +4,7 @@
 #This model:
 #a) uses a custom loss (separately, i.e. *not* differentiable and guiding backpropagation) to assess how well our algorithm is doing, by connecting the predicted circles to the "ground truth" circles
 #b) trained using the original LU78287GT.csv values as the ground truth,
-#c) uses the Unet model architechture applied on binary rings.
+#c) uses the Unet model architechture applied on binary rings. 
 
 #This model uses keras version 1.2.2.
 ############################################

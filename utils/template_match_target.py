@@ -107,8 +107,6 @@ def template_match_target_to_csv(target, csv, minrad=3, maxrad=50, match_thresh2
     csv_duplicate_flag = 0
     N_csv, N_templ = len(csv_coords), len(templ_coords)
     for tc in templ_coords:
-        #diff = (csv_coords - tc)**2
-        #diffsum = np.asarray([sum(x) for x in diff])
         diffsum = np.sum((csv_coords - tc)**2,axis=1)
         index = diffsum > match_thresh2
         N = len(np.where(index==False)[0])

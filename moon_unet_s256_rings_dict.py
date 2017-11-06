@@ -146,6 +146,8 @@ def get_recall(dir, n_samples, dim, model, X, Y, ids):
         if N_templ > 0:
             templ_new = float(N_templ - N_match)/float(N_templ) #fraction of craters that are new
             templ_new2 = float(N_templ - N_match)/float(N_csv)  #fraction of craters that are new
+        if csv_duplicate_flag == 1:
+            print "duplicate(s) found in image %d"%i
         match_csv_arr.append(match_csv); templ_csv_arr.append(templ_csv);
         templ_new_arr.append(templ_new); templ_new2_arr.append(templ_new2); maxrad_arr.append(maxr)
 

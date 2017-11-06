@@ -32,7 +32,6 @@ except:
         truthalan = truthalan[truthalan['Long']>60]        #region of test data
         truthLU = truthLU[(truthLU['Long']>60)&(truthLU['Diameter (km)']>20.)]
     elif truth_datatype == 'dev':
-        print "hi"
         truthalan = truthalan[(truthalan['Long']>-60)&(truthalan['Long']<60)]        #region of test data
         truthLU = truthLU[(truthLU['Long']<60)&(truthLU['Long']>-60)&(truthLU['Diameter (km)']>20.)]
 

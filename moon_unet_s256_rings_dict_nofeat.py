@@ -247,8 +247,8 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,ID_valid,
                             validation_data=custom_image_generator(X_valid,Y_valid,batch_size=bs),
                             nb_val_samples=n_samples,
                             callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
-        valid_dir = '%s/Dev_rings/'%dir
-        get_recall(valid_dir, MP['n_valid_recall'], dim, model, X_valid, Y_valid, ID_valid, 'dev')
+                            
+        get_recall(MP['dir'], MP['n_valid_recall'], dim, model, X_valid, Y_valid, ID_valid, 'dev')
 
     if MP['save_models'] == 1:
         model.save('models/unet_s256_rings_n112_L%.1e_D%.2f.h5'%(lmbda,drop))
@@ -257,7 +257,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,ID_valid,
     print '##########END_OF_RUN_INFO##########'
     print 'learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train=%d, img_dimensions=%d, inv_color=%d, rescale=%d, init=%s, n_filters=%d, lambda=%e, dropout=%f'%(learn_rate,bs,FL,nb_epoch,MP['n_train'],MP['dim'],MP['inv_color'],MP['rescale'],init,n_filters,lmbda,drop)
     test_dir = '%s/Test_rings/'%dir
-    get_recall(test_dir, MP['n_test_recall'], dim, model, X_test, Y_test, ID_test, 'test')
+    get_recall(MP['dir'], MP['n_test_recall'], dim, model, X_test, Y_test, ID_test, 'test')
     print '###################################'
     print '###################################'
 

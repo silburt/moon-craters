@@ -279,8 +279,8 @@ def run_cross_validation_create_models(MP):
     test_target=np.load('%s/test_0_targets.npy'%dir)
     #test_ids = np.load('%s/Test_rings/test_ids.npy'%dir)
     train_ids = range(len(train_data))
-    valid_ids = train_ids.copy()
-    test_ids = train_ids.copy()
+    valid_ids = range(len(valid_data))
+    test_ids = range(len(test_data))
     print "Successfully loaded files locally."
 
     #take desired subset of data

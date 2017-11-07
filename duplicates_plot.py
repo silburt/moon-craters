@@ -5,10 +5,11 @@ import matplotlib.pyplot as plt
 import glob
 import cv2
 
-data = np.load('datasets/rings/Test_rings/test_data_n1000.npy')
-target = np.load('datasets/rings/Test_rings/test_target_n1000.npy')
+datatype = 'dev'
+data = np.load('datasets/rings/Dev_rings/%s_data_n1000.npy'%datatype)
+target = np.load('datasets/rings/Dev_rings/%s_target_n1000.npy'%datatype)
 
-lines = open('duplicates/test/test_duplicates.txt','r').readlines()
+lines = open('duplicates/%s/%s_duplicates2.txt'%(datatype,datatype),'r').readlines()
 
 #soln = [0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,0,1,1,1,0,1,1,0,0,0,0,0,1,1,0,1,0,0,1,0,0,0,1,0,1,1,0,0,1,1,1,0,0,0,0,0]
 #soln_i = 0
@@ -29,10 +30,11 @@ for i,l in enumerate(lines):
             x,y,r = lines[j].split('[')[1].split(']')[0].split()
             x,y,r = int(float(x)), int(float(y)), int(float(r))
             cv2.circle(cimg,(x,y),r,(255,0,0),thickness=1)
-            if j == new_i-1:
+            if (j-prev_i)%2 == 1:
                 longlat_diff = (x-x_prev)**2 + (y-y_prev)**2
                 rad_diff = abs(r-r_prev)
-                print "image %d: longlat_diff=%d, rad_diff=%f, rad_diff/r=%f,r=%d"%(image_i,longlat_diff,rad_diff,rad_diff/float(r),r)
+                print "image %d: c1=(%d,%d,%d), c2=(%d,%d,%d)"%(image_i,x_prev,y_prev,r_prev,x,y,r)
+                print "longlat_diff=%d, rad_diff=%f, rad_diff/r=%f,r=%d"%(longlat_diff,rad_diff,rad_diff/float(r),r)
                 cond = (longlat_diff <= 15)&(rad_diff <= max(1.01,0.2*r))
                 if cond:
                     title="duplicate found."

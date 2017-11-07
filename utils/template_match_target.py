@@ -8,7 +8,7 @@ import cv2
 
 def template_match_target(target, minrad=3, maxrad=50, longlat_thresh2=15, rad_thresh=0.2, template_thresh=0.6, target_thresh=0.1):
     #HYPERPARAMETERS
-    # LONGLAT_THRESH2/RAD_THRESH: for template matching, if (x1-x2)^2 + (y1-y2)^2 < longlat_thresh2 AND abs(r1-r2) < max(1,rad_thresh*r1), remove (x2,y2,r2) circle (it is a duplicate). During predicted target -> csv matching (i.e. in template_match_target_to_csv), if the same criteria is met it is a positive match (increasing the recall). Maybe these should technically be separate parameters, but to first order they should be the same...
+    # LONGLAT_THRESH2/RAD_THRESH: for template matching, if (x1-x2)^2 + (y1-y2)^2 <= longlat_thresh2 AND abs(r1-r2) <= max(1,rad_thresh*r1), remove (x2,y2,r2) circle (it is a duplicate). In addition, during predicted target -> csv matching (i.e. template_match_target_to_csv), the same criteria is used to match CNN craters with csv craters (increasing the recall). Maybe these should technically be separate parameters, but to first order they should be the same...
     # TEMPLATE_THRESH: 0-1 range, if scikit-image's template matching probability > template_thresh, count as detection
     # TARGET_THRESH: 0-1 range, set pixel values > target_thresh to 1, and pixel values < target_thresh -> 0
     # minrad - keep in mind that if the predicted target has thick rings, a small ring of diameter ~ ring_thickness could be detected by match_filter.
@@ -108,15 +108,15 @@ def template_match_target_to_csv(target, csv, minrad=3, maxrad=50, longlat_thres
     csv_duplicate_flag = 0
     N_csv, N_templ = len(csv_coords), len(templ_coords)
     
-    csvLong, csvLat, csvRad = csv_coords.T
     for lo,la,r in templ_coords:
+        csvLong, csvLat, csvRad = csv_coords.T
         diff_longlat = (csvLong - lo)**2 + (csvLat - la)**2
         diff_rad = abs(csvRad - r)
         index = (diff_rad <= max(1.01,rad_thresh*r))&(diff_longlat < longlat_thresh2)
         N = len(np.where(index==True)[0])
         if N > 1:
             csv_duplicate_flag = 1  #more than one match found
-            for idd in np.where(index==False)[0]:
+            for idd in np.where(index==True)[0]:
                 print "duplicate entry:", csv_coords[idd]
                 #long, lat, rad = csv_coords[idd]
                 #print "duplicate entry: (%d-%d)=%d + (%d-%d)=%d, (%d-%d)/%d=%d"%(long,lo,(long-lo)**2,lat,la,(lat-la)**2,rad,r,((rad-r)/float(r))**2)

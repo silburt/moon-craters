@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import glob
 
-beta = 1 #controls precision's weakness in f_beta score
-real_data = 1
+beta = 10 #controls precision's weakness in f_beta score
+real_data = 0
 
-f_beta, precision, recall = [], [], []
+f_beta, precision, recall, ext = [], [], [], ''
 if real_data == 1:
     dir = 'tune_jobs'
     files = glob.glob('%s/*.txt'%dir)
@@ -31,6 +31,7 @@ else:
         f_beta.append(f)
         recall.append(r)
         precision.append(p)
+    ext = '_num'
 
 pp = plt.scatter(precision,recall,c=f_beta,edgecolors='none')
 plt.xlabel('precision')
@@ -41,5 +42,5 @@ cbar = plt.colorbar(pp)
 #for i in range(len(f_beta)):
 #    plt.text(precision[i], recall[i], f_beta[i], fontsize=8)
 
-#plt.savefig('tune_jobs/tune_fscore_beta=%.2f.png'%beta)
+plt.savefig('tune_jobs/tune_fscore_beta=%.2f%s.png'%(beta,ext))
 plt.show()

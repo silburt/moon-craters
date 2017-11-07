@@ -6,9 +6,9 @@ import numpy as np
 from skimage.feature import match_template
 import cv2
 
-def template_match_target(target, minrad=3, maxrad=50, longlat_thresh2=20, rad_thresh2=0.08, template_thresh=0.6, target_thresh=0.1):
+def template_match_target(target, minrad=3, maxrad=50, longlat_thresh2=15, rad_thresh=0.2, template_thresh=0.6, target_thresh=0.1):
     #HYPERPARAMETERS
-    # MATCH_THRESH2: for template matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, remove (x2,y2,r2) circle (it is a duplicate). For predicted target -> csv matching (i.e. in template_match_target_to_csv), if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, positive match. Maybe these should technically be separate parameters, but to first order they should be the same...
+    # LONGLAT_THRESH2/RAD_THRESH: for template matching, if (x1-x2)^2 + (y1-y2)^2 < longlat_thresh2 AND abs(r1-r2) < max(1,rad_thresh*r1), remove (x2,y2,r2) circle (it is a duplicate). During predicted target -> csv matching (i.e. in template_match_target_to_csv), if the same criteria is met it is a positive match (increasing the recall). Maybe these should technically be separate parameters, but to first order they should be the same...
     # TEMPLATE_THRESH: 0-1 range, if scikit-image's template matching probability > template_thresh, count as detection
     # TARGET_THRESH: 0-1 range, set pixel values > target_thresh to 1, and pixel values < target_thresh -> 0
     # minrad - keep in mind that if the predicted target has thick rings, a small ring of diameter ~ ring_thickness could be detected by match_filter.
@@ -49,8 +49,8 @@ def template_match_target(target, minrad=3, maxrad=50, longlat_thresh2=20, rad_t
         Long, Lat, Rad = coords.T
         lo, la, r = coords[i]
         diff_longlat = (Long - lo)**2 + (Lat - la)**2
-        diff_rad = ((Rad - r)/r)**2                    #fractional radius change
-        index = (diff_rad < rad_thresh2)&(diff_longlat < longlat_thresh2)
+        diff_rad = abs(Rad - r)
+        index = (diff_rad < max(1.01,rad_thresh*r))&(diff_longlat < longlat_thresh2)
         if len(np.where(index==True)[0]) > 1:
             #replace current coord with highest match probability coord in duplicate list
             coords_i, corr_i = coords[np.where(index==True)], corr[np.where(index==True)]
@@ -61,29 +61,29 @@ def template_match_target(target, minrad=3, maxrad=50, longlat_thresh2=20, rad_t
 
     # This might not be necessary if minrad > ring_thickness, but probably good to keep as a failsafe
     # remove small false craters that arise because of thick edges
-    i, N = 0, len(coords)
-    dim = target.shape[0]
-    while i < N:
-        x,y,r = coords[i]
-        if r < 6:   #this effect is not present for large craters
-            mask = np.zeros((dim,dim))
-            cv2.circle(mask, (x,y), int(np.round(r)), 1, thickness=-1)
-            crater = target[mask==1]
-            if np.sum(crater) == len(crater):   #crater is completely filled in, likely a false positive
-                coords = np.delete(coords, i, axis=0)
-                N = len(coords)
-            else:
-                i += 1
-        else:
-            i += 1
+#    i, N = 0, len(coords)
+#    dim = target.shape[0]
+#    while i < N:
+#        x,y,r = coords[i]
+#        if r < 6:   #this effect is not present for large craters
+#            mask = np.zeros((dim,dim))
+#            cv2.circle(mask, (x,y), int(np.round(r)), 1, thickness=-1)
+#            crater = target[mask==1]
+#            if np.sum(crater) == len(crater):   #crater is completely filled in, likely a false positive
+#                coords = np.delete(coords, i, axis=0)
+#                N = len(coords)
+#            else:
+#                i += 1
+#        else:
+#            i += 1
 
     return coords
 
 
-def template_match_target_to_csv(target, csv, minrad=3, maxrad=50, longlat_thresh2=20, rad_thresh2=0.08, template_thresh=0.6, target_thresh=0.1):
+def template_match_target_to_csv(target, csv, minrad=3, maxrad=50, longlat_thresh2=15, rad_thresh=0.2, template_thresh=0.6, target_thresh=0.1):
 
     #get coordinates from template matching
-    templ_coords = template_match_target(target, minrad, maxrad, longlat_thresh2, rad_thresh2, template_thresh, target_thresh)
+    templ_coords = template_match_target(target, minrad, maxrad, longlat_thresh2, rad_thresh, template_thresh, target_thresh)
 
     #find max detected crater radius
     maxr = 0
@@ -111,13 +111,15 @@ def template_match_target_to_csv(target, csv, minrad=3, maxrad=50, longlat_thres
     csvLong, csvLat, csvRad = csv_coords.T
     for lo,la,r in templ_coords:
         diff_longlat = (csvLong - lo)**2 + (csvLat - la)**2
-        diff_rad = ((csvRad - r)/r)**2                    #fractional radius change
-        index = (diff_rad > rad_thresh2)&(diff_longlat > longlat_thresh2)
-        N = len(np.where(index==False)[0])
+        diff_rad = abs(csvRad - r)
+        index = (diff_rad <= max(1.01,rad_thresh*r))&(diff_longlat < longlat_thresh2)
+        N = len(np.where(index==True)[0])
         if N > 1:
             csv_duplicate_flag = 1  #more than one match found
             for idd in np.where(index==False)[0]:
                 print "duplicate entry:", csv_coords[idd]
+                #long, lat, rad = csv_coords[idd]
+                #print "duplicate entry: (%d-%d)=%d + (%d-%d)=%d, (%d-%d)/%d=%d"%(long,lo,(long-lo)**2,lat,la,(lat-la)**2,rad,r,((rad-r)/float(r))**2)
         N_match += min(1,N)
 #        csv_coords = csv_coords[index]
 #        if len(csv_coords) == 0:

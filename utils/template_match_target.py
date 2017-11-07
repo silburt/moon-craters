@@ -6,7 +6,7 @@ import numpy as np
 from skimage.feature import match_template
 import cv2
 
-def template_match_target(target, minrad=3, maxrad=50, match_thresh2=50, template_thresh=0.6, target_thresh=0.1):
+def template_match_target(target, minrad=3, maxrad=50, longlat_thresh2=20, rad_thresh2=0.08, template_thresh=0.6, target_thresh=0.1):
     #HYPERPARAMETERS
     # MATCH_THRESH2: for template matching, if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, remove (x2,y2,r2) circle (it is a duplicate). For predicted target -> csv matching (i.e. in template_match_target_to_csv), if (x1-x2)^2 + (y1-y2)^2 + (r1-r2)^2 < match_thresh2, positive match. Maybe these should technically be separate parameters, but to first order they should be the same...
     # TEMPLATE_THRESH: 0-1 range, if scikit-image's template matching probability > template_thresh, count as detection
@@ -21,7 +21,6 @@ def template_match_target(target, minrad=3, maxrad=50, match_thresh2=50, templat
     target[target >= target_thresh] = 1
     target[target < target_thresh] = 0
     
-    #radii = np.linspace(minrad,maxrad,maxrad-minrad,dtype=int)
     radii = np.arange(minrad,maxrad+1,1,dtype=int)
     coords = []     #coordinates extracted from template matching
     corr = []       #correlation coefficient for coordinates set
@@ -47,11 +46,13 @@ def template_match_target(target, minrad=3, maxrad=50, match_thresh2=50, templat
     coords, corr = np.asarray(coords), np.asarray(corr)
     i, N = 0, len(coords)
     while i < N:
-        diff = (coords - coords[i])**2
-        diffsum = np.asarray([sum(x) for x in diff])
-        index = diffsum < match_thresh2
+        Long, Lat, Rad = coords.T
+        lo, la, r = tuple[i]
+        diff_longlat = (Long - lo)**2 + (Lat - la)**2
+        diff_rad = ((Rad - r)/r)**2                    #fractional radius change
+        index = (diff_rad < rad_thresh2)&(diff_longlat < longlat_thresh2)
         if len(np.where(index==True)[0]) > 1:
-            #replace current coord with match_template'd max-correlation coord from duplicate list
+            #replace current coord with highest match probability coord in duplicate list
             coords_i, corr_i = coords[np.where(index==True)], corr[np.where(index==True)]
             coords[i] = coords_i[corr_i == np.max(corr_i)][0]
             index[i] = False
@@ -79,10 +80,10 @@ def template_match_target(target, minrad=3, maxrad=50, match_thresh2=50, templat
     return coords
 
 
-def template_match_target_to_csv(target, csv, minrad=3, maxrad=50, match_thresh2=50, template_thresh=0.6, target_thresh=0.1):
+def template_match_target_to_csv(target, csv, minrad=3, maxrad=50, longlat_thresh2=20, rad_thresh2=0.08, template_thresh=0.6, target_thresh=0.1):
 
     #get coordinates from template matching
-    templ_coords = template_match_target(target, minrad, maxrad, match_thresh2, template_thresh, target_thresh)
+    templ_coords = template_match_target(target, minrad, maxrad, longlat_thresh2, rad_thresh2, template_thresh, target_thresh)
 
     #find max detected crater radius
     maxr = 0
@@ -106,19 +107,21 @@ def template_match_target_to_csv(target, csv, minrad=3, maxrad=50, match_thresh2
     N_match = 0
     csv_duplicate_flag = 0
     N_csv, N_templ = len(csv_coords), len(templ_coords)
-    for tc in templ_coords:
-        diffsum = np.sum((csv_coords - tc)**2,axis=1)
-        index = diffsum > match_thresh2
+    
+    csvLong, csvLat, csvRad = csv_coords.T
+    for lo,la,r in templ_coords:
+        diff_longlat = (csvLong - lo)**2 + (csvLat - la)**2
+        diff_rad = ((csvRad - r)/r)**2                    #fractional radius change
+        index = (diff_rad > rad_thresh2)&(diff_longlat > longlat_thresh2)
         N = len(np.where(index==False)[0])
         if N > 1:
             csv_duplicate_flag = 1  #more than one match found
             for idd in np.where(index==False)[0]:
                 print "duplicate entry:", csv_coords[idd]
-        #N_match += N
         N_match += min(1,N)
-        csv_coords = csv_coords[index]
-        if len(csv_coords) == 0:
-            break
+#        csv_coords = csv_coords[index]
+#        if len(csv_coords) == 0:
+#            break
 
     return N_match, N_csv, N_templ, maxr, csv_duplicate_flag
 

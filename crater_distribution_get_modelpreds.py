@@ -68,12 +68,12 @@ if __name__ == '__main__':
 #    n_imgs = 10
 
     #Normal dataset
-    data_dir = 'datasets/rings/Test_rings'                  #location of data to predict on. Exclude final '/' in path.
-    np_data_file = 'test_data'                         #prefix of e.g. *_data.npy files.
+    data_dir = 'datasets/rings/Dev_rings'                  #location of data to predict on. Exclude final '/' in path.
+    np_data_file = 'dev_data_n1000'                         #prefix of e.g. *_data.npy files.
     
     #model_loc = 'models/unet_s256_rings_nFL96.h5'
     model_loc = 'models/unet_s256_rings_n112_L1.0e-05_D0.15.h5'
-    n_imgs = 10016          #number of images to use for getting crater distribution.
+    n_imgs = 1000          #number of images to use for getting crater distribution.
 
     inv_color = 0           #**must be same setting as what model was trained on**
     rescale = 1             #**must be same setting as what model was trained on**

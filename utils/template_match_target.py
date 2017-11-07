@@ -47,7 +47,7 @@ def template_match_target(target, minrad=3, maxrad=50, longlat_thresh2=20, rad_t
     i, N = 0, len(coords)
     while i < N:
         Long, Lat, Rad = coords.T
-        lo, la, r = tuple[i]
+        lo, la, r = coords[i]
         diff_longlat = (Long - lo)**2 + (Lat - la)**2
         diff_rad = ((Rad - r)/r)**2                    #fractional radius change
         index = (diff_rad < rad_thresh2)&(diff_longlat < longlat_thresh2)

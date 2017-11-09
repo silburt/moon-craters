@@ -73,7 +73,7 @@ def weighted_binary_cross_entropy(target, output):   #y_true, y_pred
     pos_weight = 36.48       #pos_weight imbalance of 1s vs. 0s, hardcoded for ease from training set
     output = tf.clip_by_value(output, _epsilon, 1 - _epsilon)
     output = tf.log(output / (1 - output))
-    score = tf.nn.sigmoid_cross_entropy_with_logits(output,target,pos_weight)
+    score = tf.nn.weighted_cross_entropy_with_logits(target,output,pos_weight)
     return K.mean(score, axis=-1)
 
 def binary_crossentropy(target, output):

@@ -69,20 +69,23 @@ def get_param_i(param,i):
         return param[0]
 
 def weighted_binary_cross_entropy(target, output):   #y_true, y_pred
+    #https://stackoverflow.com/questions/42609467/binary-classification-with-tensorflow-for-weighted-cross-entropy-with-logits
+    # The argument pos_weight is used as a multiplier for the positive targets.
+    # Assigned such that fp and fn are equally felt, hardcoded for ease from training set
+    pos_weight = 36.48
     _epsilon = 10e-8
-    pos_weight = 36.48       #pos_weight imbalance of 1s vs. 0s, hardcoded for ease from training set
     output = tf.clip_by_value(output, _epsilon, 1 - _epsilon)
     output = tf.log(output / (1 - output))
-    #score = tf.nn.weighted_cross_entropy_with_logits(target,output,pos_weight)
     score = tf.nn.weighted_cross_entropy_with_logits(output,target,pos_weight)
     return K.mean(score, axis=-1)
 
 #https://github.com/fchollet/keras/issues/6261
+#backup, probs not gonna be used...
 def weighted_binary_cross_entropy2(target, output):
     _epsilon = 10e-8
-    pos_weight = 36.48       #pos_weight imbalance of 1s vs. 0s, hardcoded for ease from training set
+    class_weights = np.array([1,36.48])       #pos_weight imbalance of 1s vs. 0s, hardcoded for ease from training set
     output = tf.clip_by_value(output, _epsilon, 1. - _epsilon)
-    return - tf.reduce_sum(target * tf.log(output))
+    return - tf.reduce_sum(tf.multiply(y_true * tf.log(y_pred), class_weights))
 
 ########################
 #Custom Image Generator#
@@ -221,8 +224,8 @@ def unet_model(dim,learn_rate,lmbda,drop,FL,init,n_filters):
     
     #optimizer/compile
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-    #model.compile(loss='binary_crossentropy', optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
-    model.compile(loss=weighted_binary_cross_entropy, optimizer=optimizer)
+    model.compile(loss='binary_crossentropy', optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
+    #model.compile(loss=weighted_binary_cross_entropy, optimizer=optimizer)
     print model.summary()
     
     return model
@@ -247,6 +250,9 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,ID_valid,
     # build model
     model = unet_model(dim,learn_rate,lmbda,drop,FL,init,n_filters)
     
+    # class weight
+    class_weight = {0 : 1., 1: 36}
+    
     # main loop
     n_samples = len(X_train)
     for nb in range(nb_epoch):
@@ -254,6 +260,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,ID_valid,
                             samples_per_epoch=n_samples,nb_epoch=1,verbose=1,
                             #validation_data=(X_valid, Y_valid), #no generator for validation data
                             validation_data=custom_image_generator(X_valid,Y_valid,batch_size=bs),
+                            class_weight = class_weight,
                             nb_val_samples=n_samples,
                             callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
         valid_dir = '%s/Dev_rings/'%dir

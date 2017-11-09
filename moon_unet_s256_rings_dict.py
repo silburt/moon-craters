@@ -68,7 +68,7 @@ def get_param_i(param,i):
     else:
         return param[0]
 
-def weighted_binary_cross_entropy(target, output)   #y_true, y_pred
+def weighted_binary_cross_entropy(target, output):   #y_true, y_pred
     _epsilon = 10e-8
     pos_weight = 36.48       #pos_weight imbalance of 1s vs. 0s, hardcoded for ease from training set
     output = tf.clip_by_value(output, _epsilon, 1 - _epsilon)

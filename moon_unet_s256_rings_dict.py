@@ -68,6 +68,14 @@ def get_param_i(param,i):
     else:
         return param[0]
 
+def weighted_binary_cross_entropy(target, output)   #y_true, y_pred
+    _epsilon = 10e-8
+    pos_weight = 36.48       #pos_weight imbalance of 1s vs. 0s, hardcoded for ease from training set
+    output = tf.clip_by_value(output, _epsilon, 1 - _epsilon)
+    output = tf.log(output / (1 - output))
+    score = tf.nn.sigmoid_cross_entropy_with_logits(labels=target,logits=output,pos_weight=pos_weight)
+    return K.mean(score, axis=-1)
+
 def binary_crossentropy(target, output):
     _EPSILON = 10e-8
     _epsilon = tf.convert_to_tensor(_EPSILON, np.float32)
@@ -213,8 +221,8 @@ def unet_model(dim,learn_rate,lmbda,drop,FL,init,n_filters):
     
     #optimizer/compile
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-    model.compile(loss='binary_crossentropy', optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
-    #model.compile(loss=mixed_loss, optimizer=optimizer)
+    #model.compile(loss='binary_crossentropy', optimizer=optimizer)  #binary cross-entropy severely penalizes opposite predictions.
+    model.compile(loss=weighted_binary_cross_entropy, optimizer=optimizer)
     print model.summary()
     
     return model
@@ -327,7 +335,7 @@ if __name__ == '__main__':
     MP['lr'] = 0.0001           #learning rate
     MP['bs'] = 8                #batch size: smaller values = less memory but less accurate gradient estimate
     MP['epochs'] = 4            #number of epochs. 1 epoch = forward/back pass through all train data
-    MP['n_train'] = 30000       #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    MP['n_train'] = 1000       #number of training samples, needs to be a multiple of batch size. Big memory hog.
     MP['n_valid_recall'] = 1000 #number of examples to calculate recall on after each epoch. Expensive operation.
     MP['n_test_recall'] = 5000  #number of examples to calculate recall on after training. Expensive operation.
     MP['inv_color'] = 0         #use inverse color

@@ -267,7 +267,7 @@ def train_and_test_model(X_train,Y_train,X_valid,Y_valid,X_test,Y_test,ID_valid,
         get_recall(valid_dir, MP['n_valid_recall'], dim, model, X_valid, Y_valid, ID_valid)
 
     if MP['save_models'] == 1:
-        model.save('models/unet_s256_rings_n112_L%.1e_D%.2f.h5'%(lmbda,drop))
+        model.save('models/unet_s256_rings_n112_L%.1e_D%.2f_cw.h5'%(lmbda,drop))
 
     print '###################################'
     print '##########END_OF_RUN_INFO##########'

@@ -38,7 +38,7 @@ def get_param_i(param,i):
         return param[0]
 
 def get_csvid(i, zeropad=5):
-    return '/img_{i:0{zp}d}'.format(i=i, zp=zeropad)
+    return 'img_{i:0{zp}d}'.format(i=i, zp=zeropad)
 
 def preprocess(Data, dim=256, low=0.1, hi=1):
     #rescaling and inverting images
@@ -225,7 +225,7 @@ def train_and_test_model(Data,Craters,MP,i_MP):
                             nb_val_samples=n_samples,
                             callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
     
-        #get_metrics(Data['valid'], Craters['valid'], dim, model)
+        get_metrics(Data['valid'], Craters['valid'], dim, model)
 
     if MP['save_models'] == 1:
         model.save('models/HEAD.h5')
@@ -233,7 +233,7 @@ def train_and_test_model(Data,Craters,MP,i_MP):
     print('###################################')
     print('##########END_OF_RUN_INFO##########')
     print('learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train=%d, img_dimensions=%d, init=%s, n_filters=%d, lambda=%e, dropout=%f'%(learn_rate,bs,FL,nb_epoch,MP['n_train'],MP['dim'],init,n_filters,lmbda,drop))
-    #get_metrics(Data['test'], Craters['test'], dim, model)
+    get_metrics(Data['test'], Craters['test'], dim, model)
     print('###################################')
     print('###################################')
 
@@ -282,7 +282,8 @@ if __name__ == '__main__':
     
     #/scratch/m/mhvk/czhu/newscripttest_for_ari
     #Location of Train/Dev/Test folders. Don't include final '/' in path
-    MP['dir'] = 'datasets/HEAD'
+    #MP['dir'] = 'datasets/HEAD'
+    MP['dir'] = '/scratch/m/mhvk/czhu/newscripttest_for_ari'
     
     #Model Parameters
     MP['dim'] = 256             #image width/height, assuming square images. Shouldn't change

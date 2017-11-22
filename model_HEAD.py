@@ -109,8 +109,8 @@ def get_metrics(data, craters, dim, model):
             csvs.append(csv_coords)
     
     # calculate custom metrics
-    print ""
-    print "*********Custom Loss*********"
+    print("")
+    print("*********Custom Loss*********")
     preds = model.predict(X)
     recall, precision, f2, frac_new, frac_new2, maxrad = [], [], [], [], [], []
     for i in range(n_csvs):
@@ -126,18 +126,19 @@ def get_metrics(data, craters, dim, model):
             recall.append(r); precision.append(p); f2.append(f2score)
             frac_new.append(fn); frac_new2.append(fn2); maxrad.apend(maxr)
         else:
-            print "skipping iteration %d,N_csv=%d,N_templ=%d,N_match=%d"%(i,N_csv,N_templ,N_match)
+            print("skipping iteration %d,N_csv=%d,N_templ=%d,N_match=%d"%(i,N_csv,N_templ,N_match))
 
-    print "binary XE score = %f"%model.evaluate(X.astype('float32'), Y.astype('float32'))
-    print "mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(recall), np.std(recall))
-    print "mean and std of N_match/(N_match + (N_templ-N_match)) (precision) = %f, %f"%(np.mean(precision), np.std(precision))
-    print "mean and std of 5rp/(2r+p) (F2 score) = %f, %f"%(np.mean(f2), np.std(f2))
+    print("binary XE score = %f"%model.evaluate(X.astype('float32'), Y.astype('float32')))
+    if len(recall) > 5:
+        print("mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(recall), np.std(recall)))
+        print("mean and std of N_match/(N_match + (N_templ-N_match)) (precision) = %f, %f"%(np.mean(precision), np.std(precision)))
+        print("mean and std of 5rp/(2r+p) (F2 score) = %f, %f"%(np.mean(f2), np.std(f2)))
 
-    print "mean and std of (N_template - N_match)/N_template (fraction of craters that are new) = %f, %f"%(np.mean(frac_new), np.std(frac_new))
-    print "mean and std of (N_template - N_match)/N_csv (fraction of craters that are new, 2) = %f, %f"%(np.mean(frac_new2), np.std(frac_new2))
-    print "mean and std of maximum detected pixel radius in an image = %f, %f"%(np.mean(maxrad), np.std(maxrad))
-    print "absolute maximum detected pixel radius over all images = %f"%np.max(maxrad)
-    print ""
+        print("mean and std of (N_template - N_match)/N_template (fraction of craters that are new) = %f, %f"%(np.mean(frac_new), np.std(frac_new)))
+        print("mean and std of (N_template - N_match)/N_csv (fraction of craters that are new, 2) = %f, %f"%(np.mean(frac_new2), np.std(frac_new2)))
+        print("mean and std of maximum detected pixel radius in an image = %f, %f"%(np.mean(maxrad), np.std(maxrad)))
+        print("absolute maximum detected pixel radius over all images = %f"%np.max(maxrad))
+        print("")
 
 ##########################
 #Unet Model (keras 1.2.2)#
@@ -190,7 +191,7 @@ def unet_model(dim,learn_rate,lmbda,drop,FL,init,n_filters):
     #optimizer/compile
     optimizer = Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
     model.compile(loss='binary_crossentropy', optimizer=optimizer)
-    print model.summary()
+    print(model.summary())
     
     return model
 
@@ -229,12 +230,12 @@ def train_and_test_model(Data,Craters,MP,i_MP):
     if MP['save_models'] == 1:
         model.save('models/HEAD.h5')
 
-    print '###################################'
-    print '##########END_OF_RUN_INFO##########'
-    print 'learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train=%d, img_dimensions=%d, rescale=%d, init=%s, n_filters=%d, lambda=%e, dropout=%f'%(learn_rate,bs,FL,nb_epoch,MP['n_train'],MP['dim'],MP['rescale'],init,n_filters,lmbda,drop)
+    print('###################################')
+    print('##########END_OF_RUN_INFO##########')
+    print('learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train=%d, img_dimensions=%d, init=%s, n_filters=%d, lambda=%e, dropout=%f'%(learn_rate,bs,FL,nb_epoch,MP['n_train'],MP['dim'],init,n_filters,lmbda,drop))
     #get_metrics(Data['test'], Craters['test'], dim, model)
-    print '###################################'
-    print '###################################'
+    print('###################################')
+    print('###################################')
 
 ##################
 #Load Data, Train#

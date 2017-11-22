@@ -125,7 +125,7 @@ def get_metrics(data, craters, dim, model):
             fn = float(N_templ - N_match)/float(N_templ)
             fn2 = float(N_templ - N_match)/float(N_csv)
             recall.append(r); precision.append(p); f2.append(f2score)
-            frac_new.append(fn); frac_new2.append(fn2); maxrad.apend(maxr)
+            frac_new.append(fn); frac_new2.append(fn2); maxrad.append(maxr)
         else:
             print("skipping iteration %d,N_csv=%d,N_templ=%d,N_match=%d"%(i,N_csv,N_templ,N_match))
 

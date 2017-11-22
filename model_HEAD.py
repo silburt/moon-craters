@@ -116,9 +116,7 @@ def get_metrics(data, craters, dim, model):
     for i in range(n_csvs):
         if len(csvs[i]) < 3:
             continue
-        N_match, N_csv, N_templ, maxr, csv_dupe_flag = template_match_target_to_csv(preds[i], csvs[i], minrad,
-                                                                                    maxrad, match_thresh2,
-                                                                                    template_thresh, target_thresh)
+        N_match, N_csv, N_templ, maxr, csv_dupe_flag = template_match_target_to_csv(preds[i], csvs[i])
         if N_match > 0:
             p = float(N_match)/float(N_match + (N_templ-N_match))   #assums unmatched detected circles are FPs
             r = float(N_match)/float(N_csv)                         #N_csv = tp + fn, i.e. total ground truth matches

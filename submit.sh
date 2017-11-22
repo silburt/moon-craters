@@ -13,6 +13,7 @@ source /home/k/kristen/kristen/keras_venv_P8.v2/bin/activate
 module load cuda/8.0
 module load caffe/nv-0.14.5
 
+CUDA_VISIBLE_DEVICES=1 nohup python model_HEAD.py > HEAD.txt &
 CUDA_VISIBLE_DEVICES=1 nohup python crater_distribution_get_modelpreds.py > modelpreds.txt &
 
 CUDA_VISIBLE_DEVICES=1 nohup python moon_unet_s256_rings_pred_weighted.py > unet_s256_rings_pred_jaccard.txt &

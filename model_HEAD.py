@@ -219,14 +219,14 @@ def train_and_test_model(Data,Craters,MP,i_MP):
         model.fit_generator(custom_image_generator(Data['train'][0],Data['train'][1],batch_size=bs),
                             samples_per_epoch=n_samples,nb_epoch=1,verbose=1,
                             #validation_data=(Data['valid'][0],Data['valid'][1]), #no generator for validation data
-                            #validation_data=custom_image_generator(Data['valid'][0],Data['valid'][1],batch_size=bs),
+                            validation_data=custom_image_generator(Data['valid'][0],Data['valid'][1],batch_size=bs),
                             nb_val_samples=n_samples,
                             callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
     
-        #get_metrics(Data['valid'], Craters['valid'], dim, model)
+        get_metrics(Data['valid'], Craters['valid'], dim, model)
 
     if MP['save_models'] == 1:
-        model.save('models/unet_s256_rings_n112_L%.1e_D%.2f.h5'%(lmbda,drop))
+        model.save('models/HEAD.h5')
 
     print '###################################'
     print '##########END_OF_RUN_INFO##########'
@@ -238,22 +238,22 @@ def train_and_test_model(Data,Craters,MP,i_MP):
 ##################
 #Load Data, Train#
 ########################################################################
-def build_model(MP):
+def get_models(MP):
     
     dir, dim = MP['dir'], MP['dim']
     n_train, n_valid, n_test = MP['n_train'], MP['n_valid'], MP['n_test']
 
     #Load data /scratch/m/mhvk/czhu/newscripttest_for_ari
     train = h5py.File('%s/train_images.hdf5'%dir, 'r')
-    valid = h5py.File('%s/valid_images.hdf5'%dir, 'r')
+    valid = h5py.File('%s/dev_images.hdf5'%dir, 'r')
     test = h5py.File('%s/test_images.hdf5'%dir, 'r')
     Data = {
         'train': [train['input_images'][:n_train].astype('float32'),
                   train['target_masks'][:n_train].astype('float32')],
-#        'valid': [valid['input_images'][:n_valid].astype('float32'),
-#                  valid['target_masks'][:n_valid].astype('float32')],
-#        'test': [test['input_images'][:n_test].astype('float32'),
-#                 test['target_masks'][:n_test].astype('float32')]
+        'valid': [valid['input_images'][:n_valid].astype('float32'),
+                  valid['target_masks'][:n_valid].astype('float32')],
+        'test': [test['input_images'][:n_test].astype('float32'),
+                 test['target_masks'][:n_test].astype('float32')]
     }
 
     #Rescale (to increase contrast) and normalize pixel values
@@ -262,8 +262,8 @@ def build_model(MP):
     #Load ground-truth craters
     Craters = {
         'train': pd.HDFStore('%s/train_craters.hdf5'%dir, 'r'),
-#        'valid': pd.HDFStore('%s/valid_craters.hdf5'%dir, 'r'),
-#        'test': pd.HDFStore('%s/test_craters.hdf5'%dir, 'r')
+        'valid': pd.HDFStore('%s/dev_craters.hdf5'%dir, 'r'),
+        'test': pd.HDFStore('%s/test_craters.hdf5'%dir, 'r')
     }
 
     #Iterate over parameters
@@ -277,9 +277,8 @@ if __name__ == '__main__':
     print('Keras version: {}'.format(keras_version))
     MP = {}
     
-    #Location of Train_rings/, Dev_rings/, Test_rings/ folders.
-    #Don't include final '/' in path
-    MP['dir'] = 'datasets'
+    #Location of Train/Dev/Test folders. Don't include final '/' in path
+    MP['dir'] = 'datasets/HEAD'
     
     #Model Parameters
     MP['dim'] = 256             #image width/height, assuming square images. Shouldn't change
@@ -305,4 +304,4 @@ if __name__ == '__main__':
     #MP['dropout']=[0.25,0.15,0.25,0.15]             #dropout after merge layers
     
     #run models
-    build_model(MP)
+    get_models(MP)

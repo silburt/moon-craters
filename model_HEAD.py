@@ -224,7 +224,7 @@ def train_and_test_model(Data,Craters,MP,i_MP):
                             nb_val_samples=n_samples,
                             callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
     
-        get_metrics(Data['valid'], Craters['valid'], dim, model)
+        #get_metrics(Data['valid'], Craters['valid'], dim, model)
 
     if MP['save_models'] == 1:
         model.save('models/HEAD.h5')

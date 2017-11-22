@@ -37,8 +37,8 @@ def get_param_i(param,i):
     else:
         return param[0]
 
-def get_id(i):
-    return "img_{i:0{zp}d}".format(i=i, zp=4)
+def get_csvid(i):
+    return 'img_{i:0{zp}d}'.format(i=i, zp=4)
 
 def preprocess(Data, dim=256, low=0.1, hi=1):
     #rescaling and inverting images
@@ -93,9 +93,9 @@ def get_metrics(data, craters, dim, model):
     
     # get csvs
     csvs = []
-    minrad, maxrad, cutrad = 2, 50, 1
-    for i_r in range(len(X)):
-        csv = craters[get_id(i)]
+    minrad, maxrad, cutrad, n_csvs = 2, 50, 1, len(X)
+    for i in range(n_csvs):
+        csv = craters[get_csvid(i)]
         # remove small/large/half craters
         csv = csv[(csv['Diameter (pix)'] < 2*maxrad) & (csv['Diameter (pix)'] > 2*minrad)]
         csv = csv[(csv['x']+cutrad*csv['Diameter (pix)']/2 <= dim)]
@@ -111,13 +111,16 @@ def get_metrics(data, craters, dim, model):
     # calculate custom metrics
     print ""
     print "*********Custom Loss*********"
+    preds = model.predict(X)
     recall, precision, f2, frac_new, frac_new2, maxrad = [], [], [], [], [], []
-    for i in range(nimgs):
+    for i in range(n_csvs):
         if len(csvs[i]) < 3:
             continue
-        N_match, N_csv, N_templ, maxr, csv_duplicate_flag = template_match_target_to_csv(preds[i], csvs[i], minrad, maxrad, match_thresh2, template_thresh, target_thresh)
+        N_match, N_csv, N_templ, maxr, csv_dupe_flag = template_match_target_to_csv(preds[i], csvs[i], minrad,
+                                                                                    maxrad, match_thresh2,
+                                                                                    template_thresh, target_thresh)
         if N_match > 0:
-            p = float(N_match)/float(N_match + (N_templ-N_match))   #assuming all unmatched detected circles are false positives
+            p = float(N_match)/float(N_match + (N_templ-N_match))   #assums unmatched detected circles are FPs
             r = float(N_match)/float(N_csv)                         #N_csv = tp + fn, i.e. total ground truth matches
             f2score = 5*r*p/(4*p+r)                                 #f-score with beta = 2
             fn = float(N_templ - N_match)/float(N_templ)
@@ -287,7 +290,7 @@ if __name__ == '__main__':
     MP['lr'] = 0.0001           #learning rate
     MP['bs'] = 8                #batch size: smaller values = less memory but less accurate gradient estimate
     MP['epochs'] = 4            #number of epochs. 1 epoch = forward/back pass through all train data
-    MP['n_train'] = 3000       #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    MP['n_train'] = 1000       #number of training samples, needs to be a multiple of batch size. Big memory hog.
     MP['n_valid'] = 1000        #number of examples to calculate recall on after each epoch. Expensive operation.
     MP['n_test'] = 5000         #number of examples to calculate recall on after training. Expensive operation.
     MP['save_models'] = 1       #save keras models upon training completion

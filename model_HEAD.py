@@ -40,14 +40,14 @@ def get_param_i(param,i):
 def get_id(i):
     return "img_{i:0{zp}d}".format(i=i, zp=4)
 
-def rescale(Data, low=0.1, hi=1):
+def preprocess(Data, dim=256, low=0.1, hi=1):
     #rescaling and inverting images
     #https://www.mathworks.com/help/vision/ref/contrastadjustment.html
     #Since maxpooling is used, we want the interesting stuff (craters) to be 1, not 0.
     #But ignore null background pixels, keep them at 0.
     for key in Data:
-        d = Data[key][0]
-        for i,img in enumerate(d):
+        Data[key][0] = Data[key][0].reshape(len(Data[key][0]),dim,dim,1)
+        for i,img in enumerate(Data[key][0]):
             img = img/255.
             minn, maxx = np.min(img[img>0]), np.max(img[img>0])
             img[img>0] = low + (img[img>0] - minn)*(hi - low)/(maxx - minn) #linear re-scaling
@@ -255,9 +255,10 @@ def get_models(MP):
         'test': [test['input_images'][:n_test].astype('float32'),
                  test['target_masks'][:n_test].astype('float32')]
     }
+    train.close(); valid.close(); test.close();
 
-    #Rescale (to increase contrast) and normalize pixel values
-    rescale(Data)
+    #Rescale, normalize, add extra dim
+    preprocess(Data)
 
     #Load ground-truth craters
     Craters = {
@@ -277,6 +278,7 @@ if __name__ == '__main__':
     print('Keras version: {}'.format(keras_version))
     MP = {}
     
+    #/scratch/m/mhvk/czhu/newscripttest_for_ari
     #Location of Train/Dev/Test folders. Don't include final '/' in path
     MP['dir'] = 'datasets/HEAD'
     

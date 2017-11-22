@@ -18,3 +18,8 @@ def rescale_and_invcolor(data, inv_color, rescale):
             img[img>0] = low + (img[img>0] - minn)*(hi - low)/(maxx - minn) #linear re-scaling
     return data
 
+def rescale(data, low=0.1, hi=1):
+    #low, hi = rescaling values
+    for img in data:
+        minn, maxx = np.min(img[img>0]), np.max(img[img>0])
+        img[img>0] = low + (img[img>0] - minn)*(hi - low)/(maxx - minn) #linear re-scaling

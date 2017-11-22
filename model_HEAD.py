@@ -219,12 +219,11 @@ def train_and_test_model(Data,Craters,MP,i_MP):
         model.fit_generator(custom_image_generator(Data['train'][0],Data['train'][1],batch_size=bs),
                             samples_per_epoch=n_samples,nb_epoch=1,verbose=1,
                             #validation_data=(Data['valid'][0],Data['valid'][1]), #no generator for validation data
-                            validation_data=custom_image_generator(Data['valid'][0],Data['valid'][1],batch_size=bs),
+                            #validation_data=custom_image_generator(Data['valid'][0],Data['valid'][1],batch_size=bs),
                             nb_val_samples=n_samples,
                             callbacks=[EarlyStopping(monitor='val_loss', patience=3, verbose=0)])
     
-        valid_dir = '%s/Dev_rings/'%dir
-        get_metrics(Data['valid'], Craters['valid'], dim, model)
+        #get_metrics(Data['valid'], Craters['valid'], dim, model)
 
     if MP['save_models'] == 1:
         model.save('models/unet_s256_rings_n112_L%.1e_D%.2f.h5'%(lmbda,drop))
@@ -232,8 +231,7 @@ def train_and_test_model(Data,Craters,MP,i_MP):
     print '###################################'
     print '##########END_OF_RUN_INFO##########'
     print 'learning_rate=%e, batch_size=%d, filter_length=%e, n_epoch=%d, n_train=%d, img_dimensions=%d, rescale=%d, init=%s, n_filters=%d, lambda=%e, dropout=%f'%(learn_rate,bs,FL,nb_epoch,MP['n_train'],MP['dim'],MP['rescale'],init,n_filters,lmbda,drop)
-    test_dir = '%s/Test_rings/'%dir
-    get_metrics(Data['test'], Craters['test'], dim, model)
+    #get_metrics(Data['test'], Craters['test'], dim, model)
     print '###################################'
     print '###################################'
 
@@ -252,10 +250,10 @@ def build_model(MP):
     Data = {
         'train': [train['input_images'][:n_train].astype('float32'),
                   train['target_masks'][:n_train].astype('float32')],
-        'valid': [valid['input_images'][:n_valid].astype('float32'),
-                  valid['target_masks'][:n_valid].astype('float32')],
-        'test': [test['input_images'][:n_test].astype('float32'),
-                 test['target_masks'][:n_test].astype('float32')]
+#        'valid': [valid['input_images'][:n_valid].astype('float32'),
+#                  valid['target_masks'][:n_valid].astype('float32')],
+#        'test': [test['input_images'][:n_test].astype('float32'),
+#                 test['target_masks'][:n_test].astype('float32')]
     }
 
     #Rescale (to increase contrast) and normalize pixel values
@@ -264,8 +262,8 @@ def build_model(MP):
     #Load ground-truth craters
     Craters = {
         'train': pd.HDFStore('%s/train_craters.hdf5'%dir, 'r'),
-        'valid': pd.HDFStore('%s/valid_craters.hdf5'%dir, 'r'),
-        'test': pd.HDFStore('%s/test_craters.hdf5'%dir, 'r')
+#        'valid': pd.HDFStore('%s/valid_craters.hdf5'%dir, 'r'),
+#        'test': pd.HDFStore('%s/test_craters.hdf5'%dir, 'r')
     }
 
     #Iterate over parameters
@@ -288,7 +286,7 @@ if __name__ == '__main__':
     MP['lr'] = 0.0001           #learning rate
     MP['bs'] = 8                #batch size: smaller values = less memory but less accurate gradient estimate
     MP['epochs'] = 4            #number of epochs. 1 epoch = forward/back pass through all train data
-    MP['n_train'] = 30000       #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    MP['n_train'] = 3000       #number of training samples, needs to be a multiple of batch size. Big memory hog.
     MP['n_valid'] = 1000        #number of examples to calculate recall on after each epoch. Expensive operation.
     MP['n_test'] = 5000         #number of examples to calculate recall on after training. Expensive operation.
     MP['save_models'] = 1       #save keras models upon training completion

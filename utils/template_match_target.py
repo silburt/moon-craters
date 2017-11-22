@@ -116,7 +116,7 @@ def template_match_target_to_csv(target, csv, minrad=3, maxrad=50, longlat_thres
         N = len(np.where(index==True)[0])
         if N > 1:
             csv_duplicate_flag = 1  #more than one match found
-            print "duplicate entries, only count one match in recall, decrement N_csv:"
+            print "%d duplicate entries: only count one match and decrement N_csv:"%N
             N_csv -= (N-1)
             for idd in np.where(index==True)[0]:
                 print csv_coords[idd]

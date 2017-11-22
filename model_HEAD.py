@@ -288,7 +288,7 @@ if __name__ == '__main__':
     MP['lr'] = 0.0001           #learning rate
     MP['bs'] = 8                #batch size: smaller values = less memory but less accurate gradient estimate
     MP['epochs'] = 4            #number of epochs. 1 epoch = forward/back pass through all train data
-    MP['n_train'] = 1000       #number of training samples, needs to be a multiple of batch size. Big memory hog.
+    MP['n_train'] = 5000       #number of training samples, needs to be a multiple of batch size. Big memory hog.
     MP['n_valid'] = 1000        #number of examples to calculate recall on after each epoch. Expensive operation.
     MP['n_test'] = 5000         #number of examples to calculate recall on after training. Expensive operation.
     MP['save_models'] = 1       #save keras models upon training completion

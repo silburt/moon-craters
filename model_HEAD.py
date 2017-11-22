@@ -37,8 +37,8 @@ def get_param_i(param,i):
     else:
         return param[0]
 
-def get_csvid(i):
-    return '/img_{i:0{zp}d}'.format(i=i, zp=5)
+def get_csvid(i, zeropad=5):
+    return '/img_{i:0{zp}d}'.format(i=i, zp=zeropad)
 
 def preprocess(Data, dim=256, low=0.1, hi=1):
     #rescaling and inverting images

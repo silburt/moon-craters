@@ -125,35 +125,36 @@ def get_recall(dir, n_samples, dim, model, X, Y, ids):
     # calcualte custom loss
     print ""
     print "*********Custom Loss*********"
-    match_csv_arr, templ_csv_arr, templ_new_arr, templ_new2_arr, maxrad_arr = [], [], [], [], []
     Y_pred = model.predict(X[0:n_samples].astype('float32'))
+    recall, precision, f2, frac_new, frac_new2, maxrad = [], [], [], [], [], []
     for i in range(n_samples):
         if len(csvs[i]) < 3:    #exclude csvs with tiny crater numbers
             continue
         N_match, N_csv, N_templ, maxr, csv_duplicate_flag = template_match_target_to_csv(Y_pred[i], csvs[i])
-        match_csv, templ_csv, templ_new, templ_new2 = 0, 0, 0, 0
-        if N_csv > 0:
-            match_csv = float(N_match)/float(N_csv)             #recall
-            templ_csv = float(N_templ)/float(N_csv)             #(craters detected)/(craters in csv)
-        if N_templ > 0:
-            templ_new = float(N_templ - N_match)/float(N_templ) #fraction of craters that are new
-            templ_new2 = float(N_templ - N_match)/float(N_csv)  #fraction of craters that are new
-        if csv_duplicate_flag == 1:
-            print "duplicate(s) (shown above) found in image %d"%i
-        match_csv_arr.append(match_csv); templ_csv_arr.append(templ_csv);
-        templ_new_arr.append(templ_new); templ_new2_arr.append(templ_new2); maxrad_arr.append(maxr)
+        if N_match > 0:
+            p = float(N_match)/float(N_match + (N_templ-N_match))   #assums unmatched detected circles are FPs
+            r = float(N_match)/float(N_csv)                         #N_csv = tp + fn, i.e. total ground truth matches
+            f2score = 5*r*p/(4*p+r)                                 #f-score with beta = 2
+            fn = float(N_templ - N_match)/float(N_templ)
+            fn2 = float(N_templ - N_match)/float(N_csv)
+            recall.append(r); precision.append(p); f2.append(f2score)
+            frac_new.append(fn); frac_new2.append(fn2); maxrad.append(maxr)
+            if csv_dupe_flag == 1:
+                print "duplicate(s) (shown above) found in image %d"%i
+    else:
+        print("skipping iteration %d,N_csv=%d,N_templ=%d,N_match=%d"%(i,N_csv,N_templ,N_match))
 
-    #score = K.binary_crossentropy(tf.convert_to_tensor(Y[0:n_samples],np.float32), tf.convert_to_tensor(Y_pred,np.float32))
-    #print "binary XE score = %f"%K.mean(score, axis=-1)
-    #print "binary XE score = %f"%binary_crossentropy(Y[0:n_samples],Y_pred)
-    print "binary XE score = %f"%model.evaluate(X[0:n_samples].astype('float32'), Y[0:n_samples].astype('float32'))
-    print "mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(match_csv_arr), np.std(match_csv_arr))
-    print "mean and std of N_template/N_csv = %f, %f"%(np.mean(templ_csv_arr), np.std(templ_csv_arr))
-    print "mean and std of (N_template - N_match)/N_template (fraction of craters that are new) = %f, %f"%(np.mean(templ_new_arr), np.std(templ_new_arr))
-    print "mean and std of (N_template - N_match)/N_csv (fraction of craters that are new, 2) = %f, %f"%(np.mean(templ_new2_arr), np.std(templ_new2_arr))
-    print "mean and std of maximum detected pixel radius in an image = %f, %f"%(np.mean(maxrad_arr), np.std(maxrad_arr))
-    print "absolute maximum detected pixel radius over all images = %f"%np.max(maxrad_arr)
-    print ""
+    print("binary XE score = %f"%model.evaluate(X.astype('float32'), Y.astype('float32')))
+    if len(recall) > 5:
+        print("mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(recall), np.std(recall)))
+        print("mean and std of N_match/(N_match + (N_templ-N_match)) (precision) = %f, %f"%(np.mean(precision), np.std(precision)))
+        print("mean and std of 5rp/(2r+p) (F2 score) = %f, %f"%(np.mean(f2), np.std(f2)))
+        
+        print("mean and std of (N_template - N_match)/N_template (fraction of craters that are new) = %f, %f"%(np.mean(frac_new), np.std(frac_new)))
+        print("mean and std of (N_template - N_match)/N_csv (fraction of craters that are new, 2) = %f, %f"%(np.mean(frac_new2), np.std(frac_new2)))
+        print("mean and std of maximum detected pixel radius in an image = %f, %f"%(np.mean(maxrad), np.std(maxrad)))
+        print("absolute maximum detected pixel radius over all images = %f"%np.max(maxrad))
+        print("")
 
 ##########################
 #Unet Model (keras 1.2.2)#

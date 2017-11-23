@@ -113,6 +113,8 @@ def get_metrics(data, craters, dim, model):
             fn2 = float(N_templ - N_match)/float(N_csv)
             recall.append(r); precision.append(p); f2.append(f2score)
             frac_new.append(fn); frac_new2.append(fn2); maxrad.append(maxr)
+            if csv_dupe_flag == 1:
+                print "duplicate(s) (shown above) found in image %d"%i
         else:
             print("skipping iteration %d,N_csv=%d,N_templ=%d,N_match=%d"%(i,N_csv,N_templ,N_match))
 

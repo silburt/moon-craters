@@ -6,6 +6,7 @@ from utils.template_match_target import *
 from utils.preprocessing import *
 import glob
 from keras.models import load_model
+import os
 
 #########################
 def get_id(i, zeropad=5):
@@ -71,7 +72,7 @@ def extract_crater_dist(CP, pred_crater_dist):
 
     N_matches_tot = 0
     for i in range(CP['n_imgs']):
-        #print i, len(pred_crater_dist)
+        print i, len(pred_crater_dist)
         coords = template_match_target(preds[i])
         if len(coords) > 0:
             id = get_id(i)
@@ -101,7 +102,7 @@ if __name__ == '__main__':
     
     CP['datatype'] = 'test'
     CP['n_imgs'] = 10016
-    CP['dir_preds'] = 'datasets/HEAD/HEAD_%spreds_n%d.npy'%(CP['datatype'],CP['n_imgs'])
+    CP['dir_preds'] = 'datasets/HEAD/HEAD_%spreds_n%d.hdf5'%(CP['datatype'],CP['n_imgs'])
     CP['dir_result'] = 'datasets/HEAD/HEAD_%s_craterdist.npy'%CP['datatype']
     
     #Needed to generate model_preds if they don't exist yet

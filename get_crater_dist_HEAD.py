@@ -65,8 +65,8 @@ def extract_crater_dist(CP, pred_crater_dist):
     P = h5py.File('%s/%s_images.hdf5'%(CP['dir_data'],CP['datatype']), 'r')
     llbd, pbd = 'longlat_bounds', 'pix_bounds'
     
-    master_img_height_pix = 23040.  #number of pixels for height
-    master_img_height_lat = 180.    #degrees used for latitude
+    master_img_height_pix = 30720.  #number of pixels for height
+    master_img_height_lat = 120.    #degrees used for latitude
     r_moon = 1737.4                 #radius of the moon (km)
     dim = float(CP['dim'])          #image dimension (pixels, assume dim=height=width), needs to be float
 
@@ -76,8 +76,8 @@ def extract_crater_dist(CP, pred_crater_dist):
         coords = template_match_target(preds[i])
         if len(coords) > 0:
             id = get_id(i)
-            img_pix_height = float(P[pbd][id][2] - P[pbd][id][0])
-            pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180.0)*(img_pix_height/dim)*r_moon
+            D = float(P[pbd][id][3] - P[pbd][id][1])/dim    #accounts for image downsampling by some factor D
+            pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180.0)*r_moon*D
             long_pix,lat_pix,radii_pix = coords.T
             radii_km = radii_pix*pix_to_km
             long_deg = P[llbd][id][0] + (P[llbd][id][1]-P[llbd][id][0])*(long_pix/dim)
@@ -101,9 +101,9 @@ if __name__ == '__main__':
     CP['dir_data'] = '/scratch/m/mhvk/czhu/newscripttest_for_ari'     #exclude final '/' in path
     
     CP['datatype'] = 'test'
-    CP['n_imgs'] = 10016
+    CP['n_imgs'] = 30000
     CP['dir_preds'] = 'datasets/HEAD/HEAD_%spreds_n%d.hdf5'%(CP['datatype'],CP['n_imgs'])
-    CP['dir_result'] = 'datasets/HEAD/HEAD_%s_craterdist.npy'%CP['datatype']
+    CP['dir_result'] = 'datasets/HEAD/HEAD_%s_craterdist_n%d.npy'%(CP['datatype'], CP['n_imgs'])
     
     #Needed to generate model_preds if they don't exist yet
     CP['model'] = 'models/HEAD.h5'

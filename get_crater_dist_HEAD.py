@@ -13,9 +13,9 @@ def get_id(i, zeropad=5):
 
 #########################
 def get_model_preds(CP):
-    dir, dim, n_imgs, dtype = CP['dir'], CP['dim'], CP['n_imgs'], CP['datatype']
+    dim, n_imgs, dtype = CP['dim'], CP['n_imgs'], CP['datatype']
 
-    data = h5py.File('%s/%s_images.hdf5'%(dir,dtype), 'r')
+    data = h5py.File('%s/%s_images.hdf5'%(CP['dir_data'],dtype), 'r')
 
     Data = {
         dtype: [data['input_images'][:n_imgs].astype('float32'),
@@ -28,7 +28,7 @@ def get_model_preds(CP):
     preds = model.predict(Data[dtype][0])
     
     #save
-    h5f = h5py.File(CP['model_preds'], 'w')
+    h5f = h5py.File(CP['dir_preds'], 'w')
     h5f.create_dataset(dtype, data=preds)
     print "Successfully generated and saved model predictions."
     return preds
@@ -54,14 +54,14 @@ def extract_crater_dist(CP, pred_crater_dist):
     
     #load/generate model preds
     try:
-        preds = h5py.File(CP['model_preds'],'r')[CP['datatype']]
+        preds = h5py.File(CP['dir_preds'],'r')[CP['datatype']]
         print "Loaded model predictions successfully"
     except:
         print "Couldnt load model predictions, generating"
         preds = get_model_preds(CP)
     
     # need for long/lat bounds
-    P = h5py.File('%s/%s_images.hdf5'%(dir,dtype), 'r')
+    P = h5py.File('%s/%s_images.hdf5'%(CP['dir_data'],CP['datatype']), 'r')
     llbd, pbd = 'longlat_bounds', 'pix_bounds'
     
     master_img_height_pix = 23040.  #number of pixels for height
@@ -90,17 +90,19 @@ def extract_crater_dist(CP, pred_crater_dist):
             else:
                 pred_crater_dist = np.concatenate((pred_crater_dist,tuple_))
 
-    np.save('%s/crater_dist_n%d.npy'%(CP['dir'],CP['n_imgs']),pred_crater_dist)
+    np.save(CP['dir_result'],pred_crater_dist)
     return pred_crater_dist
 
 #########################
 if __name__ == '__main__':
     # Arguments
     CP = {}
-    CP['dir'] = '/scratch/m/mhvk/czhu/newscripttest_for_ari'     #exclude final '/' in path
+    CP['dir_data'] = '/scratch/m/mhvk/czhu/newscripttest_for_ari'     #exclude final '/' in path
+    
     CP['datatype'] = 'test'
     CP['n_imgs'] = 10016
-    CP['model_preds'] = 'datasets/HEAD/HEAD_%spreds_n%d.npy'%(CP['datatype'],CP['n_imgs'])
+    CP['dir_preds'] = 'datasets/HEAD/HEAD_%spreds_n%d.npy'%(CP['datatype'],CP['n_imgs'])
+    CP['dir_result'] = 'datasets/HEAD/HEAD_%s_craterdist.npy'%CP['datatype']
     
     #Needed to generate model_preds if they don't exist yet
     CP['model'] = 'models/HEAD.h5'

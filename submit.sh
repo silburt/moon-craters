@@ -15,6 +15,7 @@ module load caffe/nv-0.14.5
 
 CUDA_VISIBLE_DEVICES=1 nohup python model_HEAD.py > HEAD.txt &
 CUDA_VISIBLE_DEVICES=2 nohup python get_crater_dist_HEAD.py > crater_dist_HEAD2.txt &
+CUDA_VISIBLE_DEVICES=1 nohup python moon_unet_s256_rings_dict.py > Salamuniccar.txt &
 CUDA_VISIBLE_DEVICES=1 nohup python crater_distribution_get_modelpreds.py > modelpreds.txt &
 
 CUDA_VISIBLE_DEVICES=1 nohup python moon_unet_s256_rings_pred_weighted.py > unet_s256_rings_pred_jaccard.txt &
@@ -22,7 +23,6 @@ CUDA_VISIBLE_DEVICES=1 nohup python moon_unet_s256_rings_pred.py > unet_s256_rin
 CUDA_VISIBLE_DEVICES=1 nohup python moon_unet_s256_rings_public.py > unet_s256_rings_public.txt &
 CUDA_VISIBLE_DEVICES=2 nohup python moon_unet_s256_rings_customloss.py > unet_s256_rings_cl.txt &
 CUDA_VISIBLE_DEVICES=2 nohup python moon_unet_s256_rings.py > unet_s256_rings_iterate.txt &
-CUDA_VISIBLE_DEVICES=1 nohup python moon_unet_s256_rings_dict.py > unet_s256_rings_dict_XEerr.txt &
 CUDA_VISIBLE_DEVICES=0 nohup python moon_unet_s256_rings_filtmod.py > unet_s256_rings_filtmod.txt &
 CUDA_VISIBLE_DEVICES=1 nohup python moon_unet_s256_rings_forKristen.py > unet_s256_rings_forKristen.txt &
 

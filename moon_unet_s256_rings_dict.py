@@ -130,7 +130,7 @@ def get_recall(dir, n_samples, dim, model, X, Y, ids):
     for i in range(n_samples):
         if len(csvs[i]) < 3:    #exclude csvs with tiny crater numbers
             continue
-        N_match, N_csv, N_templ, maxr, csv_duplicate_flag = template_match_target_to_csv(Y_pred[i], csvs[i])
+        N_match, N_csv, N_templ, maxr, csv_dupe_flag = template_match_target_to_csv(Y_pred[i], csvs[i])
         if N_match > 0:
             p = float(N_match)/float(N_match + (N_templ-N_match))   #assums unmatched detected circles are FPs
             r = float(N_match)/float(N_csv)                         #N_csv = tp + fn, i.e. total ground truth matches

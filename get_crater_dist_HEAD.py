@@ -98,7 +98,8 @@ def extract_crater_dist(CP, pred_crater_dist):
 if __name__ == '__main__':
     # Arguments
     CP = {}
-    CP['dir_data'] = '/scratch/m/mhvk/czhu/newscripttest_for_ari'     #exclude final '/' in path
+    #CP['dir_data'] = '/scratch/m/mhvk/czhu/newscripttest_for_ari'     #exclude final '/' in path
+    CP['dir_data'] = 'datasets/HEAD'
     
     CP['datatype'] = 'test'
     CP['n_imgs'] = 30000

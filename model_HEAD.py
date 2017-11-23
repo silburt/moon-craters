@@ -27,6 +27,7 @@ from keras import backend as K
 K.set_image_dim_ordering('tf')
 
 from utils.template_match_target import *
+from utils.preprocessing import *
 
 #############################
 #Load/Read/Process Functions#
@@ -37,22 +38,8 @@ def get_param_i(param,i):
     else:
         return param[0]
 
-def get_csvid(i, zeropad=5):
+def get_id(i, zeropad=5):
     return 'img_{i:0{zp}d}'.format(i=i, zp=zeropad)
-
-def preprocess(Data, dim=256, low=0.1, hi=1):
-    #rescaling and inverting images
-    #https://www.mathworks.com/help/vision/ref/contrastadjustment.html
-    #Since maxpooling is used, we want the interesting stuff (craters) to be 1, not 0.
-    #But ignore null background pixels, keep them at 0.
-    for key in Data:
-        Data[key][0] = Data[key][0].reshape(len(Data[key][0]),dim,dim,1)
-        for i,img in enumerate(Data[key][0]):
-            img = img/255.
-            #img[img > 0.] = 1. - img[img > 0.]      #inv color
-            minn, maxx = np.min(img[img>0]), np.max(img[img>0])
-            img[img>0] = low + (img[img>0] - minn)*(hi - low)/(maxx - minn) #linear re-scaling
-            Data[key][0][i] = img
 
 ########################
 #Custom Image Generator#
@@ -96,7 +83,7 @@ def get_metrics(data, craters, dim, model):
     csvs = []
     minrad, maxrad, cutrad, n_csvs = 2, 50, 1, len(X)
     for i in range(n_csvs):
-        csv = craters[get_csvid(i)]
+        csv = craters[get_id(i)]
         # remove small/large/half craters
         csv = csv[(csv['Diameter (pix)'] < 2*maxrad) & (csv['Diameter (pix)'] > 2*minrad)]
         csv = csv[(csv['x']+cutrad*csv['Diameter (pix)']/2 <= dim)]

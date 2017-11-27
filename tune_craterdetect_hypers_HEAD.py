@@ -5,6 +5,7 @@
 import numpy as np
 import sys
 import h5py
+import pandas as pd
 from utils.template_match_target import *
 
 minrad, maxrad = 2, 50
@@ -65,7 +66,7 @@ if __name__ == '__main__':
     #load data
     file = '%sHEAD_%spreds_n%d.hdf5'%(dir,datatype,nimgs)
     preds = h5py.File(file,'r')[datatype]
-    craters = h5py.File('%sdev_craters.hdf5'%dir,'r')
+    craters = pd.HDFStore('%sdev_craters.hdf5'%dir,'r')
 
     csvs = prep_csvs(craters, nimgs)
 

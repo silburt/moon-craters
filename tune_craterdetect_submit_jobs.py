@@ -5,12 +5,13 @@ import numpy as np
 import os
 
 #iterate parameters
-match_thresh2 = np.linspace(10,70,num=4)
-template_thresh = np.linspace(0.1,0.7,num=6)
-target_thresh = np.array([0.001,0.01,0.05,0.1,0.15])
+longlat_thresh2 = np.linspace(10,70,num=4)
+rad_thresh = np.linspace(0.1,1,num=4)
+template_thresh = np.linspace(0.2,0.8,num=4)
+target_thresh = np.array([0.05,0.1,0.15])
 
 #all combinations of above params
-params = list(itertools.product(*[match_thresh2, template_thresh, target_thresh]))
+params = list(itertools.product(*[longlat_thresh2, rad_thresh, template_thresh, target_thresh]))
 
 #submit jobs as you make them. If ==0 just make them
 submit_jobs = 1
@@ -18,8 +19,8 @@ submit_jobs = 1
 #make jobs
 jobs_dir = "tune_jobs"
 counter = 0
-for ma2,te,ta in params:
-    pbs_script_name = "tune_ma%.2e_te%.2e_ta%.2e.pbs"%(ma2,te,ta)
+for llt2,rt,te,ta in params:
+    pbs_script_name = "tune_llt%.2e_rt%.2e_te%.2e_ta%.2e.pbs"%(llt2,rt,te,ta)
     with open('%s/%s'%(jobs_dir,pbs_script_name), 'w') as f:
         f.write('#!/bin/bash\n')
         f.write('#PBS -l nodes=1:ppn=1\n')
@@ -28,7 +29,7 @@ for ma2,te,ta in params:
         f.write('#PBS -A ebf11_a_g_sc_default\n')
         f.write('#PBS -j oe\n')
         f.write('cd $PBS_O_WORKDIR\n')
-        f.write('python tune_craterdetect_hypers.py %f %f %f > tune_ma%.2e_te%.2e_ta%.2e.txt\n'%(ma2,te,ta,ma2,te,ta))
+        f.write('python tune_craterdetect_hypers.py %f %f %f %f > tune_ma%.2e_te%.2e_ta%.2e_ta%.2e.txt\n'%(llt2,rt,te,ta,llt2,rt,te,ta))
     f.close()
 
     if submit_jobs == 1:

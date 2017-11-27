@@ -3,7 +3,6 @@
 # match_thresh2, template_thresh and target_thresh. 
 
 import numpy as np
-import pandas as pd
 import sys
 from utils.template_match_target import *
 

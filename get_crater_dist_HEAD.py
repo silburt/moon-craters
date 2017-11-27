@@ -61,6 +61,8 @@ def extract_crater_dist(CP, pred_crater_dist):
         print "Couldnt load model predictions, generating"
         preds = get_model_preds(CP)
     
+    print "done"
+    return extract_crater_dist
     # need for long/lat bounds
     P = h5py.File('%s/%s_images.hdf5'%(CP['dir_data'],CP['datatype']), 'r')
     llbd, pbd = 'longlat_bounds', 'pix_bounds'
@@ -98,11 +100,11 @@ def extract_crater_dist(CP, pred_crater_dist):
 if __name__ == '__main__':
     # Arguments
     CP = {}
-    #CP['dir_data'] = '/scratch/m/mhvk/czhu/newscripttest_for_ari'     #exclude final '/' in path
-    CP['dir_data'] = 'datasets/HEAD'
+    CP['dir_data'] = '/scratch/m/mhvk/czhu/newscripttest_for_ari'     #exclude final '/' in path
+    #CP['dir_data'] = 'datasets/HEAD'
     
-    CP['datatype'] = 'test'
-    CP['n_imgs'] = 30000
+    CP['datatype'] = 'dev'
+    CP['n_imgs'] = 10016
     CP['dir_preds'] = 'datasets/HEAD/HEAD_%spreds_n%d.hdf5'%(CP['datatype'],CP['n_imgs'])
     CP['dir_result'] = 'datasets/HEAD/HEAD_%s_craterdist_n%d.npy'%(CP['datatype'], CP['n_imgs'])
     

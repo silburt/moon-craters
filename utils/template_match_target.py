@@ -98,7 +98,7 @@ def template_match_target_to_csv(target, csv, minrad=3, maxrad=50, longlat_thres
         if len(index[0]) > 0:
             csv_coords = csv[index]
         else:
-            print "all craters are larger than max detected radius"
+            print("all craters are larger than max detected radius")
             csv_coords = csv
     else:
         csv_coords = csv
@@ -116,10 +116,10 @@ def template_match_target_to_csv(target, csv, minrad=3, maxrad=50, longlat_thres
         N = len(np.where(index==True)[0])
         if N > 1:
             csv_duplicate_flag = 1  #more than one match found
-            print "%d duplicate entries: only count one match and decrement N_csv:"%N
+            print("%d duplicate entries: only count one match and decrement N_csv:"%N)
             N_csv -= (N-1)
             for idd in np.where(index==True)[0]:
-                print csv_coords[idd]
+                print(csv_coords[idd])
         N_match += min(1,N)     #only counting one match in recall
 #        csv_coords = csv_coords[index]
 #        if len(csv_coords) == 0:

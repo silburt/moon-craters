@@ -37,10 +37,11 @@ def template_match_target(target, minrad=3, maxrad=50, longlat_thresh2=15, rad_t
         corr_r = np.asarray(result[index_r])
         
         # store x,y,r
-        for c in coords_r:
-            coords.append([c[1],c[0],r])
-        for l in corr_r:
-            corr.append(np.abs(l))
+        if len(coords_r) >= 1:
+            for c in coords_r:
+                coords.append([c[1],c[0],r])
+            for l in corr_r:
+                corr.append(np.abs(l))
 
     # remove duplicates from template matching at neighboring radii/locations
     coords, corr = np.asarray(coords), np.asarray(corr)

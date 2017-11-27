@@ -34,7 +34,7 @@ def prep_csvs(craters, nimgs):
 def get_recall(preds, csvs, nimgs, longlat_thresh2, rad_thresh, template_thresh, target_thresh):
     recall, precision, f1 = [], [], []
     #for i in range(nimgs):
-    for i in range(10)
+    for i in range(10):
         if len(csvs[i]) < 3:
             continue
         N_match, N_csv, N_templ, maxr, csv_duplicate_flag = template_match_target_to_csv(preds[i], csvs[i], minrad, maxrad, longlat_thresh2, rad_thresh, template_thresh, target_thresh)

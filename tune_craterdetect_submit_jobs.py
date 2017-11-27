@@ -29,10 +29,10 @@ for llt2,rt,te,ta in params:
         f.write('#PBS -A ebf11_a_g_sc_default\n')
         f.write('#PBS -j oe\n')
         f.write('cd $PBS_O_WORKDIR\n')
-        f.write('module load gcc/5.3.1')
-        f.write('module load python/2.7.8')
-        f.write('source ~/venv/bin/activate')
-        f.write('python tune_craterdetect_hypers.py %f %f %f %f > tune_ma%.2e_te%.2e_ta%.2e_ta%.2e.txt\n'%(llt2,rt,te,ta,llt2,rt,te,ta))
+#        f.write('module load gcc/5.3.1')
+#        f.write('module load python/2.7.8')
+#        f.write('source ~/venv/bin/activate')
+        f.write('python tune_craterdetect_hypers_HEAD.py %f %f %f %f > tune_ma%.2e_te%.2e_ta%.2e_ta%.2e.txt\n'%(llt2,rt,te,ta,llt2,rt,te,ta))
     f.close()
 
     if submit_jobs == 1:

@@ -4,6 +4,7 @@
 
 import numpy as np
 import sys
+import h5py
 from utils.template_match_target import *
 
 minrad, maxrad = 2, 50

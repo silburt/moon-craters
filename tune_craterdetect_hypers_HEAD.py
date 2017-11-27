@@ -63,7 +63,7 @@ if __name__ == '__main__':
     target_thresh = float(sys.argv[4])
     
     #load data
-    file = '%sHEAD_%spreds_n%d.npy'%(dir,datatype,nimgs)
+    file = '%sHEAD_%spreds_n%d.hdf5'%(dir,datatype,nimgs)
     preds = h5py.File(file,'r')[datatype]
     craters = h5py.File('%sdev_craters.hdf5'%dir,'r')
 

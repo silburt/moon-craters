@@ -43,12 +43,12 @@ def get_recall(preds, csvs, nimgs, longlat_thresh2, rad_thresh, template_thresh,
             r = float(N_match)/float(N_csv)                         #N_csv = tp + fn, i.e. total ground truth matches
             recall.append(r); precision.append(p); f1.append(2*r*p/(r+p))
         else:
-            print "skipping iteration %d,N_csv=%d,N_templ=%d,N_match=%d"%(i,N_csv,N_templ,N_match)
+            print("skipping iteration %d,N_csv=%d,N_templ=%d,N_match=%d"%(i,N_csv,N_templ,N_match))
 
-    print "longlat_thresh2=%f, rad_thresh=%f, template_thresh=%f, target_thresh=%f"%(longlat_thresh2, rad_thresh, template_thresh, target_thresh)
-    print "mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(recall), np.std(recall))
-    print "mean and std of N_match/(N_match + (N_templ-N_match)) (precision) = %f, %f"%(np.mean(precision), np.std(precision))
-    print "mean and std of 2rp/(r+p) (F1 score) = %f, %f"%(np.mean(f1), np.std(f1))
+    print("longlat_thresh2=%f, rad_thresh=%f, template_thresh=%f, target_thresh=%f"%(longlat_thresh2, rad_thresh, template_thresh, target_thresh))
+    print("mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(recall), np.std(recall)))
+    print("mean and std of N_match/(N_match + (N_templ-N_match)) (precision) = %f, %f"%(np.mean(precision), np.std(precision)))
+    print("mean and std of 2rp/(r+p) (F1 score) = %f, %f"%(np.mean(f1), np.std(f1)))
 
 if __name__ == '__main__':
     #data parameters
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     csvs = prep_csvs(craters, nimgs)
 
     get_recall(preds, csvs, nimgs, longlat_thresh2, rad_thresh, template_thresh, target_thresh)
-    print "finised successfully"
+    print("finished successfully")
 
 #    # Main Loop
 #    for ma2,te,ta in params:

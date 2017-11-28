@@ -75,7 +75,7 @@ def custom_image_generator(data, target, batch_size=32):
 #######################
 #Calculate Custom Loss#
 ########################################################################
-def get_metrics(data, craters, dim, model):
+def get_metrics(data, craters, dim, model, beta=1):
     
     X, Y = data[0], data[1]
     
@@ -108,10 +108,10 @@ def get_metrics(data, craters, dim, model):
         if N_match > 0:
             p = float(N_match)/float(N_match + (N_templ-N_match))   #assums unmatched detected circles are FPs
             r = float(N_match)/float(N_csv)                         #N_csv = tp + fn, i.e. total ground truth matches
-            f2score = 5*r*p/(4*p+r)                                 #f-score with beta = 2
+            fscore = (1+beta**2)*(r*p)/(p*beta**2 + r)              #f_beta score
             fn = float(N_templ - N_match)/float(N_templ)
             fn2 = float(N_templ - N_match)/float(N_csv)
-            recall.append(r); precision.append(p); f2.append(f2score)
+            recall.append(r); precision.append(p); f2.append(fscore)
             frac_new.append(fn); frac_new2.append(fn2); maxrad.append(maxr)
             if csv_dupe_flag == 1:
                 print "duplicate(s) (shown above) found in image %d"%i

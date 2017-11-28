@@ -6,7 +6,15 @@ import numpy as np
 from skimage.feature import match_template
 import cv2
 
-def template_match_target(target, minrad=3, maxrad=50, longlat_thresh2=70, rad_thresh=1, template_thresh=0.6, target_thresh=0.1):
+#DEFAULT HYPERS
+minrad_=3
+maxrad_=50
+longlat_thresh2_=70
+rad_thresh_=1
+template_thresh_=0.6
+target_thresh_=0.1
+
+def template_match_target(target, minrad=minrad_, maxrad=maxrad_, longlat_thresh2=longlat_thresh2_, rad_thresh=rad_thresh_, template_thresh=template_thresh_, target_thresh=target_thresh_):
     #HYPERPARAMETERS
     # LONGLAT_THRESH2/RAD_THRESH: for template matching, if (x1-x2)^2 + (y1-y2)^2 < longlat_thresh2 AND abs(r1-r2) < max(1.01,rad_thresh*r1), remove (x2,y2,r2) circle (it is a duplicate). In addition, during predicted target -> csv matching (i.e. template_match_target_to_csv), the same criteria is used to match CNN craters with csv craters (increasing the recall). Maybe these should technically be separate parameters, but to first order they should be the same...
     # TEMPLATE_THRESH: 0-1 range, if scikit-image's template matching probability > template_thresh, count as detection
@@ -83,7 +91,7 @@ def template_match_target(target, minrad=3, maxrad=50, longlat_thresh2=70, rad_t
     return coords
 
 
-def template_match_target_to_csv(target, csv, minrad=3, maxrad=50, longlat_thresh2=15, rad_thresh=0.2, template_thresh=0.6, target_thresh=0.1):
+def template_match_target_to_csv(target, csv, minrad=minrad_, maxrad=maxrad_, longlat_thresh2=longlat_thresh2_, rad_thresh=rad_thresh_, template_thresh=template_thresh_, target_thresh=target_thresh_):
 
     #get coordinates from template matching
     templ_coords = template_match_target(target, minrad, maxrad, longlat_thresh2, rad_thresh, template_thresh, target_thresh)

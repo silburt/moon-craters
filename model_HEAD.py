@@ -108,10 +108,10 @@ def get_metrics(data, craters, dim, model, beta=1):
         if N_match > 0:
             p = float(N_match)/float(N_match + (N_templ-N_match))   #assumes unmatched detected circles are FPs
             r = float(N_match)/float(N_csv)                         #N_csv = tp + fn, i.e. total ground truth matches
-            fscore = (1+beta**2)*(r*p)/(p*beta**2 + r)              #f_beta score
+            f = (1+beta**2)*(r*p)/(p*beta**2 + r)              #f_beta score
             fn = float(N_templ - N_match)/float(N_templ)
             fn2 = float(N_templ - N_match)/float(N_csv)
-            recall.append(r); precision.append(p); fscore.append(fscore)
+            recall.append(r); precision.append(p); fscore.append(f)
             frac_new.append(fn); frac_new2.append(fn2); maxrad.append(maxr)
             if csv_dupe_flag == 1:
                 print "duplicate(s) (shown above) found in image %d"%i

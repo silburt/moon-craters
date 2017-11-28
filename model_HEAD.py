@@ -193,7 +193,7 @@ def unet_model(dim,learn_rate,lmbda,drop,FL,init,n_filters):
 def train_and_test_model(Data,Craters,MP,i_MP):
     
     # static params
-    dir, dim, learn_rate, nb_epoch, bs = MP['dir'], MP['dim'], MP['lr'], MP['epochs'], MP['bs']
+    dim, learn_rate, nb_epoch, bs = MP['dim'], MP['lr'], MP['epochs'], MP['bs']
     
     # iterating params
     lmbda = get_param_i(MP['lambda'],i_MP)
@@ -236,9 +236,9 @@ def get_models(MP):
     n_train, n_valid, n_test = MP['n_train'], MP['n_valid'], MP['n_test']
 
     #Load data /scratch/m/mhvk/czhu/newscripttest_for_ari
-    train = h5py.File('%s/train_images.hdf5'%dir, 'r')
-    valid = h5py.File('%s/dev_images.hdf5'%dir, 'r')
-    test = h5py.File('%s/test_images.hdf5'%dir, 'r')
+    train = h5py.File('%strain_images.hdf5'%dir, 'r')
+    valid = h5py.File('%sdev_images.hdf5'%dir, 'r')
+    test = h5py.File('%stest_images.hdf5'%dir, 'r')
     Data = {
         'train': [train['input_images'][:n_train].astype('float32'),
                   train['target_masks'][:n_train].astype('float32')],
@@ -254,9 +254,9 @@ def get_models(MP):
 
     #Load ground-truth craters
     Craters = {
-        'train': pd.HDFStore('%s/train_craters.hdf5'%dir, 'r'),
-        'valid': pd.HDFStore('%s/dev_craters.hdf5'%dir, 'r'),
-        'test': pd.HDFStore('%s/test_craters.hdf5'%dir, 'r')
+        'train': pd.HDFStore('%strain_craters.hdf5'%dir, 'r'),
+        'valid': pd.HDFStore('%sdev_craters.hdf5'%dir, 'r'),
+        'test': pd.HDFStore('%stest_craters.hdf5'%dir, 'r')
     }
 
     #Iterate over parameters
@@ -271,9 +271,10 @@ if __name__ == '__main__':
     MP = {}
     
     #/scratch/m/mhvk/czhu/newscripttest_for_ari
-    #Location of Train/Dev/Test folders. Don't include final '/' in path
-    #MP['dir'] = 'datasets/HEAD'
-    MP['dir'] = '/scratch/m/mhvk/czhu/newscripttest_for_ari'
+    #Location of Train/Dev/Test folders. Include final '/' in path!
+    #MP['dir'] = 'datasets/HEAD/'
+    #MP['dir'] = '/scratch/m/mhvk/czhu/newscripttest_for_ari/'
+    MP['dir'] = '/scratch/m/mhvk/czhu/newsala_for_ari/sala_'
     
     #Model Parameters
     MP['dim'] = 256             #image width/height, assuming square images. Shouldn't change

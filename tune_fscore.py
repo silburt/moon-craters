@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import glob
 
-beta = 1 #controls precision's weakness in f_beta score
+beta = 2 #controls precision's weakness in f_beta score
 real_data = 1
 
 f_beta, precision, recall, ext = [], [], [], ''
@@ -25,7 +25,7 @@ if real_data == 1:
             if f > 0.7:
                 temp = lines[-5].replace('\n','').replace('=', ', ').split(',')
                 #print file
-                print "fscore=%f,llt2=%f, rt=%f, temp_thresh=%f, targ_thresh=%f"%(f,float(temp[1]),float(temp[3]),float(temp[5]),float(temp[7]))
+                print "fscore=%f, p=%f, r=%f, llt2=%f, rt=%f, temp_thresh=%f, targ_thresh=%f"%(f,p,r,float(temp[1]),float(temp[3]),float(temp[5]),float(temp[7]))
         
         except:
             pass

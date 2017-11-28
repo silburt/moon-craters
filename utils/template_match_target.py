@@ -6,22 +6,20 @@ import numpy as np
 from skimage.feature import match_template
 import cv2
 
-#DEFAULT HYPERS
-minrad_=3
-maxrad_=50
-longlat_thresh2_=70
-rad_thresh_=1
-template_thresh_=0.6
-target_thresh_=0.1
+###########HYPERPARAMETERS###########
+# LONGLAT_THRESH2, RAD_THRESH: for template matching, if (x1-x2)^2 + (y1-y2)^2 < longlat_thresh2 AND abs(r1-r2) < max(1.01,rad_thresh*r1), remove (x2,y2,r2) circle (it is a duplicate of another crater candidate). In addition, during predicted target -> csv matching (i.e. template_match_target_to_csv), the same criteria is used to match CNN craters with csv craters (increasing the recall). Maybe these should technically be separate parameters, but to first order they should be the same...
+# TEMPLATE_THRESH: 0-1 range, if scikit-image's template matching probability > template_thresh, count as detection
+# TARGET_THRESH: 0-1 range, set pixel values > target_thresh to 1, and pixel values < target_thresh -> 0
+# MINRAD/MAXRAD are the radii to search over during template matching. For minrad, keep in mind that if the predicted target has thick rings, a small ring of diameter ~ ring_thickness could be detected by match_filter.
+minrad_= 3
+maxrad_= 50
+longlat_thresh2_= 70
+rad_thresh_= 1
+template_thresh_= 0.6
+target_thresh_= 0.1
+#####################################
 
 def template_match_target(target, minrad=minrad_, maxrad=maxrad_, longlat_thresh2=longlat_thresh2_, rad_thresh=rad_thresh_, template_thresh=template_thresh_, target_thresh=target_thresh_):
-    #HYPERPARAMETERS
-    # LONGLAT_THRESH2/RAD_THRESH: for template matching, if (x1-x2)^2 + (y1-y2)^2 < longlat_thresh2 AND abs(r1-r2) < max(1.01,rad_thresh*r1), remove (x2,y2,r2) circle (it is a duplicate). In addition, during predicted target -> csv matching (i.e. template_match_target_to_csv), the same criteria is used to match CNN craters with csv craters (increasing the recall). Maybe these should technically be separate parameters, but to first order they should be the same...
-    # TEMPLATE_THRESH: 0-1 range, if scikit-image's template matching probability > template_thresh, count as detection
-    # TARGET_THRESH: 0-1 range, set pixel values > target_thresh to 1, and pixel values < target_thresh -> 0
-    # minrad - keep in mind that if the predicted target has thick rings, a small ring of diameter ~ ring_thickness could be detected by match_filter.
-    
-    # minrad/maxrad are the radii to search over during template matching
     # hyperparameters, probably don't need to change
     ring_thickness = 2       #thickness of rings for the templates. 2 seems to work well.
     
@@ -91,7 +89,7 @@ def template_match_target(target, minrad=minrad_, maxrad=maxrad_, longlat_thresh
     return coords
 
 
-def template_match_target_to_csv(target, csv, minrad=minrad_, maxrad=maxrad_, longlat_thresh2=longlat_thresh2_, rad_thresh=rad_thresh_, template_thresh=template_thresh_, target_thresh=target_thresh_):
+def template_match_target_to_csv(target, csv, minrad=minrad_, maxrad=maxrad_, longlat_thresh2=longlat_thresh2_, rad_thresh=rad_thresh_, template_thresh=template_thresh_, target_thresh=target_thresh_, remove_large_craters_csv=0):
 
     #get coordinates from template matching
     templ_coords = template_match_target(target, minrad, maxrad, longlat_thresh2, rad_thresh, template_thresh, target_thresh)
@@ -103,7 +101,6 @@ def template_match_target_to_csv(target, csv, minrad=minrad_, maxrad=maxrad_, lo
         maxr = np.max(r)
     
     #If remove_large_craters_csv == 1, see how recall improves when large craters are excluded.
-    remove_large_craters_csv = 0
     if remove_large_craters_csv == 1:
         index = np.where((csv.T[2] < maxr)&(csv.T[2] > minrad))
         if len(index[0]) > 0:

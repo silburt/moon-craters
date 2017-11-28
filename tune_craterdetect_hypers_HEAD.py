@@ -34,12 +34,13 @@ def prep_csvs(craters, nimgs):
 
 def get_recall(preds, csvs, nimgs, longlat_thresh2, rad_thresh, template_thresh, target_thresh):
     recall, precision, f1 = [], [], []
-    for i in range(nimgs):
-        print(i)
+    #for i in range(nimgs):
+    for i in range(5):
         if len(csvs[i]) < 3:
             continue
         N_match, N_csv, N_templ, maxr, csv_duplicate_flag = template_match_target_to_csv(preds[i], csvs[i], minrad, maxrad, longlat_thresh2, rad_thresh, template_thresh, target_thresh)
         if N_match > 0:
+            print(i, N_match, N_csv, N_templ, maxr, csv_duplicate_flag)
             p = float(N_match)/float(N_match + (N_templ-N_match))   #assuming all unmatched detected circles are false positives
             r = float(N_match)/float(N_csv)                         #N_csv = tp + fn, i.e. total ground truth matches
             recall.append(r); precision.append(p); f1.append(2*r*p/(r+p))

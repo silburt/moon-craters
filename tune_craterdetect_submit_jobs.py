@@ -29,8 +29,10 @@ for llt2,rt,te,ta in params:
         f.write('#PBS -l pmem=2gb\n')
         f.write('#PBS -A ebf11_a_g_sc_default\n')
         f.write('#PBS -j oe\n')
+        f.write('module load gcc/5.3.1 python/2.7.8')
+        f.write('source /storage/home/ajs725/venv/bin/activate')
         f.write('cd $PBS_O_WORKDIR\n')
-        f.write('python tune_craterdetect_hypers_HEAD.py %f %f %f %f > tune_ma%.2e_te%.2e_ta%.2e_ta%.2e.txt\n'%(llt2,rt,te,ta,llt2,rt,te,ta))
+        f.write('python tune_craterdetect_hypers_HEAD.py %f %f %f %f > tune_llt%.2e_rt%.2e_te%.2e_ta%.2e.txt\n'%(llt2,rt,te,ta,llt2,rt,te,ta))
     f.close()
 
     if submit_jobs == 1:
@@ -38,5 +40,5 @@ for llt2,rt,te,ta in params:
         os.system('qsub %s'%pbs_script_name)
         os.system('mv %s %s/%s'%(pbs_script_name,jobs_dir,pbs_script_name))
         counter += 1
-
+    break
 print "submitted %d jobs"%counter

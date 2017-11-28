@@ -232,7 +232,7 @@ def train_and_test_model(Data,Craters,MP,i_MP):
 ########################################################################
 def get_models(MP):
     
-    dir, n_train, n_valid, n_test = MP['n_train'], MP['n_valid'], MP['n_test'], MP['dir']
+    dir, n_train, n_valid, n_test = MP['dir'], MP['n_train'], MP['n_valid'], MP['n_test']
     
     #Sample from different part of the dev/test sets
     val_offset = 1000
@@ -298,10 +298,9 @@ if __name__ == '__main__':
 #    MP['dropout'] = [0.15]
 
     #example for iterating over parameters
-#    MP['N_runs'] = 4
+    MP['N_runs'] = 4
 #    MP['lambda']=[1e-4,1e-4,1e-5,1e-5]              #regularization
 #    MP['dropout']=[0.25,0.15,0.25,0.15]             #dropout after merge layers
-    MP['N_runs'] = 4
     MP['lambda']=[1e-6,1e-6,1e-7,1e-7]              #regularization
     MP['dropout']=[0.25,0.15,0.25,0.15]             #dropout after merge layers
 

@@ -81,7 +81,7 @@ def get_metrics(data, craters, dim, model, beta=1):
     
     # get csvs
     csvs = []
-    minrad, maxrad, cutrad, n_csvs = 2, 50, 1, len(X)
+    minrad, maxrad, cutrad, n_csvs = 2, 50, 0.8, len(X)
     for i in range(n_csvs):
         csv = craters[get_id(i)]
         # remove small/large/half craters

@@ -114,27 +114,28 @@ def template_match_target_to_csv(target, csv, minrad=minrad_, maxrad=maxrad_, lo
     else:
         csv_coords = csv
 
-    # compare template-matched results to "ground truth" csv input data
+    # compare template-matched results to ground truth csv input data
     N_match = 0
     csv_duplicate_flag = 0
     N_csv, N_templ = len(csv_coords), len(templ_coords)
-    
     for lo,la,r in templ_coords:
         csvLong, csvLat, csvRad = csv_coords.T
         diff_longlat = (csvLong - lo)**2 + (csvLat - la)**2
         diff_rad = abs(csvRad - r)
         index = (diff_rad < max(1.01,rad_thresh*r))&(diff_longlat < longlat_thresh2)
-        N = len(np.where(index==True)[0])
+        index_True = np.where(index==True)[0]
+        N = len(index_True)
         if N > 1:
-            csv_duplicate_flag = 1  #more than one match found
-            print("%d duplicate entries: only count one match and decrement N_csv:"%N)
-            N_csv -= (N-1)
-            for idd in np.where(index==True)[0]:
-                print(csv_coords[idd])
-        N_match += min(1,N)     #only counting one match in recall
-#        csv_coords = csv_coords[index]
-#        if len(csv_coords) == 0:
-#            break
+            csv_duplicate_flag = 1
+            print("%d GT entries matched to CNN-predicted ring... only counting first match."%N)
+            for i,id in enumerate(index_True):
+                print(csv_coords[id])
+                if i > 0:                               #keep only first match as true
+                    index[id] = False
+        N_match += min(1,N)                             #count up to one match in recall
+        csv_coords = csv_coords[np.where(index==False)] #remove csv so that it cannot be re-matched again
+        if len(csv_coords) == 0:
+            break
 
     return N_match, N_csv, N_templ, maxr, csv_duplicate_flag
 

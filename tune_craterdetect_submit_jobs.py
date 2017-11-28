@@ -40,5 +40,5 @@ for llt2,rt,te,ta in params:
         os.system('qsub %s'%pbs_script_name)
         os.system('mv %s %s/%s'%(pbs_script_name,jobs_dir,pbs_script_name))
         counter += 1
-    break
+
 print "submitted %d jobs"%counter

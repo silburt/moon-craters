@@ -20,8 +20,9 @@ target_thresh_= 0.1
 #####################################
 
 def template_match_target(target, minrad=minrad_, maxrad=maxrad_, longlat_thresh2=longlat_thresh2_, rad_thresh=rad_thresh_, template_thresh=template_thresh_, target_thresh=target_thresh_):
-    # hyperparameters, probably don't need to change
-    ring_thickness = 2       #thickness of rings for the templates. 2 seems to work well.
+
+    # thickness of rings for the templates. 2 works well, just hardcode.
+    ring_thickness = 2
     
     # target - can be predicted or ground truth
     target[target >= target_thresh] = 1
@@ -68,39 +69,21 @@ def template_match_target(target, minrad=minrad_, maxrad=maxrad_, longlat_thresh
             coords = coords[np.where(index==False)]
         N, i = len(coords), i+1
 
-    # This might not be necessary if minrad > ring_thickness, but probably good to keep as a failsafe
-    # remove small false craters that arise because of thick edges
-#    i, N = 0, len(coords)
-#    dim = target.shape[0]
-#    while i < N:
-#        x,y,r = coords[i]
-#        if r < 6:   #this effect is not present for large craters
-#            mask = np.zeros((dim,dim))
-#            cv2.circle(mask, (x,y), int(np.round(r)), 1, thickness=-1)
-#            crater = target[mask==1]
-#            if np.sum(crater) == len(crater):   #crater is completely filled in, likely a false positive
-#                coords = np.delete(coords, i, axis=0)
-#                N = len(coords)
-#            else:
-#                i += 1
-#        else:
-#            i += 1
-
     return coords
 
 
 def template_match_target_to_csv(target, csv, minrad=minrad_, maxrad=maxrad_, longlat_thresh2=longlat_thresh2_, rad_thresh=rad_thresh_, template_thresh=template_thresh_, target_thresh=target_thresh_, remove_large_craters_csv=0):
 
-    #get coordinates from template matching
+    # get coordinates from template matching
     templ_coords = template_match_target(target, minrad, maxrad, longlat_thresh2, rad_thresh, template_thresh, target_thresh)
 
-    #find max detected crater radius
+    # find max detected crater radius
     maxr = 0
     if len(templ_coords > 0):
         x,y,r = templ_coords.T
         maxr = np.max(r)
     
-    #If remove_large_craters_csv == 1, see how recall improves when large craters are excluded.
+    # If remove_large_craters_csv == 1, see how recall improves when large craters are excluded.
     if remove_large_craters_csv == 1:
         index = np.where((csv.T[2] < maxr)&(csv.T[2] > minrad))
         if len(index[0]) > 0:
@@ -130,7 +113,7 @@ def template_match_target_to_csv(target, csv, minrad=minrad_, maxrad=maxrad_, lo
                 if i > 0:                               #keep only first match as true
                     index[id] = False
         N_match += min(1,N)                             #count up to one match in recall
-        csv_coords = csv_coords[np.where(index==False)] #remove csv so that it cannot be re-matched again
+        csv_coords = csv_coords[np.where(index==False)] #remove csv so it can't be re-matched again
         if len(csv_coords) == 0:
             break
 

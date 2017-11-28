@@ -1,5 +1,5 @@
-######################
-#MOON_UNET_S256_RINGS#
+#######
+#MODEL#
 ############################################
 #This model:
 #a) uses a custom loss (separately, i.e. *not* differentiable and guiding backpropagation) to assess how well our algorithm is doing, by connecting the predicted circles to the "ground truth" circles
@@ -100,29 +100,29 @@ def get_metrics(data, craters, dim, model, beta=1):
     print("")
     print("*********Custom Loss*********")
     preds = model.predict(X)
-    recall, precision, f2, frac_new, frac_new2, maxrad = [], [], [], [], [], []
+    recall, precision, fscore, frac_new, frac_new2, maxrad = [], [], [], [], [], []
     for i in range(n_csvs):
         if len(csvs[i]) < 3:
             continue
-        N_match, N_csv, N_templ, maxr, csv_dupe_flag = template_match_target_to_csv(preds[i], csvs[i], remove_large_craters_csv=1)
+        N_match, N_csv, N_templ, maxr, csv_dupe_flag = template_match_target_to_csv(preds[i], csvs[i])
         if N_match > 0:
-            p = float(N_match)/float(N_match + (N_templ-N_match))   #assums unmatched detected circles are FPs
+            p = float(N_match)/float(N_match + (N_templ-N_match))   #assumes unmatched detected circles are FPs
             r = float(N_match)/float(N_csv)                         #N_csv = tp + fn, i.e. total ground truth matches
             fscore = (1+beta**2)*(r*p)/(p*beta**2 + r)              #f_beta score
             fn = float(N_templ - N_match)/float(N_templ)
             fn2 = float(N_templ - N_match)/float(N_csv)
-            recall.append(r); precision.append(p); f2.append(fscore)
+            recall.append(r); precision.append(p); fscore.append(fscore)
             frac_new.append(fn); frac_new2.append(fn2); maxrad.append(maxr)
             if csv_dupe_flag == 1:
                 print "duplicate(s) (shown above) found in image %d"%i
         else:
             print("skipping iteration %d,N_csv=%d,N_templ=%d,N_match=%d"%(i,N_csv,N_templ,N_match))
 
-    print("binary XE score = %f"%model.evaluate(X.astype('float32'), Y.astype('float32')))
+    print("binary XE score = %f"%model.evaluate(X, Y))
     if len(recall) > 5:
         print("mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(recall), np.std(recall)))
         print("mean and std of N_match/(N_match + (N_templ-N_match)) (precision) = %f, %f"%(np.mean(precision), np.std(precision)))
-        print("mean and std of 5rp/(2r+p) (F2 score) = %f, %f"%(np.mean(f2), np.std(f2)))
+        print("mean and std of F_%d score = %f, %f"%(beta, np.mean(fscore), np.std(fscore)))
 
         print("mean and std of (N_template - N_match)/N_template (fraction of craters that are new) = %f, %f"%(np.mean(frac_new), np.std(frac_new)))
         print("mean and std of (N_template - N_match)/N_csv (fraction of craters that are new, 2) = %f, %f"%(np.mean(frac_new2), np.std(frac_new2)))
@@ -218,7 +218,7 @@ def train_and_test_model(Data,Craters,MP,i_MP):
         get_metrics(Data['valid'], Craters['valid'], dim, model)
 
     if MP['save_models'] == 1:
-        model.save('models/HEAD.h5')
+        model.save('models/HEAD_L%.1e_D%.2f.h5'%(lmbda,drop))
 
     print('###################################')
     print('##########END_OF_RUN_INFO##########')
@@ -232,8 +232,11 @@ def train_and_test_model(Data,Craters,MP,i_MP):
 ########################################################################
 def get_models(MP):
     
-    dir, dim = MP['dir'], MP['dim']
-    n_train, n_valid, n_test = MP['n_train'], MP['n_valid'], MP['n_test']
+    dir, n_train, n_valid, n_test = MP['n_train'], MP['n_valid'], MP['n_test'], MP['dir']
+    
+    #Sample from different part of the dev/test sets
+    val_offset = 1000
+    test_offset = 5000
 
     #Load data /scratch/m/mhvk/czhu/newscripttest_for_ari
     train = h5py.File('%strain_images.hdf5'%dir, 'r')
@@ -242,10 +245,10 @@ def get_models(MP):
     Data = {
         'train': [train['input_images'][:n_train].astype('float32'),
                   train['target_masks'][:n_train].astype('float32')],
-        'valid': [valid['input_images'][:n_valid].astype('float32'),
-                  valid['target_masks'][:n_valid].astype('float32')],
-        'test': [test['input_images'][:n_test].astype('float32'),
-                 test['target_masks'][:n_test].astype('float32')]
+        'valid': [valid['input_images'][val_offset:(n_valid+val_offset)].astype('float32'),
+                  valid['target_masks'][val_offset:(n_valid+val_offset)].astype('float32')],
+        'test': [test['input_images'][test_offset:(n_test+test_offset)].astype('float32'),
+                 test['target_masks'][test_offset:(n_test+test_offset)].astype('float32')]
     }
     train.close(); valid.close(); test.close();
 
@@ -280,24 +283,27 @@ if __name__ == '__main__':
     MP['dim'] = 256             #image width/height, assuming square images. Shouldn't change
     MP['lr'] = 0.0001           #learning rate
     MP['bs'] = 8                #batch size: smaller values = less memory but less accurate gradient estimate
-    MP['epochs'] = 4            #number of epochs. 1 epoch = forward/back pass through all train data
-    MP['n_train'] = 30000       #number of training samples, needs to be a multiple of batch size. Big memory hog.
-    MP['n_valid'] = 1000        #number of examples to calculate recall on after each epoch. Expensive operation.
-    MP['n_test'] = 5000         #number of examples to calculate recall on after training. Expensive operation.
+    MP['epochs'] = 6            #number of epochs. 1 epoch = forward/back pass through all train data
+    MP['n_train'] = 20000       #number of training samples, needs to be a multiple of batch size. Big memory hog. (30000)
+    MP['n_valid'] = 760         #number of examples to calculate recall on after each epoch. Expensive operation. (1000)
+    MP['n_test'] = 2000         #number of examples to calculate recall on after training. Expensive operation. (5000)
     MP['save_models'] = 1       #save keras models upon training completion
     
     #Model Parameters (to potentially iterate over, keep in lists)
-    MP['N_runs'] = 1
+#    MP['N_runs'] = 1
     MP['filter_length'] = [3]
     MP['n_filters'] = [112]
     MP['init'] = ['he_normal']                      #See unet model. Initialization of weights.
-    MP['lambda'] = [1e-6]
-    MP['dropout'] = [0.15]
-    
+#    MP['lambda'] = [1e-6]
+#    MP['dropout'] = [0.15]
+
     #example for iterating over parameters
-    #MP['N_runs'] = 4
-    #MP['lambda']=[1e-5,1e-5,1e-6,1e-6]              #regularization
-    #MP['dropout']=[0.25,0.15,0.25,0.15]             #dropout after merge layers
-    
+#    MP['N_runs'] = 4
+#    MP['lambda']=[1e-4,1e-4,1e-5,1e-5]              #regularization
+#    MP['dropout']=[0.25,0.15,0.25,0.15]             #dropout after merge layers
+    MP['N_runs'] = 4
+    MP['lambda']=[1e-6,1e-6,1e-7,1e-7]              #regularization
+    MP['dropout']=[0.25,0.15,0.25,0.15]             #dropout after merge layers
+
     #run models
     get_models(MP)

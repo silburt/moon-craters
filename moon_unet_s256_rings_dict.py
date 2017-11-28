@@ -102,11 +102,11 @@ def custom_image_generator(data, target, batch_size=32):
 ################################
 #Calculate Custom Loss (recall)#
 ########################################################################
-def get_recall(dir, n_samples, dim, model, X, Y, ids):
+def get_recall(dir, n_samples, dim, model, X, Y, ids, beta=1):
     
     # get csvs for recall
     csvs = []
-    minrad, maxrad, cutrad = 2, 50, 1
+    minrad, maxrad, cutrad = 2, 50, 0.8
     for i_r in range(n_samples):
         csv_name = '%s/lola_%s.csv'%(dir,str(ids[i_r]).zfill(5))
         csv = pd.read_csv(csv_name)
@@ -126,7 +126,7 @@ def get_recall(dir, n_samples, dim, model, X, Y, ids):
     print ""
     print "*********Custom Loss*********"
     Y_pred = model.predict(X[0:n_samples].astype('float32'))
-    recall, precision, f2, frac_new, frac_new2, maxrad = [], [], [], [], [], []
+    recall, precision, fscore, frac_new, frac_new2, maxrad = [], [], [], [], [], []
     for i in range(n_samples):
         if len(csvs[i]) < 3:    #exclude csvs with tiny crater numbers
             continue
@@ -134,10 +134,10 @@ def get_recall(dir, n_samples, dim, model, X, Y, ids):
         if N_match > 0:
             p = float(N_match)/float(N_match + (N_templ-N_match))   #assums unmatched detected circles are FPs
             r = float(N_match)/float(N_csv)                         #N_csv = tp + fn, i.e. total ground truth matches
-            f2score = 5*r*p/(4*p+r)                                 #f-score with beta = 2
+            fscore = (1+beta**2)*(r*p)/(p*beta**2 + r)              #f-score with beta = 2
             fn = float(N_templ - N_match)/float(N_templ)
             fn2 = float(N_templ - N_match)/float(N_csv)
-            recall.append(r); precision.append(p); f2.append(f2score)
+            recall.append(r); precision.append(p); fscore.append(fscore)
             frac_new.append(fn); frac_new2.append(fn2); maxrad.append(maxr)
             if csv_dupe_flag == 1:
                 print "duplicate(s) (shown above) found in image %d"%i
@@ -148,7 +148,7 @@ def get_recall(dir, n_samples, dim, model, X, Y, ids):
     if len(recall) > 5:
         print("mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(recall), np.std(recall)))
         print("mean and std of N_match/(N_match + (N_templ-N_match)) (precision) = %f, %f"%(np.mean(precision), np.std(precision)))
-        print("mean and std of 5rp/(2r+p) (F2 score) = %f, %f"%(np.mean(f2), np.std(f2)))
+        print("mean and std of F1-score = %f, %f"%(np.mean(fscore), np.std(fscore)))
         
         print("mean and std of (N_template - N_match)/N_template (fraction of craters that are new) = %f, %f"%(np.mean(frac_new), np.std(frac_new)))
         print("mean and std of (N_template - N_match)/N_csv (fraction of craters that are new, 2) = %f, %f"%(np.mean(frac_new2), np.std(frac_new2)))

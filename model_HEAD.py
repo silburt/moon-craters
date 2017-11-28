@@ -273,8 +273,8 @@ if __name__ == '__main__':
     #/scratch/m/mhvk/czhu/newscripttest_for_ari
     #Location of Train/Dev/Test folders. Include final '/' in path!
     #MP['dir'] = 'datasets/HEAD/'
-    #MP['dir'] = '/scratch/m/mhvk/czhu/newscripttest_for_ari/'
-    MP['dir'] = '/scratch/m/mhvk/czhu/newsala_for_ari/sala_'
+    MP['dir'] = '/scratch/m/mhvk/czhu/newscripttest_for_ari/'
+    #MP['dir'] = '/scratch/m/mhvk/czhu/newsala_for_ari/sala_'
     
     #Model Parameters
     MP['dim'] = 256             #image width/height, assuming square images. Shouldn't change

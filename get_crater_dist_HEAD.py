@@ -5,8 +5,8 @@ import numpy as np, h5py
 from utils.template_match_target import *
 from utils.preprocessing import *
 import glob
+import sys
 #from keras.models import load_model
-import os
 
 #########################
 def get_id(i, zeropad=5):

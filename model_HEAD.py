@@ -279,7 +279,7 @@ if __name__ == '__main__':
     MP['dim'] = 256             #image width/height, assuming square images. Shouldn't change
     MP['lr'] = 0.0001           #learning rate
     MP['bs'] = 8                #batch size: smaller values = less memory but less accurate gradient estimate
-    MP['epochs'] = 6            #number of epochs. 1 epoch = forward/back pass through all train data
+    MP['epochs'] = 4            #number of epochs. 1 epoch = forward/back pass through all train data
     MP['n_train'] = 20000       #number of training samples, needs to be a multiple of batch size. Big memory hog. (30000)
     MP['n_valid'] = 1000         #number of examples to calculate recall on after each epoch. Expensive operation. (1000)
     MP['n_test'] = 5000         #number of examples to calculate recall on after training. Expensive operation. (5000)

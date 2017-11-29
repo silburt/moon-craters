@@ -104,7 +104,7 @@ def get_metrics(data, craters, dim, model, beta=1):
     for i in range(n_csvs):
         if len(csvs[i]) < 3:
             continue
-        N_match, N_csv, N_templ, maxr, csv_dupe_flag = template_match_target_to_csv(preds[i], csvs[i], remove_large_craters_csv=1)
+        N_match, N_csv, N_templ, maxr, csv_dupe_flag = template_match_target_to_csv(preds[i], csvs[i])
         if N_match > 0:
             p = float(N_match)/float(N_match + (N_templ-N_match))   #assumes unmatched detected circles are FPs
             r = float(N_match)/float(N_csv)                         #N_csv = tp + fn, i.e. total ground truth matches
@@ -218,7 +218,7 @@ def train_and_test_model(Data,Craters,MP,i_MP):
         get_metrics(Data['valid'], Craters['valid'], dim, model)
 
     if MP['save_models'] == 1:
-        model.save('models/HEAD_L%.1e_D%.2f.h5'%(lmbda,drop))
+        model.save('models/HEAD_FINAL.h5')
 
     print('###################################')
     print('##########END_OF_RUN_INFO##########')
@@ -280,7 +280,7 @@ if __name__ == '__main__':
     MP['lr'] = 0.0001           #learning rate
     MP['bs'] = 8                #batch size: smaller values = less memory but less accurate gradient estimate
     MP['epochs'] = 4            #number of epochs. 1 epoch = forward/back pass through all train data
-    MP['n_train'] = 20000       #number of training samples, needs to be a multiple of batch size. Big memory hog. (30000)
+    MP['n_train'] = 30000       #number of training samples, needs to be a multiple of batch size. Big memory hog. (30000)
     MP['n_valid'] = 1000         #number of examples to calculate recall on after each epoch. Expensive operation. (1000)
     MP['n_test'] = 5000         #number of examples to calculate recall on after training. Expensive operation. (5000)
     MP['save_models'] = 1       #save keras models upon training completion

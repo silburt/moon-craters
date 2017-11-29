@@ -104,7 +104,7 @@ def get_metrics(data, craters, dim, model, beta=1):
     for i in range(n_csvs):
         if len(csvs[i]) < 3:
             continue
-        N_match, N_csv, N_templ, maxr, csv_dupe_flag = template_match_target_to_csv(preds[i], csvs[i], remove_large_craters_csv=1)
+        N_match, N_csv, N_templ, maxr, csv_dupe_flag = template_match_target_to_csv(preds[i], csvs[i], remove_large_craters_csv=0)
         if N_match > 0:
             p = float(N_match)/float(N_match + (N_templ-N_match))   #assumes unmatched detected circles are FPs
             r = float(N_match)/float(N_csv)                         #N_csv = tp + fn, i.e. total ground truth matches
@@ -218,7 +218,7 @@ def train_and_test_model(Data,Craters,MP,i_MP):
         get_metrics(Data['valid'], Craters['valid'], dim, model)
 
     if MP['save_models'] == 1:
-        model.save('models/HEAD_rmvlargestcraters.h5')
+        model.save('models/HEAD.h5')
 
     print('###################################')
     print('##########END_OF_RUN_INFO##########')

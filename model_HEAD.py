@@ -218,7 +218,7 @@ def train_and_test_model(Data,Craters,MP,i_MP):
         get_metrics(Data['valid'], Craters['valid'], dim, model)
 
     if MP['save_models'] == 1:
-        model.save('models/HEAD_FINAL.h5')
+        model.save('models/HEAD_rmvlargestcraters.h5')
 
     print('###################################')
     print('##########END_OF_RUN_INFO##########')

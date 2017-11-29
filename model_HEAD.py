@@ -108,7 +108,7 @@ def get_metrics(data, craters, dim, model, beta=1):
         if N_match > 0:
             p = float(N_match)/float(N_match + (N_templ-N_match))   #assumes unmatched detected circles are FPs
             r = float(N_match)/float(N_csv)                         #N_csv = tp + fn, i.e. total ground truth matches
-            f = (1+beta**2)*(r*p)/(p*beta**2 + r)              #f_beta score
+            f = (1+beta**2)*(r*p)/(p*beta**2 + r)                   #f_beta score
             fn = float(N_templ - N_match)/float(N_templ)
             fn2 = float(N_templ - N_match)/float(N_csv)
             recall.append(r); precision.append(p); fscore.append(f)
@@ -233,10 +233,6 @@ def train_and_test_model(Data,Craters,MP,i_MP):
 def get_models(MP):
     
     dir, n_train, n_valid, n_test = MP['dir'], MP['n_train'], MP['n_valid'], MP['n_test']
-    
-    #Sample from different part of the dev/test sets
-    val_offset = 1000
-    test_offset = 5000
 
     #Load data /scratch/m/mhvk/czhu/newscripttest_for_ari
     train = h5py.File('%strain_images.hdf5'%dir, 'r')
@@ -245,10 +241,10 @@ def get_models(MP):
     Data = {
         'train': [train['input_images'][:n_train].astype('float32'),
                   train['target_masks'][:n_train].astype('float32')],
-        'valid': [valid['input_images'][val_offset:(n_valid+val_offset)].astype('float32'),
-                  valid['target_masks'][val_offset:(n_valid+val_offset)].astype('float32')],
-        'test': [test['input_images'][test_offset:(n_test+test_offset)].astype('float32'),
-                 test['target_masks'][test_offset:(n_test+test_offset)].astype('float32')]
+        'valid': [valid['input_images'][:n_valid].astype('float32'),
+                  valid['target_masks'][:n_valid].astype('float32')],
+        'test': [test['input_images'][:n_test].astype('float32'),
+                 test['target_masks'][:n_test].astype('float32')]
     }
     train.close(); valid.close(); test.close();
 

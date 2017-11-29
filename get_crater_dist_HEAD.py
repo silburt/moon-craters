@@ -5,7 +5,7 @@ import numpy as np, h5py
 from utils.template_match_target import *
 from utils.preprocessing import *
 import glob
-from keras.models import load_model
+#from keras.models import load_model
 import os
 
 #########################
@@ -16,7 +16,7 @@ def get_id(i, zeropad=5):
 def get_model_preds(CP):
     dim, n_imgs, dtype = CP['dim'], CP['n_imgs'], CP['datatype']
 
-    data = h5py.File('%s/%s_images.hdf5'%(CP['dir_data'],dtype), 'r')
+    data = h5py.File('%s%s_images.hdf5'%(CP['dir_data'],dtype), 'r')
 
     Data = {
         dtype: [data['input_images'][:n_imgs].astype('float32'),
@@ -61,10 +61,8 @@ def extract_crater_dist(CP, pred_crater_dist):
         print "Couldnt load model predictions, generating"
         preds = get_model_preds(CP)
     
-    return pred_crater_dist
-    
     # need for long/lat bounds
-    P = h5py.File('%s/%s_images.hdf5'%(CP['dir_data'],CP['datatype']), 'r')
+    P = h5py.File('%s%s_images.hdf5'%(CP['dir_data'],CP['datatype']), 'r')
     llbd, pbd = 'longlat_bounds', 'pix_bounds'
     
     master_img_height_pix = 30720.  #number of pixels for height
@@ -100,8 +98,8 @@ def extract_crater_dist(CP, pred_crater_dist):
 if __name__ == '__main__':
     # Arguments
     CP = {}
-    CP['dir_data'] = '/scratch/m/mhvk/czhu/newscripttest_for_ari'     #exclude final '/' in path
-    #CP['dir_data'] = 'datasets/HEAD'
+    #CP['dir_data'] = '/scratch/m/mhvk/czhu/newscripttest_for_ari/'
+    CP['dir_data'] = 'datasets/HEAD/'
     
     CP['datatype'] = 'dev'
     CP['n_imgs'] = 30000
@@ -113,8 +111,8 @@ if __name__ == '__main__':
     CP['dim'] = 256
     
     # Tuned Hyperparameters - Shouldn't really change
-    CP['llt2'] = 0.6    #D_{L,L} from Silburt et. al (2017)
-    CP['rt2'] = 0.6     #D_{R} from Silburt et. al (2017)
+    CP['llt2'] = float(sys.argv[1])    #D_{L,L} from Silburt et. al (2017)
+    CP['rt2'] = float(sys.argv[2])     #D_{R} from Silburt et. al (2017)
 
     pred_crater_dist = np.empty([0,3])
     pred_crater_dist = extract_crater_dist(CP, pred_crater_dist)

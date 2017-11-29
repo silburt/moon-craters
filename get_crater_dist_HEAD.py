@@ -101,18 +101,18 @@ if __name__ == '__main__':
     #CP['dir_data'] = '/scratch/m/mhvk/czhu/newscripttest_for_ari/'
     CP['dir_data'] = 'datasets/HEAD/'
     
+    # Tuned Hyperparameters - Shouldn't really change
+    CP['llt2'] = float(sys.argv[1])    #D_{L,L} from Silburt et. al (2017)
+    CP['rt2'] = float(sys.argv[2])     #D_{R} from Silburt et. al (2017)
+    
     CP['datatype'] = 'dev'
     CP['n_imgs'] = 30000
     CP['dir_preds'] = 'datasets/HEAD/HEAD_%spreds_n%d.hdf5'%(CP['datatype'],CP['n_imgs'])
-    CP['dir_result'] = 'datasets/HEAD/HEAD_%s_craterdist_n%d.npy'%(CP['datatype'], CP['n_imgs'])
+    CP['dir_result'] = 'datasets/HEAD/HEAD_%s_craterdist_llt%.2f_rt%.2f.npy'%(CP['datatype'], CP['llt2'], CP['rt2'])
     
     #Needed to generate model_preds if they don't exist yet
     CP['model'] = 'models/HEAD_FINALL.h5'
     CP['dim'] = 256
-    
-    # Tuned Hyperparameters - Shouldn't really change
-    CP['llt2'] = float(sys.argv[1])    #D_{L,L} from Silburt et. al (2017)
-    CP['rt2'] = float(sys.argv[2])     #D_{R} from Silburt et. al (2017)
 
     pred_crater_dist = np.empty([0,3])
     pred_crater_dist = extract_crater_dist(CP, pred_crater_dist)

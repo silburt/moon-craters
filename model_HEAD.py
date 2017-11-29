@@ -104,7 +104,7 @@ def get_metrics(data, craters, dim, model, beta=1):
     for i in range(n_csvs):
         if len(csvs[i]) < 3:
             continue
-        N_match, N_csv, N_templ, maxr, csv_dupe_flag = template_match_target_to_csv(preds[i], csvs[i])
+        N_match, N_csv, N_templ, maxr, csv_dupe_flag = template_match_target_to_csv(preds[i], csvs[i], remove_large_craters_csv=1)
         if N_match > 0:
             p = float(N_match)/float(N_match + (N_templ-N_match))   #assumes unmatched detected circles are FPs
             r = float(N_match)/float(N_csv)                         #N_csv = tp + fn, i.e. total ground truth matches
@@ -281,8 +281,8 @@ if __name__ == '__main__':
     MP['bs'] = 8                #batch size: smaller values = less memory but less accurate gradient estimate
     MP['epochs'] = 6            #number of epochs. 1 epoch = forward/back pass through all train data
     MP['n_train'] = 20000       #number of training samples, needs to be a multiple of batch size. Big memory hog. (30000)
-    MP['n_valid'] = 760         #number of examples to calculate recall on after each epoch. Expensive operation. (1000)
-    MP['n_test'] = 2000         #number of examples to calculate recall on after training. Expensive operation. (5000)
+    MP['n_valid'] = 1000         #number of examples to calculate recall on after each epoch. Expensive operation. (1000)
+    MP['n_test'] = 5000         #number of examples to calculate recall on after training. Expensive operation. (5000)
     MP['save_models'] = 1       #save keras models upon training completion
     
     #Model Parameters (to potentially iterate over, keep in lists)
@@ -290,13 +290,13 @@ if __name__ == '__main__':
     MP['filter_length'] = [3]
     MP['n_filters'] = [112]
     MP['init'] = ['he_normal']                      #See unet model. Initialization of weights.
-#    MP['lambda'] = [1e-6]
-#    MP['dropout'] = [0.15]
+    MP['lambda'] = [1e-6]
+    MP['dropout'] = [0.15]
 
     #example for iterating over parameters
-    MP['N_runs'] = 2
-    MP['lambda']=[1e-4,1e-4]              #regularization
-    MP['dropout']=[0.25,0.15]             #dropout after merge layers
+#    MP['N_runs'] = 2
+#    MP['lambda']=[1e-4,1e-4]              #regularization
+#    MP['dropout']=[0.25,0.15]             #dropout after merge layers
 #    MP['lambda']=[1e-5,1e-5]              #regularization
 #    MP['dropout']=[0.25,0.15]             #dropout after merge layers
 #    MP['lambda']=[1e-6,1e-6]              #regularization

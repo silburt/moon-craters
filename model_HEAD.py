@@ -286,7 +286,7 @@ if __name__ == '__main__':
     MP['save_models'] = 1       #save keras models upon training completion
     
     #Model Parameters (to potentially iterate over, keep in lists)
-#    MP['N_runs'] = 1
+    MP['N_runs'] = 1
     MP['filter_length'] = [3]
     MP['n_filters'] = [112]
     MP['init'] = ['he_normal']                      #See unet model. Initialization of weights.

@@ -249,7 +249,10 @@ def get_models(MP):
     train.close(); valid.close(); test.close();
 
     #Rescale, normalize, add extra dim
-    preprocess(Data, low=0)
+    if dir == '/scratch/m/mhvk/czhu/moondata/crop_for_ari/':
+        preprocess(Data, low=0)
+    else:
+        preprocess(Data)
 
     #Load ground-truth craters
     Craters = {

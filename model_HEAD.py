@@ -218,7 +218,7 @@ def train_and_test_model(Data,Craters,MP,i_MP):
         get_metrics(Data['valid'], Craters['valid'], dim, model)
 
     if MP['save_models'] == 1:
-        model.save('models/HEAD.h5')
+        model.save('models/HEAD_crop.h5')
 
     print('###################################')
     print('##########END_OF_RUN_INFO##########')
@@ -249,7 +249,7 @@ def get_models(MP):
     train.close(); valid.close(); test.close();
 
     #Rescale, normalize, add extra dim
-    preprocess(Data)
+    preprocess(Data, low=0)
 
     #Load ground-truth craters
     Craters = {
@@ -272,8 +272,9 @@ if __name__ == '__main__':
     #/scratch/m/mhvk/czhu/newscripttest_for_ari
     #Location of Train/Dev/Test folders. Include final '/' in path!
     #MP['dir'] = 'datasets/HEAD/'
-    MP['dir'] = '/scratch/m/mhvk/czhu/newscripttest_for_ari/'
+    #MP['dir'] = '/scratch/m/mhvk/czhu/newscripttest_for_ari/'
     #MP['dir'] = '/scratch/m/mhvk/czhu/newsala_for_ari/sala_'
+    MP['dir'] = '/scratch/m/mhvk/czhu/moondata/crop_for_ari/'
     
     #Model Parameters
     MP['dim'] = 256             #image width/height, assuming square images. Shouldn't change

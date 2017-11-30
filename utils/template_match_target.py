@@ -100,10 +100,6 @@ def template_match_target_to_csv(target, csv_coords, minrad=minrad_, maxrad=maxr
                 print(csv_coords[id])
                 if i > 0:                               #keep only first match as true
                     index[id] = False
-        elif N == 1:
-            print lo,la,r
-            print csv_coords[index]
-            print ''
         N_match += min(1,N)                             #count up to one match in recall
         csv_coords = csv_coords[np.where(index==False)] #remove csv so it can't be re-matched again
         if len(csv_coords) == 0:

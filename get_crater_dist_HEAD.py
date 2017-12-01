@@ -6,7 +6,7 @@ from utils.template_match_target import *
 from utils.preprocessing import *
 import glob
 import sys
-#from keras.models import load_model
+from keras.models import load_model
 
 #########################
 def get_id(i, zeropad=5):
@@ -16,7 +16,8 @@ def get_id(i, zeropad=5):
 def get_model_preds(CP):
     dim, n_imgs, dtype = CP['dim'], CP['n_imgs'], CP['datatype']
 
-    data = h5py.File('%s%s_images.hdf5'%(CP['dir_data'],dtype), 'r')
+    #data = h5py.File('%s%s_images.hdf5'%(CP['dir_data'],dtype), 'r')
+    data = h5py.File(CP['dir_data'], 'r')
 
     Data = {
         dtype: [data['input_images'][:n_imgs].astype('float32'),
@@ -61,6 +62,8 @@ def extract_crater_dist(CP, pred_crater_dist):
         print "Couldnt load model predictions, generating"
         preds = get_model_preds(CP)
     
+    return pred_crater_dist
+    
     # need for long/lat bounds
     P = h5py.File('%s%s_images.hdf5'%(CP['dir_data'],CP['datatype']), 'r')
     llbd, pbd = 'longlat_bounds', 'pix_bounds'
@@ -98,8 +101,8 @@ def extract_crater_dist(CP, pred_crater_dist):
 if __name__ == '__main__':
     # Arguments
     CP = {}
-    #CP['dir_data'] = '/scratch/m/mhvk/czhu/newscripttest_for_ari/'
-    CP['dir_data'] = 'datasets/HEAD/'
+    CP['dir_data'] = '/scratch/m/mhvk/czhu/moondata/fullilen_uncropped/dev_wideilen_images.hdf5'
+    #CP['dir_data'] = 'datasets/HEAD/'
     
     # Tuned Hyperparameters - Shouldn't really change
     CP['llt2'] = float(sys.argv[1])    #D_{L,L} from Silburt et. al (2017)
@@ -107,7 +110,7 @@ if __name__ == '__main__':
     
     CP['datatype'] = 'dev'
     CP['n_imgs'] = 30000
-    CP['dir_preds'] = 'datasets/HEAD/HEAD_%spreds_n%d.hdf5'%(CP['datatype'],CP['n_imgs'])
+    CP['dir_preds'] = 'datasets/HEAD/HEADwideilen_%spreds_n%d.hdf5'%(CP['datatype'],CP['n_imgs'])
     CP['dir_result'] = 'datasets/HEAD/HEAD_%s_craterdist_llt%.2f_rt%.2f.npy'%(CP['datatype'], CP['llt2'], CP['rt2'])
     
     #Needed to generate model_preds if they don't exist yet

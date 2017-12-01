@@ -104,7 +104,7 @@ def get_metrics(data, craters, dim, model, beta=1):
     for i in range(n_csvs):
         if len(csvs[i]) < 3:
             continue
-        N_match, N_csv, N_templ, maxr, csv_dupe_flag = template_match_target_to_csv(preds[i], csvs[i], remove_large_craters_csv=1)
+        N_match, N_csv, N_templ, maxr, csv_dupe_flag = template_match_target_to_csv(preds[i], csvs[i], remove_large_craters_csv=0)
         if N_match > 0:
             p = float(N_match)/float(N_match + (N_templ-N_match))   #assumes unmatched detected circles are FPs
             r = float(N_match)/float(N_csv)                         #N_csv = tp + fn, i.e. total ground truth matches
@@ -218,7 +218,7 @@ def train_and_test_model(Data,Craters,MP,i_MP):
         get_metrics(Data['valid'], Craters['valid'], dim, model)
 
     if MP['save_models'] == 1:
-        model.save('models/HEAD_crop_rmvlargecraters.h5')
+        model.save('models/HEAD_wideilen.h5')
 
     print('###################################')
     print('##########END_OF_RUN_INFO##########')
@@ -233,11 +233,12 @@ def train_and_test_model(Data,Craters,MP,i_MP):
 def get_models(MP):
     
     dir, n_train, n_valid, n_test = MP['dir'], MP['n_train'], MP['n_valid'], MP['n_test']
+    dir_temp = '/scratch/m/mhvk/czhu/newscripttest_for_ari/'
 
     #Load data /scratch/m/mhvk/czhu/newscripttest_for_ari
-    train = h5py.File('%strain_images.hdf5'%dir, 'r')
-    valid = h5py.File('%sdev_images.hdf5'%dir, 'r')
-    test = h5py.File('%stest_images.hdf5'%dir, 'r')
+    train = h5py.File('%strain_wideilen_images.hdf5'%dir, 'r')
+    valid = h5py.File('%sdev_wideilen_images.hdf5'%dir, 'r')
+    test = h5py.File('%stest_images.hdf5'%dir_temp, 'r')
     Data = {
         'train': [train['input_images'][:n_train].astype('float32'),
                   train['target_masks'][:n_train].astype('float32')],
@@ -256,9 +257,9 @@ def get_models(MP):
 
     #Load ground-truth craters
     Craters = {
-        'train': pd.HDFStore('%strain_craters.hdf5'%dir, 'r'),
-        'valid': pd.HDFStore('%sdev_craters.hdf5'%dir, 'r'),
-        'test': pd.HDFStore('%stest_craters.hdf5'%dir, 'r')
+        'train': pd.HDFStore('%strain_wideilen_craters.hdf5'%dir, 'r'),
+        'valid': pd.HDFStore('%sdev_wideilen_craters.hdf5'%dir, 'r'),
+        'test': pd.HDFStore('%stest_craters.hdf5'%dir_temp, 'r')
     }
 
     #Iterate over parameters
@@ -277,7 +278,8 @@ if __name__ == '__main__':
     #MP['dir'] = 'datasets/HEAD/'
     #MP['dir'] = '/scratch/m/mhvk/czhu/newscripttest_for_ari/'
     #MP['dir'] = '/scratch/m/mhvk/czhu/newsala_for_ari/sala_'
-    MP['dir'] = '/scratch/m/mhvk/czhu/moondata/crop_for_ari/'
+    #MP['dir'] = '/scratch/m/mhvk/czhu/moondata/crop_for_ari/'
+    MP['dir'] = '/scratch/m/mhvk/czhu/moondata/fullilen_uncropped/'
     
     #Model Parameters
     MP['dim'] = 256             #image width/height, assuming square images. Shouldn't change

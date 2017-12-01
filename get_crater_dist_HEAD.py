@@ -62,10 +62,9 @@ def extract_crater_dist(CP, pred_crater_dist):
         print "Couldnt load model predictions, generating"
         preds = get_model_preds(CP)
     
-    return pred_crater_dist
-    
     # need for long/lat bounds
-    P = h5py.File('%s%s_images.hdf5'%(CP['dir_data'],CP['datatype']), 'r')
+    #P = h5py.File('%s%s_images.hdf5'%(CP['dir_data'],CP['datatype']), 'r')
+    P = h5py.File(CP['dir_data'], 'r')
     llbd, pbd = 'longlat_bounds', 'pix_bounds'
     
     master_img_height_pix = 30720.  #number of pixels for height

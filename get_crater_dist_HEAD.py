@@ -100,8 +100,8 @@ def extract_crater_dist(CP, pred_crater_dist):
 if __name__ == '__main__':
     # Arguments
     CP = {}
-    CP['dir_data'] = '/scratch/m/mhvk/czhu/moondata/fullilen_uncropped/dev_wideilen_images.hdf5'
-    #CP['dir_data'] = 'datasets/HEAD/'
+    #CP['dir_data'] = '/scratch/m/mhvk/czhu/moondata/fullilen_uncropped/dev_wideilen_images.hdf5'
+    CP['dir_data'] = 'datasets/HEAD/dev_wideilen_images.hdf5'
     
     # Tuned Hyperparameters - Shouldn't really change
     CP['llt2'] = float(sys.argv[1])    #D_{L,L} from Silburt et. al (2017)

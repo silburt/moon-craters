@@ -233,12 +233,13 @@ def train_and_test_model(Data,Craters,MP,i_MP):
 def get_models(MP):
     
     dir, n_train, n_valid, n_test = MP['dir'], MP['n_train'], MP['n_valid'], MP['n_test']
-    dir_temp = '/scratch/m/mhvk/czhu/moondata/newscripttest_for_ari/'
+    #dir_test = '/scratch/m/mhvk/czhu/moondata/newscripttest_for_ari/'
+    dir_test = '/scratch/m/mhvk/czhu/moondata/crop_for_ari/'
 
     #Load data /scratch/m/mhvk/czhu/newscripttest_for_ari
     train = h5py.File('%strain_wideilen_images.hdf5'%dir, 'r')
     valid = h5py.File('%sdev_wideilen_images.hdf5'%dir, 'r')
-    test = h5py.File('%stest_images.hdf5'%dir_temp, 'r')
+    test = h5py.File('%stest_images.hdf5'%dir_test, 'r')
     Data = {
         'train': [train['input_images'][:n_train].astype('float32'),
                   train['target_masks'][:n_train].astype('float32')],
@@ -250,7 +251,7 @@ def get_models(MP):
     train.close(); valid.close(); test.close();
 
     #Rescale, normalize, add extra dim
-    if dir == '/scratch/m/mhvk/czhu/moondata/crop_for_ari/':
+    if dir == '/scratch/m/mhvk/czhu/moondata/crop_for_ari/' or dir_test == '/scratch/m/mhvk/czhu/moondata/crop_for_ari/':
         preprocess(Data, low=0)
     else:
         preprocess(Data)
@@ -259,7 +260,7 @@ def get_models(MP):
     Craters = {
         'train': pd.HDFStore('%strain_wideilen_craters.hdf5'%dir, 'r'),
         'valid': pd.HDFStore('%sdev_wideilen_craters.hdf5'%dir, 'r'),
-        'test': pd.HDFStore('%stest_craters.hdf5'%dir_temp, 'r')
+        'test': pd.HDFStore('%stest_craters.hdf5'%dir_test, 'r')
     }
 
     #Iterate over parameters
@@ -279,6 +280,7 @@ if __name__ == '__main__':
     #MP['dir'] = '/scratch/m/mhvk/czhu/moondata/newscripttest_for_ari/'
     #MP['dir'] = '/scratch/m/mhvk/czhu/newsala_for_ari/sala_'
     #MP['dir'] = '/scratch/m/mhvk/czhu/moondata/crop_for_ari/'
+    #MP['dir'] = '/scratch/m/mhvk/czhu/moondata/fullilen_uncropped/'
     MP['dir'] = '/scratch/m/mhvk/czhu/moondata/fullilen_uncropped/'
     
     #Model Parameters

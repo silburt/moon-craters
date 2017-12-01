@@ -233,7 +233,7 @@ def train_and_test_model(Data,Craters,MP,i_MP):
 def get_models(MP):
     
     dir, n_train, n_valid, n_test = MP['dir'], MP['n_train'], MP['n_valid'], MP['n_test']
-    dir_temp = '/scratch/m/mhvk/czhu/newscripttest_for_ari/'
+    dir_temp = '/scratch/m/mhvk/czhu/moondata/newscripttest_for_ari/'
 
     #Load data /scratch/m/mhvk/czhu/newscripttest_for_ari
     train = h5py.File('%strain_wideilen_images.hdf5'%dir, 'r')
@@ -276,7 +276,7 @@ if __name__ == '__main__':
     #/scratch/m/mhvk/czhu/newscripttest_for_ari
     #Location of Train/Dev/Test folders. Include final '/' in path!
     #MP['dir'] = 'datasets/HEAD/'
-    #MP['dir'] = '/scratch/m/mhvk/czhu/newscripttest_for_ari/'
+    #MP['dir'] = '/scratch/m/mhvk/czhu/moondata/newscripttest_for_ari/'
     #MP['dir'] = '/scratch/m/mhvk/czhu/newsala_for_ari/sala_'
     #MP['dir'] = '/scratch/m/mhvk/czhu/moondata/crop_for_ari/'
     MP['dir'] = '/scratch/m/mhvk/czhu/moondata/fullilen_uncropped/'

@@ -101,15 +101,17 @@ if __name__ == '__main__':
     # Arguments
     CP = {}
     #CP['dir_data'] = '/scratch/m/mhvk/czhu/moondata/fullilen_uncropped/dev_wideilen_images.hdf5'
-    CP['dir_data'] = 'datasets/HEAD/dev_wideilen_images.hdf5'
+    #CP['dir_data'] = 'datasets/HEAD/dev_wideilen_images.hdf5'
+    CP['dir_data'] = 'datasets/HEAD/test_images.hdf5'
     
     # Tuned Hyperparameters - Shouldn't really change
     CP['llt2'] = float(sys.argv[1])    #D_{L,L} from Silburt et. al (2017)
     CP['rt2'] = float(sys.argv[2])     #D_{R} from Silburt et. al (2017)
     
-    CP['datatype'] = 'dev'
+    CP['datatype'] = 'test'
     CP['n_imgs'] = 30000
-    CP['dir_preds'] = 'datasets/HEAD/HEADwideilen_%spreds_n%d.hdf5'%(CP['datatype'],CP['n_imgs'])
+    #CP['dir_preds'] = 'datasets/HEAD/HEADwideilen_%spreds_n%d.hdf5'%(CP['datatype'],CP['n_imgs'])
+    CP['dir_preds'] = 'datasets/HEAD/HEAD_%spreds_n%d.hdf5'%(CP['datatype'],CP['n_imgs'])
     CP['dir_result'] = 'datasets/HEAD/HEAD_%s_craterdist_llt%.2f_rt%.2f.npy'%(CP['datatype'], CP['llt2'], CP['rt2'])
     
     #Needed to generate model_preds if they don't exist yet

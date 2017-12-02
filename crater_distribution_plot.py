@@ -11,7 +11,7 @@ norm = False
 nbins = 50
 maxrad = 45
 cdf = 0
-truth_datatype = 'test'
+truth_datatype = 'dev'
 truth_data = 'HEAD' #Salamuniccar or HEAD
 
 ###############Original ground truth dataset################
@@ -82,8 +82,8 @@ if truth_data == 'Salamuniccar':
 
     #GT = np.load('datasets/rings/Test_rings/test_uniqueGT_llt1.0e-06_rt1.0e-06_n10016.npy') #unique distribution for 10,000 images
 elif truth_data == 'HEAD':
-    filename = 'datasets/HEAD/HEAD_%s_craterdist_n30000.npy'%truth_datatype
-    #filename = 'datasets/HEAD/HEAD_%s_craterdist_llt0.50_rt0.70.npy'%truth_datatype
+    #filename = 'datasets/HEAD/HEAD_%s_craterdist_n30000.npy'%truth_datatype
+    filename = 'datasets/HEAD/HEAD_%s_craterdist_llt0.90_rt0.90.npy'%truth_datatype
 #########################################
 #load data
 pred = np.load(filename)
@@ -106,10 +106,10 @@ else:
     plt.hist(rad_truth, nbins, range=[min(rad_truth),maxrad], normed=norm, alpha=0.3, label='ground truth')
     
     #extended
-#    bin_diff = dist_bins[1]-dist_bins[0]
-#    binnies = [dist_bins[0]-bin_diff, dist_bins[0]]
-#    print binnies
-#    plt.hist(rad, bins=binnies, normed=norm, label='new craters')
+    bin_diff = dist_bins[1]-dist_bins[0]
+    binnies = [dist_bins[0]-bin_diff, dist_bins[0]]
+    print binnies
+    plt.hist(rad, bins=binnies, normed=norm, label='new craters')
     #ext = '_ext'
     
     print "%d new craters"%(len(rad[rad<min(rad_truth)]))

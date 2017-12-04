@@ -77,13 +77,14 @@ def extract_crater_dist(CP, pred_crater_dist):
         print i, len(pred_crater_dist)
         coords = template_match_target(preds[i])
         if len(coords) > 0:
-            id = get_id(i)
-            D = float(P[pbd][id][3] - P[pbd][id][1])/dim    #accounts for image downsampling by some factor D
-            pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180.0)*r_moon*D
             long_pix,lat_pix,radii_pix = coords.T
-            radii_km = radii_pix*pix_to_km
-            long_deg = P[llbd][id][0] + (P[llbd][id][1]-P[llbd][id][0])*(long_pix/dim)
-            lat_deg = P[llbd][id][3] - (P[llbd][id][3]-P[llbd][id][2])*(lat_pix/dim)
+            id = get_id(i)
+            
+            pix_per_km = P['pixperkm'][id][0]
+            pix_per_deg = pix_per_km*np.pi*r_moon/180.
+            radii_km = radii_pix/pix_per_km
+            long_deg = long_pix/pix_per_deg
+            lat_deg = lat_pix/pix_per_deg
             tuple_ = np.column_stack((long_deg,lat_deg,radii_km))
             N_matches_tot += len(coords)
             

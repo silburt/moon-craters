@@ -86,7 +86,7 @@ if truth_data == 'Salamuniccar':
     #GT = np.load('datasets/rings/Test_rings/test_uniqueGT_llt1.0e-06_rt1.0e-06_n10016.npy') #unique distribution for 10,000 images
 elif truth_data == 'HEAD':
     #filename = 'datasets/HEAD/HEAD_%s_craterdist_n30000.npy'%truth_datatype
-    filename = 'datasets/HEAD/HEAD_%s_craterdist_llt0.60_rt0.60.npy'%truth_datatype
+    filename = 'datasets/HEAD/HEAD_%s_craterdist_llt0.70_rt0.70.npy'%truth_datatype
 #########################################
 #load data
 pred = np.load(filename)

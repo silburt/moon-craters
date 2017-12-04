@@ -62,6 +62,8 @@ def extract_crater_dist(CP, pred_crater_dist):
         print "Couldnt load model predictions, generating"
         preds = get_model_preds(CP)
     
+    return pred_crater_dist
+    
     # need for long/lat bounds
     #P = h5py.File('%s%s_images.hdf5'%(CP['dir_data'],CP['datatype']), 'r')
     P = h5py.File(CP['dir_data'], 'r')
@@ -102,7 +104,8 @@ if __name__ == '__main__':
     CP = {}
     #CP['dir_data'] = '/scratch/m/mhvk/czhu/moondata/fullilen_uncropped/dev_wideilen_images.hdf5'
     #CP['dir_data'] = 'datasets/HEAD/dev_wideilen_images.hdf5'
-    CP['dir_data'] = 'datasets/HEAD/test_images.hdf5'
+    #CP['dir_data'] = 'datasets/HEAD/test_images.hdf5'
+    CP['dir_data'] = '/scratch/m/mhvk/czhu/moondata/test_images.hdf5'
     
     # Tuned Hyperparameters - Shouldn't really change
     CP['llt2'] = float(sys.argv[1])    #D_{L,L} from Silburt et. al (2017)
@@ -111,11 +114,12 @@ if __name__ == '__main__':
     CP['datatype'] = 'test'
     CP['n_imgs'] = 30000
     #CP['dir_preds'] = 'datasets/HEAD/HEADwideilen_%spreds_n%d.hdf5'%(CP['datatype'],CP['n_imgs'])
-    CP['dir_preds'] = 'datasets/HEAD/HEAD_%spreds_n%d.hdf5'%(CP['datatype'],CP['n_imgs'])
+    CP['dir_preds'] = 'datasets/HEAD/HEAD_wideilencrop_%spreds_n%d.hdf5'%(CP['datatype'],CP['n_imgs'])
     CP['dir_result'] = 'datasets/HEAD/HEAD_%s_craterdist_llt%.2f_rt%.2f.npy'%(CP['datatype'], CP['llt2'], CP['rt2'])
     
     #Needed to generate model_preds if they don't exist yet
-    CP['model'] = 'models/HEAD_FINALL.h5'
+    #CP['model'] = 'models/HEAD_FINALL.h5'
+    CP['model'] = 'models/HEAD_wideilen_cropped.h5'
     CP['dim'] = 256
 
     pred_crater_dist = np.empty([0,3])

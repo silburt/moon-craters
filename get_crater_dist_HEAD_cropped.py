@@ -24,7 +24,7 @@ def get_model_preds(CP):
                 data['target_masks'][:n_imgs].astype('float32')]
     }
     data.close()
-    preprocess(Data)
+    preprocess(Data, low=0)
 
     model = load_model(CP['model'])
     preds = model.predict(Data[dtype][0])

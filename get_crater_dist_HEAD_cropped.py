@@ -6,7 +6,7 @@ from utils.template_match_target import *
 from utils.preprocessing import *
 import glob
 import sys
-from keras.models import load_model
+#from keras.models import load_model
 
 #########################
 def get_id(i, zeropad=5):

@@ -67,7 +67,6 @@ def extract_crater_dist(CP, pred_crater_dist):
     # need for long/lat bounds
     #P = h5py.File('%s%s_images.hdf5'%(CP['dir_data'],CP['datatype']), 'r')
     P = h5py.File(CP['dir_data'], 'r')
-    llbd, pbd = 'longlat_bounds', 'pix_bounds'
     
     master_img_height_pix = 30720.  #number of pixels for height
     master_img_height_lat = 120.    #degrees used for latitude
@@ -81,12 +80,12 @@ def extract_crater_dist(CP, pred_crater_dist):
         if len(coords) > 0:
             long_pix,lat_pix,radii_pix = coords.T
             id = get_id(i)
-            
+
             pix_per_km = P['pixperkm'][id][0]
             pix_per_deg = pix_per_km*np.pi*r_moon/180.
             radii_km = radii_pix/pix_per_km
-            long_deg = long_pix/pix_per_deg
-            lat_deg = lat_pix/pix_per_deg
+            long_deg = P['longlat_bounds'][id][0] + long_pix/pix_per_deg
+            lat_deg = P['longlat_bounds'][id][3] - lat_pix/pix_per_deg
             tuple_ = np.column_stack((long_deg,lat_deg,radii_km))
             N_matches_tot += len(coords)
             

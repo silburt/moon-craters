@@ -14,7 +14,7 @@ module load cuda/8.0
 module load caffe/nv-0.14.5
 
 CUDA_VISIBLE_DEVICES=1 nohup python model_HEAD.py > HEAD_wideilen_cropped_rmvlargecraters.txt &
-CUDA_VISIBLE_DEVICES=1 nohup python get_crater_dist_HEAD.py > crater_dist_HEAD2.txt &
+CUDA_VISIBLE_DEVICES=2 nohup python get_crater_dist_HEAD.py > crater_dist_HEAD2.txt &
 CUDA_VISIBLE_DEVICES=1 nohup python moon_unet_s256_rings_dict.py > Salamuniccar.txt &
 CUDA_VISIBLE_DEVICES=1 nohup python crater_distribution_get_modelpreds.py > modelpreds.txt &
 

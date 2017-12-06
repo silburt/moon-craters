@@ -82,8 +82,8 @@ def extract_crater_dist(CP, pred_crater_dist):
             pix_per_km = P['pixperkm'][id][0]
             pix_per_deg = pix_per_km*np.pi*r_moon/180.
             radii_km = radii_pix/pix_per_km
-            long_deg = P['longlat_bounds'][id][0] + long_pix/pix_per_deg
-            lat_deg = P['longlat_bounds'][id][3] - lat_pix/pix_per_deg
+            long_deg = P['pix_bounds_large_img'][id][0] + long_pix/pix_per_deg
+            lat_deg = P['pix_bounds_large_img'][id][3] - lat_pix/pix_per_deg
             tuple_ = np.column_stack((long_deg,lat_deg,radii_km))
             N_matches_tot += len(coords)
             

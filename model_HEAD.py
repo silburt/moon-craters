@@ -101,10 +101,11 @@ def get_metrics(data, craters, dim, model, beta=1):
     print("*********Custom Loss*********")
     preds = model.predict(X)
     recall, precision, fscore, frac_new, frac_new2, maxrad = [], [], [], [], [], []
+    err_lo, err_la, err_r = [], [], []
     for i in range(n_csvs):
         if len(csvs[i]) < 3:
             continue
-        N_match, N_csv, N_templ, maxr, csv_dupe_flag = template_match_target_to_csv(preds[i], csvs[i], remove_large_craters_csv=0)
+        N_match, N_csv, N_templ, maxr, elo, ela, er, csv_duplicates = template_match_target_to_csv(preds[i], csvs[i], remove_largesmall_csvs=0)
         if N_match > 0:
             p = float(N_match)/float(N_match + (N_templ-N_match))   #assumes unmatched detected circles are FPs
             r = float(N_match)/float(N_csv)                         #N_csv = tp + fn, i.e. total ground truth matches
@@ -113,19 +114,21 @@ def get_metrics(data, craters, dim, model, beta=1):
             fn2 = float(N_templ - N_match)/float(N_csv)
             recall.append(r); precision.append(p); fscore.append(f)
             frac_new.append(fn); frac_new2.append(fn2); maxrad.append(maxr)
-            if csv_dupe_flag == 1:
+            err_lo.append(elo), err_la.append(ela), err_r.append(er)
+            if len(csv_duplicates) > 0:
                 print "duplicate(s) (shown above) found in image %d"%i
         else:
             print("skipping iteration %d,N_csv=%d,N_templ=%d,N_match=%d"%(i,N_csv,N_templ,N_match))
 
     print("binary XE score = %f"%model.evaluate(X, Y))
-    if len(recall) > 5:
+    if len(recall) > 3:
         print("mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(recall), np.std(recall)))
         print("mean and std of N_match/(N_match + (N_templ-N_match)) (precision) = %f, %f"%(np.mean(precision), np.std(precision)))
         print("mean and std of F_%d score = %f, %f"%(beta, np.mean(fscore), np.std(fscore)))
 
         print("mean and std of (N_template - N_match)/N_template (fraction of craters that are new) = %f, %f"%(np.mean(frac_new), np.std(frac_new)))
         print("mean and std of (N_template - N_match)/N_csv (fraction of craters that are new, 2) = %f, %f"%(np.mean(frac_new2), np.std(frac_new2)))
+        print("mean fractional difference between pred and GT craters: %f, %f, %f"%(np.mean(err_lo),np.mean(err_la),np.mean(err_r)))
         print("mean and std of maximum detected pixel radius in an image = %f, %f"%(np.mean(maxrad), np.std(maxrad)))
         print("absolute maximum detected pixel radius over all images = %f"%np.max(maxrad))
         print("")

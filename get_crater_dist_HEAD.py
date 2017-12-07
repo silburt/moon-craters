@@ -16,7 +16,6 @@ def get_id(i, zeropad=5):
 def get_model_preds(CP):
     dim, n_imgs, dtype = CP['dim'], CP['n_imgs'], CP['datatype']
 
-    #data = h5py.File('%s%s_images.hdf5'%(CP['dir_data'],dtype), 'r')
     data = h5py.File(CP['dir_data'], 'r')
 
     Data = {
@@ -77,7 +76,6 @@ def extract_crater_dist(CP, pred_crater_dist):
         coords = template_match_target(preds[i])
         if len(coords) > 0:
             id = get_id(i)
-            D = float(P[pbd][id][3] - P[pbd][id][1])/dim    #accounts for image downsampling by some factor D
             pix_to_km = ((P[llbd][id][3] - P[llbd][id][2]) *
                              (np.pi / 180.0) * r_moon / dim)
             long_pix, lat_pix, radii_pix = coords.T
@@ -89,6 +87,7 @@ def extract_crater_dist(CP, pred_crater_dist):
             long_deg = long_central + ((P[llbd][id][1] - P[llbd][id][0]) *
                                        (long_pix / dim - 0.5) /
                                        (np.cos(np.pi * lat_deg / 180.)))
+#            D = float(P[pbd][id][3] - P[pbd][id][1])/dim    #accounts for image downsampling by some factor D
 #            pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180.0)*r_moon*D
 #            long_pix,lat_pix,radii_pix = coords.T
 #            radii_km = radii_pix*pix_to_km

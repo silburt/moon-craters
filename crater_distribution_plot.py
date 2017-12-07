@@ -11,7 +11,7 @@ norm = False
 nbins = 50
 maxrad = 45
 cdf = 0
-truth_datatype = 'test'
+truth_datatype = 'dev'
 truth_data = 'HEAD' #Salamuniccar or HEAD
 
 ###############Original ground truth dataset################
@@ -85,8 +85,8 @@ if truth_data == 'Salamuniccar':
 
     #GT = np.load('datasets/rings/Test_rings/test_uniqueGT_llt1.0e-06_rt1.0e-06_n10016.npy') #unique distribution for 10,000 images
 elif truth_data == 'HEAD':
-    #filename = 'datasets/HEAD/HEAD_%s_craterdist_n30000.npy'%truth_datatype
-    filename = 'datasets/HEAD/HEAD_wideilencrop_%s_craterdist_llt0.70_rt0.70.npy'%truth_datatype
+    filename = 'datasets/HEAD/HEAD_%s_craterdist_llt0.60_rt0.60.npy'%truth_datatype
+    #filename = 'datasets/HEAD/HEAD_wideilencrop_%s_craterdist_llt0.70_rt0.70.npy'%truth_datatype
 #########################################
 #load data
 pred = np.load(filename)
@@ -122,8 +122,8 @@ else:
     plt.ylim([2,5000])
     plt.yscale('log')
     plt.legend()
-    plt.savefig('output_dir/images/%s%s_pred.png'%(outname,ext))
-    #plt.savefig('output_dir/images/%s.png'%truth_data)
+    #plt.savefig('output_dir/images/%s%s_pred.png'%(outname,ext))
+    plt.savefig('output_dir/images/%s.png'%truth_data)
 
 #Theres a problem with this because I think the KStest chooses N=number of bins, which makes anything significant enough. I want a log-ks test with the high N included. 
 ks_test = 0

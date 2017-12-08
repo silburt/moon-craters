@@ -6,7 +6,7 @@ from utils.template_match_target import *
 from utils.preprocessing import *
 import glob
 import sys
-#from keras.models import load_model
+from keras.models import load_model
 
 #########################
 def get_id(i, zeropad=5):
@@ -61,12 +61,12 @@ def extract_crater_dist(CP, pred_crater_dist):
         print "Couldnt load model predictions, generating"
         preds = get_model_preds(CP)
     
+    return pred_crater_dist
+    
     # need for long/lat bounds
     P = h5py.File(CP['dir_data'], 'r')
-    llbd, pbd = 'longlat_bounds', 'pix_bounds'
+    llbd, pbd, distcoeff = ('longlat_bounds', 'pix_bounds', 'pix_distortion_coefficient')
 
-    master_img_height_pix = 30720.  #number of pixels for height
-    master_img_height_lat = 120.    #degrees used for latitude
     r_moon = 1737.4                 #radius of the moon (km)
     dim = float(CP['dim'])          #image dimension (pixels, assume dim=height=width), needs to be float
 
@@ -77,22 +77,17 @@ def extract_crater_dist(CP, pred_crater_dist):
         if len(coords) > 0:
             id = get_id(i)
             pix_to_km = ((P[llbd][id][3] - P[llbd][id][2]) *
-                             (np.pi / 180.0) * r_moon / dim)
-            long_pix, lat_pix, radii_pix = coords.T
-            radii_km = radii_pix * pix_to_km
-            long_central = 0.5 * (P[llbd][id][0] + P[llbd][id][1])
-            lat_central = 0.5 * (P[llbd][id][2] + P[llbd][id][3])
-            lat_deg = lat_central - ((P[llbd][id][3] - P[llbd][id][2]) *
-                                     (lat_pix / dim - 0.5))
-            long_deg = long_central + ((P[llbd][id][1] - P[llbd][id][0]) *
-                                       (long_pix / dim - 0.5) /
-                                       (np.cos(np.pi * lat_deg / 180.)))
-#            D = float(P[pbd][id][3] - P[pbd][id][1])/dim    #accounts for image downsampling by some factor D
-#            pix_to_km = (master_img_height_lat/master_img_height_pix)*(np.pi/180.0)*r_moon*D
-#            long_pix,lat_pix,radii_pix = coords.T
-#            radii_km = radii_pix*pix_to_km
-#            long_deg = P[llbd][id][0] + (P[llbd][id][1]-P[llbd][id][0])*(long_pix/dim)
-#            lat_deg = P[llbd][id][3] - (P[llbd][id][3]-P[llbd][id][2])*(lat_pix/dim)
+                         (np.pi / 180.0) * r_moon / dim)
+                         long_pix, lat_pix, radii_pix = coords.T
+                         radii_km = radii_pix * pix_to_km
+                         long_central = 0.5 * (P[llbd][id][0] + P[llbd][id][1])
+                         lat_central = 0.5 * (P[llbd][id][2] + P[llbd][id][3])
+                         deg_per_pix = ((P[llbd][id][3] - P[llbd][id][2]) / dim /
+                                        distortion_coeff)
+                         lat_deg = lat_central - deg_per_pix * (lat_pix - 128.)
+                         long_deg = long_central + (deg_per_pix * (long_pix - 128.) /
+                                                    np.cos(np.pi * lat_deg / 180.))
+                         tuple_ = np.column_stack((long_deg, lat_deg, radii_km))
             tuple_ = np.column_stack((long_deg,lat_deg,radii_km))
             N_matches_tot += len(coords)
             
@@ -109,7 +104,7 @@ def extract_crater_dist(CP, pred_crater_dist):
 if __name__ == '__main__':
     # Arguments
     CP = {}
-    CP['datatype'] = 'dev'
+    CP['datatype'] = 'test'
     CP['n_imgs'] = 30000
     CP['dim'] = 256
     
@@ -121,8 +116,8 @@ if __name__ == '__main__':
     #CP['dir_data'] = 'datasets/HEAD/dev_wideilen_images.hdf5'
     #CP['dir_data'] = 'datasets/HEAD/test_wideilencrop_images.hdf5'
     #CP['dir_data'] = '/scratch/m/mhvk/czhu/moondata/crop_for_ari/test_images.hdf5'
-    #CP['dir_data'] = 'datasets/HEAD/%s_images.hdf5'%CP['datatype'] #test
-    CP['dir_data'] = 'datasets/HEAD/%s_wideilen_images.hdf5'%CP['datatype'] #dev
+    CP['dir_data'] = '/scratch/m/mhvk/czhu/moondata/fullilen_uncropped/%s_wdistmeta_images.hdf5'%CP['datatype'] #test
+    #CP['dir_data'] = 'datasets/HEAD/%s_wideilen_images.hdf5'%CP['datatype'] #dev
     
     #CP['dir_preds'] = 'datasets/HEAD/HEAD_%spreds_n%d.hdf5'%(CP['datatype'],CP['n_imgs'])
     #CP['dir_preds'] = 'datasets/HEAD/HEAD_wideilencrop_%spreds_n%d.hdf5'%(CP['datatype'],CP['n_imgs'])
@@ -131,8 +126,8 @@ if __name__ == '__main__':
     CP['dir_result'] = 'datasets/HEAD/HEAD_%s_craterdist_llt%.2f_rt%.2f.npy'%(CP['datatype'], CP['llt2'], CP['rt2'])
     
     #Needed to generate model_preds if they don't exist yet
-    CP['model'] = 'models/HEAD_FINALL.h5'
-    #CP['model'] = 'models/HEAD_wideilen_cropped.h5'
+    #CP['model'] = 'models/HEAD_FINALL.h5'
+    CP['model'] = 'models/HEAD_wideilen_cropped.h5'
 
     pred_crater_dist = np.empty([0,3])
     pred_crater_dist = extract_crater_dist(CP, pred_crater_dist)

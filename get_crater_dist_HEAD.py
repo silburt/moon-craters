@@ -78,17 +78,14 @@ def extract_crater_dist(CP, pred_crater_dist):
             id = get_id(i)
             pix_to_km = ((P[llbd][id][3] - P[llbd][id][2]) *
                          (np.pi / 180.0) * r_moon / dim)
-                         long_pix, lat_pix, radii_pix = coords.T
-                         radii_km = radii_pix * pix_to_km
-                         long_central = 0.5 * (P[llbd][id][0] + P[llbd][id][1])
-                         lat_central = 0.5 * (P[llbd][id][2] + P[llbd][id][3])
-                         deg_per_pix = ((P[llbd][id][3] - P[llbd][id][2]) / dim /
-                                        distortion_coeff)
-                         lat_deg = lat_central - deg_per_pix * (lat_pix - 128.)
-                         long_deg = long_central + (deg_per_pix * (long_pix - 128.) /
-                                                    np.cos(np.pi * lat_deg / 180.))
-                         tuple_ = np.column_stack((long_deg, lat_deg, radii_km))
-            tuple_ = np.column_stack((long_deg,lat_deg,radii_km))
+            long_pix, lat_pix, radii_pix = coords.T
+            radii_km = radii_pix * pix_to_km
+            long_central = 0.5 * (P[llbd][id][0] + P[llbd][id][1])
+            lat_central = 0.5 * (P[llbd][id][2] + P[llbd][id][3])
+            deg_per_pix = ((P[llbd][id][3] - P[llbd][id][2]) / dim /distortion_coeff)
+            lat_deg = lat_central - deg_per_pix * (lat_pix - 128.)
+            long_deg = long_central + (deg_per_pix * (long_pix - 128.) / np.cos(np.pi * lat_deg / 180.))
+            tuple_ = np.column_stack((long_deg, lat_deg, radii_km))
             N_matches_tot += len(coords)
             
             #only add unique (non-duplicate) values to the master pred_crater_dist

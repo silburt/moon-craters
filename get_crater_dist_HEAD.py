@@ -6,7 +6,7 @@ from utils.template_match_target import *
 from utils.preprocessing import *
 import glob
 import sys
-from keras.models import load_model
+#from keras.models import load_model
 
 #########################
 def get_id(i, zeropad=5):
@@ -60,8 +60,6 @@ def extract_crater_dist(CP, pred_crater_dist):
     except:
         print "Couldnt load model predictions, generating"
         preds = get_model_preds(CP)
-    
-    return pred_crater_dist
     
     # need for long/lat bounds
     P = h5py.File(CP['dir_data'], 'r')

@@ -129,6 +129,11 @@ def template_match_target_to_csv(target, csv_coords, minrad=minrad_, maxrad=maxr
         if N_large_unmatched < N_csv:
             N_csv -= N_large_unmatched
 
-    return N_match, N_csv, N_templ, maxr, err_lo/N_match, err_la/N_match, err_r/N_match, csv_duplicates
+    if N_match >= 1:
+        err_lo /= N_match
+        err_la /= N_match
+        err_r /= N_match
+
+    return N_match, N_csv, N_templ, maxr, err_lo, err_la, err_r, csv_duplicates
 
 

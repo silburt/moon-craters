@@ -36,10 +36,11 @@ def get_model_preds(CP):
 
 #########################
 def add_unique_craters(tuple, crater_dist, thresh_longlat2, thresh_rad2):
+    km_to_deg = 180./(np.pi*1737.4)
     Long, Lat, Rad = crater_dist.T
     for j in range(len(tuple)):
         lo,la,r = tuple[j].T
-        diff_longlat = (Long - lo)**2 + (Lat - la)**2
+        diff_longlat = ((Long - lo)**2 + (Lat - la)**2)/(r*km_to_deg)**2    #fractional long/lat change
         Rad_ = Rad[diff_longlat < thresh_longlat2]
         if len(Rad_) > 0:
             diff_rad = ((Rad_ - r)/r)**2                #fractional radius change

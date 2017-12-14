@@ -6,13 +6,15 @@ import numpy as np
 import os
 
 #iterate parameters
-longlat_thresh2 = np.linspace(10,70,num=4)
-rad_thresh = np.linspace(0.1,1,num=4)
-template_thresh = np.linspace(0.2,0.8,num=4)
-target_thresh = np.array([0.05,0.1,0.15])
+minrad = np.linspace(3,12,num=4,dtype='int')
+longlat_thresh2 = np.linspace(30,70,num=3)
+template_thresh = np.linspace(0.3,0.7,num=5)
+#rad_thresh = np.linspace(0.1,1,num=4)
+#target_thresh = np.array([0.05,0.1,0.15])
 
 #all combinations of above params
-params = list(itertools.product(*[longlat_thresh2, rad_thresh, template_thresh, target_thresh]))
+params = list(itertools.product(*[minrad, longlat_thresh2, template_thresh]))
+#params = list(itertools.product(*[longlat_thresh2, rad_thresh, template_thresh, target_thresh]))
 
 #submit jobs as you make them. If ==0 just make them
 submit_jobs = 1
@@ -20,8 +22,8 @@ submit_jobs = 1
 #make jobs
 jobs_dir = "tune_jobs"
 counter = 0
-for llt2,rt,te,ta in params:
-    pbs_script_name = "tune_llt%.2e_rt%.2e_te%.2e_ta%.2e.pbs"%(llt2,rt,te,ta)
+for mr,llt2,tt in params:
+    pbs_script_name = "tune_mr%d_llt%.2e_tt%.2e.pbs"%(mr,llt2,tt)
     with open('%s/%s'%(jobs_dir,pbs_script_name), 'w') as f:
         f.write('#!/bin/bash\n')
         f.write('#PBS -l nodes=1:ppn=1\n')
@@ -32,7 +34,7 @@ for llt2,rt,te,ta in params:
         f.write('module load gcc/5.3.1 python/2.7.8\n')
         f.write('source /storage/home/ajs725/venv/bin/activate\n')
         f.write('cd $PBS_O_WORKDIR\n')
-        f.write('python tune_craterdetect_hypers_HEAD.py %f %f %f %f > tune_llt%.2e_rt%.2e_te%.2e_ta%.2e.txt\n'%(llt2,rt,te,ta,llt2,rt,te,ta))
+        f.write('python tune_craterdetect_hypers_HEAD.py %d %f %f > %s.txt\n'%(mr,llt2,tt,pbs_script_name.split('.pbs')[0]))
     f.close()
 
     if submit_jobs == 1:

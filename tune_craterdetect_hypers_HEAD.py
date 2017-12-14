@@ -36,7 +36,7 @@ def get_recall(preds, csvs, nimgs, minrad, longlat_thresh2, template_thresh):
     for i in range(nimgs):
         if len(csvs[i]) < 3:
             continue
-        N_match, N_csv, N_templ, maxr, err_lo, err_la, err_r, csv_duplicates = template_match_target_to_csv(preds[i], csvs[i], minrad=minrad,
+        N_match, N_csv, N_templ, maxr, elo, ela, er, csv_duplicates = template_match_target_to_csv(preds[i], csvs[i], minrad=minrad,
                                                                                                             longlat_thresh2=longlat_thresh2,
                                                                                                             template_thresh=template_thresh,
                                                                                                             remove_largesmall_csvs=1)

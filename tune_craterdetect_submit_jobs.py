@@ -8,7 +8,7 @@ import os
 #iterate parameters
 minrad = np.linspace(3,12,num=4,dtype='int')
 longlat_thresh2 = np.linspace(30,70,num=3)
-template_thresh = np.linspace(0.3,0.7,num=5)
+template_thresh = np.array([0.3,0.35,0.4,0.45,0.5,0.6,0.7])
 #rad_thresh = np.linspace(0.1,1,num=4)
 #target_thresh = np.array([0.05,0.1,0.15])
 

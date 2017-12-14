@@ -8,8 +8,6 @@ import h5py
 import pandas as pd
 from utils.template_match_target import *
 
-minrad, maxrad = 3, 50
-
 def get_id(i, zeropad=5):
     return 'img_{i:0{zp}d}'.format(i=i, zp=zeropad)
 

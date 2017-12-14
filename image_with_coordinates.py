@@ -9,7 +9,8 @@ data_dir = '/scratch/m/mhvk/czhu/moondata/final_data/%s_images.hdf5'%dtype
 pred_dir = 'datasets/HEAD/HEAD_%spreds_n30000_final.hdf5'%dtype
 
 #xleft, xright, ylow, yhi = -39,-38,-20,-19
-xleft, xright, ylow, yhi = 18.4, 31.4, -27.8,-18.1
+#xleft, xright, ylow, yhi = 18.4, 31.4, -27.8,-18.1
+xleft, xright, ylow, yhi = -10, -1, -29.86, -18.1
 
 data = h5py.File(data_dir, 'r')
 for i in range(1000):

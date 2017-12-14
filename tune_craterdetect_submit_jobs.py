@@ -43,4 +43,4 @@ for mr,llt2,tt in params:
         os.system('mv %s %s/%s'%(pbs_script_name,jobs_dir,pbs_script_name))
         counter += 1
 
-print "submitted %d jobs"%counter
+print("submitted %d jobs"%counter)

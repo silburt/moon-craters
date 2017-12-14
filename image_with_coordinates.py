@@ -23,5 +23,5 @@ for i in range(10000):
     rawlen = data['pix_bounds'][get_id(i)][2] - data['pix_bounds'][get_id(i)][0]
     #if xleft > llbd[0] and xright < llbd[1] and ylow > llbd[2] and yhi < llbd[3] and rawlen > raw_thresh:
     if llbd[0] > xleft and llbd[1] < xright and llbd[2] > ylow and llbd[3] < yhi and rawlen < raw_thresh:
-        print(i,llbd)
+        print(i,rawlen,llbd)
 

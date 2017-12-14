@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import glob
 
-beta = 2 #controls precision's weakness in f_beta score
+beta = 1 #controls precision's weakness in f_beta score
 real_data = 1
 
 f_beta, precision, recall, ext = [], [], [], ''
@@ -15,18 +15,20 @@ if real_data == 1:
     for file in files:
         try:
             lines = open(file,'r').readlines()
-            p = float(lines[-3].split('=')[1].split(',')[0])
-            r = float(lines[-4].split('=')[1].split(',')[0])
+            elo = float(lines[-2].split(':')[1].split(',')[0])
+            ela = float(lines[-2].split(':')[1].split(',')[1])
+            er = float(lines[-2].split(':')[1].split(',')[2])
+            p = float(lines[-4].split('=')[1].split(',')[0])
+            r = float(lines[-5].split('=')[1].split(',')[0])
             f = round((1+beta**2)*(r*p)/(p*beta**2 + r),3)
             precision.append(p)
             recall.append(r)
             f_beta.append(f)
-            
-            if f > 0.7:
-                temp = lines[-5].replace('\n','').replace('=', ', ').split(',')
-                #print file
-                print "fscore=%f, p=%f, r=%f, llt2=%f, rt=%f, temp_thresh=%f, targ_thresh=%f"%(f,p,r,float(temp[1]),float(temp[3]),float(temp[5]),float(temp[7]))
         
+            if f > 0.77:
+                temp = lines[-6].replace('\n','').replace('=', ', ').split(',')
+                #print file
+                print "fscore=%f, p=%f, r=%f, elo=%f, ela=%f, er=%f, minrad=%d, llt2=%f, temp_thresh=%f"%(f,p,r,elo,ela,er,float(temp[1]),float(temp[3]),float(temp[5]))
         except:
             pass
             #print "%s not done"%f
@@ -50,4 +52,4 @@ cbar = plt.colorbar(pp)
 #    plt.text(precision[i], recall[i], f_beta[i], fontsize=8)
 
 plt.savefig('tune_jobs/tune_fscore_beta=%.2f%s.png'%(beta,ext))
-plt.show()
+#plt.show()

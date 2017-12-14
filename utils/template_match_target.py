@@ -11,12 +11,20 @@ import cv2
 # TEMPLATE_THRESH: 0-1 range, if scikit-image's template matching probability > template_thresh, count as detection
 # TARGET_THRESH: 0-1 range, set pixel values > target_thresh to 1, and pixel values < target_thresh -> 0
 # MINRAD/MAXRAD are the radii to search over during template matching. For minrad, keep in mind that if the predicted target has thick rings, a small ring of diameter ~ ring_thickness could be detected by match_filter.
-minrad_= 3
+#old
+#minrad_= 3
+#maxrad_= 50
+#longlat_thresh2_= 70
+#rad_thresh_= 1
+#template_thresh_= 0.6
+#target_thresh_= 0.1
+minrad_= 9
 maxrad_= 50
-longlat_thresh2_= 70
+longlat_thresh2_= 50
 rad_thresh_= 1
-template_thresh_= 0.6
+template_thresh_= 0.4
 target_thresh_= 0.1
+
 #####################################
 
 def template_match_target(target, minrad=minrad_, maxrad=maxrad_, longlat_thresh2=longlat_thresh2_, rad_thresh=rad_thresh_, template_thresh=template_thresh_, target_thresh=target_thresh_):

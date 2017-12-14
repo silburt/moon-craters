@@ -14,6 +14,6 @@ data = h5py.File(data_dir, 'r')
 for i in range(1000):
     llbd = data['longlat_bounds'][get_id(i)][...]
     rawlen = data['pix_bounds'][get_id(i)][2] - data['pix_bounds'][get_id(i)][0]
-    if xleft > llbd[0] and xright < llbd[1] and ylow > llbd[2] and yhigh < llbd[3] and rawlen > 3000:
+    if xleft > llbd[0] and xright < llbd[1] and ylow > llbd[2] and yhi < llbd[3] and rawlen > 3000:
         print(i,llbd)
 

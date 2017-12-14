@@ -64,7 +64,8 @@ def extract_crater_dist(CP, pred_crater_dist):
     
     # need for long/lat bounds
     P = h5py.File(CP['dir_data'], 'r')
-    llbd, pbd, distcoeff = ('longlat_bounds', 'pix_bounds', 'pix_distortion_coefficient')
+    llbd, pbd, distcoeff = ('longlat_bounds', 'pix_bounds',
+                            'pix_distortion_coefficient')
 
     r_moon = 1737.4                 #radius of the moon (km)
     dim = float(CP['dim'])          #image dimension (pixels, assume dim=height=width), needs to be float
@@ -77,6 +78,7 @@ def extract_crater_dist(CP, pred_crater_dist):
             id = get_id(i)
             pix_to_km = ((P[llbd][id][3] - P[llbd][id][2]) *
                          (np.pi / 180.0) * r_moon / dim)
+            distortion_coeff = P['pix_distortion_coefficient'][id][0]
             long_pix, lat_pix, radii_pix = coords.T
             radii_km = radii_pix * pix_to_km
             long_central = 0.5 * (P[llbd][id][0] + P[llbd][id][1])

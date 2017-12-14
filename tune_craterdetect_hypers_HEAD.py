@@ -60,7 +60,7 @@ if __name__ == '__main__':
     #data parameters
     dir = 'datasets/HEAD/'    #location of model predictions. Exclude final '/' in path.
     datatype = 'dev'
-    nimgs = 10              #1000, 10016, 30016
+    nimgs = 5000              #1000, 10016, 30016
     
     #load hyperparams
     minrad = int(sys.argv[1])

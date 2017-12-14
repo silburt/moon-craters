@@ -14,7 +14,7 @@ def get_id(i, zeropad=5):
 def prep_csvs(craters, nimgs):
     # get csvs
     csvs = []
-    cutrad, dim = 1, 256
+    cutrad, dim, maxrad = 1, 256, 50
     for i in range(nimgs):
         csv = craters[get_id(i)]
         # remove small/large/half craters
@@ -75,7 +75,3 @@ if __name__ == '__main__':
 
     get_recall(preds, csvs, nimgs, minrad, longlat_thresh2, template_thresh)
     print("finished successfully")
-
-#    # Main Loop
-#    for ma2,te,ta in params:
-#        get_recall(preds, csvs, nimgs, ma2, te, ta)

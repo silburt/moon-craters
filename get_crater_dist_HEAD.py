@@ -110,7 +110,8 @@ if __name__ == '__main__':
     
     #CP['dir_data'] = '/scratch/m/mhvk/czhu/moondata/fullilen_uncropped/%s_wdistmeta_images.hdf5'%CP['datatype'] #test
     #CP['dir_data'] = 'datasets/HEAD/%s_wideilen_images.hdf5'%CP['datatype'] #dev
-    CP['dir_data'] = '/scratch/m/mhvk/czhu/moondata/final_data/%s_images.hdf5'%CP['datatype']
+    #CP['dir_data'] = '/scratch/m/mhvk/czhu/moondata/final_data/%s_images.hdf5'%CP['datatype']  #final scinet
+    CP['dir_data'] = 'datasets/HEAD/%s_images_final.hdf5'%CP['datatype']    #final rein005
     
     #CP['dir_preds'] = 'datasets/HEAD/HEAD_%spreds_n%d.hdf5'%(CP['datatype'],CP['n_imgs'])
     #CP['dir_preds'] = 'datasets/HEAD/HEAD_wideilencrop_%spreds_n%d.hdf5'%(CP['datatype'],CP['n_imgs'])

@@ -70,7 +70,7 @@ if __name__ == '__main__':
     #load data
     file = '%sHEAD_%spreds_n30000_final.hdf5'%(dir,datatype)
     preds = h5py.File(file,'r')[datatype]
-    craters = pd.HDFStore('%s%s_craters.hdf5'%(dir,datatype),'r')
+    craters = pd.HDFStore('%s%s_craters_final.hdf5'%(dir,datatype),'r')
 
     csvs = prep_csvs(craters, nimgs)
 

@@ -40,6 +40,7 @@ def get_recall(preds, csvs, nimgs, minrad, longlat_thresh2, template_thresh):
                                                                                                             longlat_thresh2=longlat_thresh2,
                                                                                                             template_thresh=template_thresh,
                                                                                                             remove_largesmall_csvs=1)
+        print(elo,ela,er)
         if N_match > 0:
             print(i, N_match, N_csv, N_templ, maxr, csv_duplicates)
             p = float(N_match)/float(N_match + (N_templ-N_match))   #assuming all unmatched detected circles are false positives
@@ -59,7 +60,7 @@ if __name__ == '__main__':
     #data parameters
     dir = 'datasets/HEAD/'    #location of model predictions. Exclude final '/' in path.
     datatype = 'dev'
-    nimgs = 5000              #1000, 10016, 30016
+    nimgs = 10              #1000, 10016, 30016
     
     #load hyperparams
     minrad = int(sys.argv[1])

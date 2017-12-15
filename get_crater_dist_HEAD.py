@@ -73,17 +73,18 @@ def extract_crater_dist(CP, pred_crater_dist):
     N_matches_tot = 0
     for i in range(CP['n_imgs']):
         print i, len(pred_crater_dist)
+        id = get_id(i)
         
-        # if high rawlen, search generously only for largest craters
-#        rawlen = P[pbd][get_id(i)][2] - P[pbd][get_id(i)][0]
-#        mr, tt = 3, 0.6
-#        if rawlen > 4000:
-#            mr, tt = 10, 0.4
-        coords = template_match_target(preds[i])
+        # sloped minrad
+        rawlen = P[pbd][get_id(i)][2] - P[pbd][get_id(i)][0]
+        if rawlen < 4000:
+            minrad = int((3./1000.)*rawlen-3)
+            coords = template_match_target(preds[i],minrad=max(minrad,3))
+        elif rawlen >= 4000:
+            coords = template_match_target(preds[i],minrad=9)
         
         # convert, add to master dist
         if len(coords) > 0:
-            id = get_id(i)
             pix_to_km = ((P[llbd][id][3] - P[llbd][id][2]) *
                          (np.pi / 180.0) * r_moon / dim)
             long_pix, lat_pix, radii_pix = coords.T

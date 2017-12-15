@@ -18,11 +18,11 @@ import cv2
 #rad_thresh_= 1
 #template_thresh_= 0.6
 #target_thresh_= 0.1
-minrad_= 9
+minrad_= 6
 maxrad_= 50
 longlat_thresh2_= 70
 rad_thresh_= 1
-template_thresh_= 0.4
+template_thresh_= 0.5
 target_thresh_= 0.1
 
 #####################################

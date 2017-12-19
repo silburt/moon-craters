@@ -22,11 +22,11 @@ submit_jobs = 1
 jobs_dir = "tune_jobs"
 counter = 0
 for llt2,tt,rt in params:
-    pbs_script_name = "tune_mr%d_llt%.2e_tt%.2e.pbs"%(llt2,tt,rt)
+    pbs_script_name = "tune_llt%.2e_tt%.2e_rt%.2e.pbs"%(llt2,tt,rt)
     with open('%s/%s'%(jobs_dir,pbs_script_name), 'w') as f:
         f.write('#!/bin/bash\n')
         f.write('#PBS -l nodes=1:ppn=1\n')
-        f.write('#PBS -l walltime=24:00:00\n')
+        f.write('#PBS -l walltime=12:00:00\n')
         f.write('#PBS -l pmem=2gb\n')
         f.write('#PBS -A ebf11_a_g_sc_default\n')
         f.write('#PBS -j oe\n')

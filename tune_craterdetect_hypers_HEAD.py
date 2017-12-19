@@ -30,16 +30,17 @@ def prep_csvs(craters, nimgs):
             csvs.append(csv_coords)
     return csvs
 
-def get_recall(preds, csvs, nimgs, minrad, longlat_thresh2, template_thresh):
+def get_recall(preds, csvs, nimgs, longlat_thresh2, template_thresh, rad_thresh):
     recall, precision, f1 = [], [], []
     err_lo, err_la, err_r = [], [], []
     for i in range(nimgs):
         if len(csvs[i]) < 3:
             continue
-        N_match, N_csv, N_templ, maxr, elo, ela, er, csv_duplicates = template_match_target_to_csv(preds[i], csvs[i], minrad=minrad,
-                                                                                                            longlat_thresh2=longlat_thresh2,
-                                                                                                            template_thresh=template_thresh,
-                                                                                                            remove_largesmall_csvs=1)
+        N_match, N_csv, N_templ, maxr, elo, ela, er, csv_duplicates = template_match_t2c(preds[i], csvs[i],
+                                                                                         longlat_thresh2=longlat_thresh2,
+                                                                                         template_thresh=template_thresh,
+                                                                                         rad_thresh=rad_thresh,
+                                                                                         remove_largesmall_csvs=1)
         if N_match > 0:
             print(i, N_match, N_csv, N_templ, maxr, csv_duplicates)
             p = float(N_match)/float(N_match + (N_templ-N_match))   #assuming all unmatched detected circles are false positives
@@ -62,9 +63,9 @@ if __name__ == '__main__':
     nimgs = 5000              #1000, 10016, 30016
     
     #load hyperparams
-    minrad = int(sys.argv[1])
-    longlat_thresh2 = float(sys.argv[2])
-    template_thresh = float(sys.argv[3])
+    longlat_thresh2 = float(sys.argv[1])
+    template_thresh = float(sys.argv[2])
+    rad_thresh = float(sys.argv[3])
     
     #load data
     file = '%sHEAD_%spreds_n30000_final.hdf5'%(dir,datatype)
@@ -73,5 +74,5 @@ if __name__ == '__main__':
 
     csvs = prep_csvs(craters, nimgs)
 
-    get_recall(preds, csvs, nimgs, minrad, longlat_thresh2, template_thresh)
+    get_recall(preds, csvs, nimgs, longlat_thresh2, template_thresh, rad_thresh)
     print("finished successfully")

@@ -26,7 +26,7 @@ if real_data == 1:
             f_beta.append(f)
         
             temp = lines[-6].replace('\n','').replace('=', ', ').split(',')
-            if f > 0.5 and float(temp[5]) > 0.4:
+            if f > 0.5 and float(temp[5]) > 0.4 and r > 0.8:
                 #print file
                 print "fscore=%f, p=%f, r=%f, elo=%f, ela=%f, er=%f, minrad=%d, llt2=%f, temp_thresh=%f"%(f,p,r,elo,ela,er,float(temp[1]),float(temp[3]),float(temp[5]))
         except:

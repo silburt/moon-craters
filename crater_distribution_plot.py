@@ -8,7 +8,7 @@ from scipy import stats
 import os
 
 norm = False
-nbins = 50
+nbins = 40
 maxrad = 45
 cdf = 0
 truth_datatype = 'dev'
@@ -86,7 +86,7 @@ if truth_data == 'Salamuniccar':
     #GT = np.load('datasets/rings/Test_rings/test_uniqueGT_llt1.0e-06_rt1.0e-06_n10016.npy') #unique distribution for 10,000 images
 elif truth_data == 'HEAD':
     #filename = 'datasets/HEAD/HEAD_%s_craterdist_llt1.40_rt0.25_final.npy'%truth_datatype
-    filename = 'datasets/HEAD/HEAD_%s_craterdist_llt1.60_rt0.15_final.npy'%truth_datatype
+    filename = 'datasets/HEAD/HEAD_%s_craterdist_llt2.00_rt0.50_final.npy'%truth_datatype
 #########################################
 #load data
 pred = np.load(filename)
@@ -119,7 +119,7 @@ else:
     print "%d craters total"%(len(rad))
     
     plt.xlabel('crater radius (km)')
-    plt.ylim([2,5000])
+    plt.ylim([2,10000])
     plt.yscale('log')
     plt.legend()
     plt.savefig('output_dir/images/%s%s_pred.png'%(outname,ext))
@@ -142,6 +142,9 @@ if ks_test == 1:    #Do log-ks-test by binning the data, logging the counts in e
     print stats.ks_2samp(dists[0], dists[1])
 
 plt.show()
+
+
+
 
 ##########################################################################################
 ################## extra stuff ##################

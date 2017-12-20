@@ -195,8 +195,8 @@ def template_match_t2c(target, csv_coords, minrad=minrad_, maxrad=maxrad_,
             err_lo += abs(Lo - lo) / r
             err_la += abs(La - la) / r
             err_r += abs(R - r) / r
-            print("%d GT entries matched to (%d,%d,%d) ring... counted " /
-                  "(%f,%f,%f) as the match." % (N, lo, la, r, Lo, La, r))
+            print("""%d GT entries matched to (%d,%d,%d) ring... 
+                  counted (%f,%f,%f) as the match.""" % (N, lo, la, r, Lo, La, r))
             print(csv_duplicates)
         elif N == 1:
             Lo, La, R = csv_coords[index_True[0]].T

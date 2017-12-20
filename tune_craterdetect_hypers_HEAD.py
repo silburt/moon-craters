@@ -14,7 +14,7 @@ def get_id(i, zeropad=5):
 def prep_csvs(craters, nimgs):
     # get csvs
     csvs = []
-    cutrad, dim, maxrad = 1, 256, 50
+    cutrad, dim, minrad, maxrad = 1, 256, 3, 50
     for i in range(nimgs):
         csv = craters[get_id(i)]
         # remove small/large/half craters

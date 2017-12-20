@@ -33,7 +33,7 @@ for mr,tt,rt in params:
         f.write('module load gcc/5.3.1 python/2.7.8\n')
         f.write('source /storage/home/ajs725/venv/bin/activate\n')
         f.write('cd $PBS_O_WORKDIR\n')
-        f.write('python tune_craterdetect_hypers_HEAD.py %f %f %f > %s.txt\n'%(mr,tt,rt,pbs_script_name.split('.pbs')[0]))
+        f.write('python tune_craterdetect_hypers_HEAD.py %d %f %f > %s.txt\n'%(mr,tt,rt,pbs_script_name.split('.pbs')[0]))
     f.close()
 
     if submit_jobs == 1:

@@ -30,14 +30,14 @@ def prep_csvs(craters, nimgs):
             csvs.append(csv_coords)
     return csvs
 
-def get_recall(preds, csvs, nimgs, longlat_thresh2, template_thresh, rad_thresh):
+def get_recall(preds, csvs, nimgs, minrad, template_thresh, rad_thresh):
     recall, precision, f1 = [], [], []
     err_lo, err_la, err_r = [], [], []
     for i in range(nimgs):
         if len(csvs[i]) < 3:
             continue
         N_match, N_csv, N_templ, maxr, elo, ela, er, csv_duplicates = template_match_t2c(preds[i], csvs[i],
-                                                                                         longlat_thresh2=longlat_thresh2,
+                                                                                         minrad=minrad,
                                                                                          rad_thresh=rad_thresh,
                                                                                          template_thresh=template_thresh,
                                                                                          rmv_oob_csvs=1)
@@ -50,7 +50,7 @@ def get_recall(preds, csvs, nimgs, longlat_thresh2, template_thresh, rad_thresh)
         else:
             print("skipping iteration %d,N_csv=%d,N_templ=%d,N_match=%d"%(i,N_csv,N_templ,N_match))
 
-    print("longlat_thresh2=%f, template_thresh=%f, rad_thresh=%f"%(longlat_thresh2, template_thresh, rad_thresh))
+    print("minrad=%d, template_thresh=%f, rad_thresh=%f"%(minrad, template_thresh, rad_thresh))
     print("mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(recall), np.std(recall)))
     print("mean and std of N_match/(N_match + (N_templ-N_match)) (precision) = %f, %f"%(np.mean(precision), np.std(precision)))
     print("mean and std of 2rp/(r+p) (F1 score) = %f, %f"%(np.mean(f1), np.std(f1)))
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     nimgs = 5000              #1000, 10016, 30016
     
     #load hyperparams
-    longlat_thresh2 = float(sys.argv[1])
+    minrad = int(sys.argv[1])
     template_thresh = float(sys.argv[2])
     rad_thresh = float(sys.argv[3])
     
@@ -76,5 +76,5 @@ if __name__ == '__main__':
 
     csvs = prep_csvs(craters, nimgs)
 
-    get_recall(preds, csvs, nimgs, longlat_thresh2, template_thresh, rad_thresh)
+    get_recall(preds, csvs, nimgs, minrad, template_thresh, rad_thresh)
     print("finished successfully")

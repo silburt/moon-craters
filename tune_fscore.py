@@ -15,20 +15,20 @@ if real_data == 1:
     for file in files:
         try:
             lines = open(file,'r').readlines()
-            elo = float(lines[-2].split(':')[1].split(',')[0])
-            ela = float(lines[-2].split(':')[1].split(',')[1])
-            er = float(lines[-2].split(':')[1].split(',')[2])
-            p = float(lines[-4].split('=')[1].split(',')[0])
-            r = float(lines[-5].split('=')[1].split(',')[0])
+            elo = float(lines[-4].split(':')[1].split(',')[1])
+            ela = float(lines[-3].split(':')[1].split(',')[1])
+            er = float(lines[-2].split(':')[1].split(',')[1])
+            p = float(lines[-6].split('=')[1].split(',')[0])
+            r = float(lines[-7].split('=')[1].split(',')[0])
             f = round((1+beta**2)*(r*p)/(p*beta**2 + r),3)
             precision.append(p)
             recall.append(r)
             f_beta.append(f)
         
-            temp = lines[-6].replace('\n','').replace('=', ', ').split(',')
+            temp = lines[-8].replace('\n','').replace('=', ', ').split(',')
             if f > 0.5 and float(temp[5]) > 0.4 and r > 0.8:
                 #print file
-                print "fscore=%f, p=%f, r=%f, elo=%f, ela=%f, er=%f, minrad=%d, llt2=%f, temp_thresh=%f"%(f,p,r,elo,ela,er,float(temp[1]),float(temp[3]),float(temp[5]))
+                print "fscore=%f, p=%f, r=%f, elo=%f, ela=%f, er=%f, llt2=%d, temp_thresh=%f, rt2=%f"%(f,p,r,elo,ela,er,float(temp[1]),float(temp[3]),float(temp[5]))
         except:
             pass
             #print "%s not done"%f

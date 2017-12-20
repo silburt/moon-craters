@@ -54,7 +54,9 @@ def get_recall(preds, csvs, nimgs, longlat_thresh2, template_thresh, rad_thresh)
     print("mean and std of N_match/N_csv (recall) = %f, %f"%(np.mean(recall), np.std(recall)))
     print("mean and std of N_match/(N_match + (N_templ-N_match)) (precision) = %f, %f"%(np.mean(precision), np.std(precision)))
     print("mean and std of 2rp/(r+p) (F1 score) = %f, %f"%(np.mean(f1), np.std(f1)))
-    print("mean fractional difference between pred and GT craters: %f, %f, %f"%(np.mean(err_lo),np.mean(err_la),np.mean(err_r)))
+    print("mean and std longitude fractional difference between pred and GT craters: %f, %f"%(np.mean(err_lo),np.std(err_lo)))
+    print("mean and std latitude fractional difference between pred and GT craters: %f, %f"%(np.mean(err_la),np.std(err_la)))
+    print("mean and std radius fractional difference between pred and GT craters: %f, %f"%(np.mean(err_r),np.std(err_r)))
 
 if __name__ == '__main__':
     #data parameters
